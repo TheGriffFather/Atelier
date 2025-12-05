@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dan Brown Art Tracker</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --accent: #c9a227;
+            --accent-soft: #8b7355;
+            --text-primary: #ffffff;
+            --text-secondary: #888;
+            --success: #4a9c6d;
+            --warning: #c9a227;
+            --danger: #a85454;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 400;
+        }
+
+        header h1 span {
+            color: var(--accent);
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2.5rem;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 300;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls select, .controls button {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .controls select:hover, .controls select:focus {
+            border-color: var(--accent-soft);
+        }
+
+        .controls button {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: #d4ad30;
+        }
+
+        .controls button.secondary {
+            background: transparent;
+            border-color: var(--accent-soft);
+            color: var(--text-primary);
+        }
+
+        .controls button.secondary:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .artwork-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .artwork-card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .artwork-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .artwork-image {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
+
+        .artwork-info {
+            padding: 1.25rem;
+        }
+
+        .artwork-title {
+            font-size: 1rem;
+            font-weight: 400;
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .artwork-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .artwork-price {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .artwork-confidence {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .confidence-high {
+            background: rgba(74, 156, 109, 0.2);
+            color: var(--success);
+        }
+
+        .confidence-medium {
+            background: rgba(201, 162, 39, 0.2);
+            color: var(--warning);
+        }
+
+        .confidence-low {
+            background: rgba(168, 84, 84, 0.2);
+            color: var(--danger);
+        }
+
+        .artwork-signals {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .signal-tag {
+            padding: 0.2rem 0.6rem;
+            background: rgba(201, 162, 39, 0.15);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: var(--accent);
+        }
+
+        .artwork-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .artwork-actions button {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .artwork-actions button:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-verify {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-verify:hover {
+            background: #5aac7d;
+        }
+
+        .btn-reject {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #b86464;
+        }
+
+        .btn-view {
+            background: transparent;
+            border: 1px solid var(--accent-soft);
+            color: var(--text-primary);
+        }
+
+        .btn-view:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--accent);
+            font-size: 0.75rem;
+            background: rgba(201, 162, 39, 0.15);
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h2 {
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 4rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            transform: translateX(150%);
+            transition: transform 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .tab-btn {
+            padding: 0.9rem 1.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            letter-spacing: 0.02em;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.03);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Gallery Styles */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .gallery-item {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-item .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.95));
+            padding: 2.5rem 1rem 1rem;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+        }
+
+        .gallery-item:hover .overlay {
+            transform: translateY(0);
+        }
+
+        .gallery-item .title {
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-bottom: 0.35rem;
+        }
+
+        .gallery-item .meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Biography Styles */
+        .biography-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .biography-content {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 3rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            line-height: 1.8;
+        }
+
+        .biography-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+            font-weight: 300;
+        }
+
+        .biography-content h2 {
+            font-size: 1.75rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text-primary);
+            font-weight: 300;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .biography-content h3 {
+            font-size: 1.25rem;
+            margin: 2rem 0 0.75rem;
+            color: var(--accent-soft);
+            font-weight: 400;
+        }
+
+        .biography-content p {
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .biography-content ul, .biography-content ol {
+            margin: 1rem 0 1.5rem 2rem;
+            color: var(--text-primary);
+        }
+
+        .biography-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .biography-content a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .biography-content a:hover {
+            border-bottom-color: var(--accent);
+        }
+
+        .biography-content blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .biography-content .dates {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .biography-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            gap: 1rem;
+        }
+
+        .biography-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .biography-loading p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.97);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 2rem;
+            cursor: zoom-out;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 90vh;
+            position: relative;
+        }
+
+        .lightbox-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .lightbox-info {
+            text-align: center;
+            margin-top: 1.25rem;
+        }
+
+        .lightbox-info h3 {
+            font-size: 1.35rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .lightbox-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent);
+            border: none;
+            color: #000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.2s;
+        }
+
+        .lightbox-close:hover {
+            background: #d4ad30;
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s;
+        }
+
+        .lightbox-nav:hover {
+            opacity: 1;
+            background: var(--accent-soft);
+        }
+
+        .lightbox-nav.prev {
+            left: 1rem;
+        }
+
+        .lightbox-nav.next {
+            right: 1rem;
+        }
+
+        .gallery-filters {
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .gallery-filters select {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+
+        .gallery-filters select:hover, .gallery-filters select:focus {
+            border-color: var(--accent-soft);
+        }
+
+        .gallery-count {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+
+        /* Search box */
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+            max-width: 280px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent-soft);
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Bulk selection */
+        .bulk-controls {
+            display: none;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.75rem 2rem;
+            background: rgba(201, 162, 39, 0.15);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .bulk-controls.active {
+            display: flex;
+        }
+
+        .bulk-controls span {
+            font-size: 0.85rem;
+            color: var(--accent);
+        }
+
+        .bulk-controls button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        .artwork-checkbox {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            z-index: 10;
+            accent-color: var(--accent);
+        }
+
+        .artwork-card {
+            position: relative;
+        }
+
+        .artwork-card.selected {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .form-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .form-section h4 {
+            color: var(--accent);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .modal-header h2 {
+            font-size: 1.15rem;
+            font-weight: 400;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent-soft);
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.85rem;
+            background: var(--accent);
+            border: none;
+            border-radius: 4px;
+            color: #000;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 1.25rem;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #d4ad30;
+        }
+
+        /* Export dropdown */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.25rem;
+            background: var(--bg-card);
+            min-width: 150px;
+            border-radius: 4px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            display: block;
+            padding: 0.7rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .dropdown-content a:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-add {
+            background: var(--success) !important;
+            border-color: var(--success) !important;
+            color: white !important;
+        }
+
+        .btn-add:hover {
+            background: #5aac7d !important;
+        }
+
+        .controls-spacer {
+            flex: 1;
+        }
+
+        /* Checkbox label styling */
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .controls label input[type="checkbox"] {
+            accent-color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><span>Dan Brown</span> Art Tracker</h1>
+        <p class="subtitle">Tracking artwork by Dan Brown (1949-2022) &middot; Trompe l'oeil master</p>
+    </header>
+
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('tracker')">Tracker</button>
+        <button class="tab-btn" onclick="switchTab('gallery')">Gallery</button>
+        <button class="tab-btn" onclick="switchTab('biography')">Biography</button>
+        <a href="/outreach" class="tab-btn" style="text-decoration: none;">Outreach</a>
+        <a href="/display" class="tab-btn" style="text-decoration: none;">Display Frame</a>
+    </nav>
+
+    <!-- Tracker Tab -->
+    <div id="tab-tracker" class="tab-content active">
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total Found</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-new">-</div>
+                <div class="stat-label">New</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-verified">-</div>
+                <div class="stat-label">Verified</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="stat-acquired">-</div>
+                <div class="stat-label">Acquired</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search artworks..." onkeyup="handleSearch(event)">
+            </div>
+            <select id="filter-status">
+                <option value="" selected>All Status</option>
+                <option value="new">New</option>
+                <option value="watching">Watching</option>
+                <option value="contacted">Contacted</option>
+                <option value="acquired">Acquired</option>
+                <option value="passed">Passed</option>
+            </select>
+            <select id="filter-verified">
+                <option value="">All</option>
+                <option value="verified">Verified Only</option>
+                <option value="unverified">Unverified Only</option>
+            </select>
+            <select id="filter-art-type">
+                <option value="" selected>All Types</option>
+                <option value="Painting">Paintings</option>
+                <option value="Book Cover">Book Covers</option>
+                <option value="Lithograph">Lithographs</option>
+                <option value="Illustration">Illustrations</option>
+                <option value="Drawing">Drawings</option>
+                <option value="Print">Prints</option>
+            </select>
+            <label>
+                <input type="checkbox" id="filter-false-positives"> Show False Positives
+            </label>
+            <label>
+                <input type="checkbox" id="select-mode" onchange="toggleSelectMode()"> Select
+            </label>
+            <div class="controls-spacer"></div>
+            <button class="btn-add" onclick="openAddModal()">+ Add Artwork</button>
+            <div class="dropdown">
+                <button class="secondary">Export</button>
+                <div class="dropdown-content">
+                    <a href="/api/artworks/export/json" target="_blank">Export JSON</a>
+                    <a href="/api/artworks/export/csv" target="_blank">Export CSV</a>
+                </div>
+            </div>
+            <button onclick="loadArtworks()">Refresh</button>
+            <button class="secondary" onclick="runScraper()">Run Scraper</button>
+        </div>
+
+        <!-- Bulk Actions Bar -->
+        <div id="bulk-controls" class="bulk-controls">
+            <span id="selected-count">0 selected</span>
+            <button onclick="bulkVerify()">Verify Selected</button>
+            <button onclick="bulkReject()">Reject Selected</button>
+            <button onclick="clearSelection()">Clear Selection</button>
+        </div>
+
+        <main>
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+
+            <div id="empty-state" class="empty-state" style="display: none;">
+                <h2>No artworks found</h2>
+                <p>Try adjusting your filters or run the scraper to find new listings.</p>
+            </div>
+
+            <div id="artwork-grid" class="artwork-grid"></div>
+        </main>
+    </div>
+
+    <!-- Gallery Tab -->
+    <div id="tab-gallery" class="tab-content">
+        <div class="gallery-filters">
+            <select id="gallery-filter">
+                <option value="all">All Artworks</option>
+                <option value="currency">Currency / Money</option>
+                <option value="postcards">Vintage Postcards</option>
+                <option value="landscapes">Landscapes / Coastal</option>
+                <option value="stilllife">Still Life / Ephemera</option>
+                <option value="newyork">New York Scenes</option>
+                <option value="rack">Rack Paintings</option>
+            </select>
+            <span class="gallery-count" id="gallery-count">Loading...</span>
+        </div>
+        <div id="gallery-grid" class="gallery-grid"></div>
+    </div>
+
+    <!-- Biography Tab -->
+    <div id="tab-biography" class="tab-content">
+        <div class="biography-container">
+            <div class="biography-content" id="biography-content">
+                <div class="biography-loading">
+                    <div class="spinner"></div>
+                    <p>Loading biography...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <button class="lightbox-nav prev" onclick="navigateLightbox(-1, event)">&larr;</button>
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <img id="lightbox-img" src="" alt="">
+            <div class="lightbox-info">
+                <h3 id="lightbox-title"></h3>
+                <p id="lightbox-meta"></p>
+            </div>
+        </div>
+        <button class="lightbox-nav next" onclick="navigateLightbox(1, event)">&rarr;</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Add Artwork Modal -->
+    <div id="add-modal" class="modal" onclick="closeAddModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Add New Artwork</h2>
+                <button class="modal-close" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="add-artwork-form" onsubmit="submitArtwork(event)">
+                <!-- Basic Info Section -->
+                <div class="form-section">
+                    <h4>Basic Information</h4>
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" name="title" required placeholder="e.g., Seven Ones">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" placeholder="Description of the artwork..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Physical Details Section -->
+                <div class="form-section">
+                    <h4>Physical Details</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Medium</label>
+                            <select name="medium">
+                                <option value="">Select medium</option>
+                                <option value="Oil on canvas">Oil on canvas</option>
+                                <option value="Oil on board">Oil on board</option>
+                                <option value="Oil on panel">Oil on panel</option>
+                                <option value="Oil on Masonite">Oil on Masonite</option>
+                                <option value="Acrylic">Acrylic</option>
+                                <option value="Watercolor">Watercolor</option>
+                                <option value="Mixed media">Mixed media</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select name="category">
+                                <option value="">Select category</option>
+                                <option value="Currency">Currency / Trompe l'oeil</option>
+                                <option value="Vintage Postcards">Vintage Postcards</option>
+                                <option value="Still Life">Still Life / Ephemera</option>
+                                <option value="Coastal">Landscapes / Coastal</option>
+                                <option value="New York">New York Scenes</option>
+                                <option value="Winter">Winter / Atmospheric</option>
+                                <option value="Rack Painting">Rack Painting</option>
+                                <option value="Portrait">Portrait</option>
+                                <option value="Architecture">Architecture</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Dimensions (in)</label>
+                            <input type="text" name="dimensions" placeholder="e.g., 12 x 16 in">
+                        </div>
+                        <div class="form-group">
+                            <label>Dimensions (cm)</label>
+                            <input type="text" name="dimensions_cm" placeholder="e.g., 30.5 x 40.6 cm">
+                        </div>
+                        <div class="form-group">
+                            <label>Subject Matter</label>
+                            <input type="text" name="subject_matter" placeholder="e.g., Dollar bills">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dating & Signature Section -->
+                <div class="form-section">
+                    <h4>Dating & Signature</h4>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Year Created</label>
+                            <input type="number" name="year_created" placeholder="e.g., 1985" min="1949" max="2022">
+                        </div>
+                        <div class="form-group">
+                            <label>Circa (approximate)</label>
+                            <select name="year_created_circa">
+                                <option value="false">Exact year</option>
+                                <option value="true">Circa (c.)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Signed</label>
+                            <input type="text" name="signed" placeholder="e.g., Signed lower right">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Inscription</label>
+                        <input type="text" name="inscription" placeholder="Any text inscribed on the work...">
+                    </div>
+                </div>
+
+                <!-- Condition & Framing Section -->
+                <div class="form-section">
+                    <h4>Condition & Framing</h4>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Condition</label>
+                            <input type="text" name="condition" placeholder="e.g., Excellent">
+                        </div>
+                        <div class="form-group">
+                            <label>Framed</label>
+                            <select name="framed">
+                                <option value="">Unknown</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Frame Description</label>
+                            <input type="text" name="frame_description" placeholder="e.g., Original gilt frame">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Provenance & History Section -->
+                <div class="form-section">
+                    <h4>Provenance & History</h4>
+                    <div class="form-group">
+                        <label>Provenance</label>
+                        <textarea name="provenance" placeholder="Ownership history..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Exhibition History</label>
+                        <textarea name="exhibition_history" placeholder="Where exhibited..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Literature</label>
+                        <textarea name="literature" placeholder="Publications featuring this work..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Acquisition Info Section -->
+                <div class="form-section">
+                    <h4>Acquisition Info</h4>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Priority (1-5)</label>
+                            <select name="acquisition_priority">
+                                <option value="">Not Set</option>
+                                <option value="1">1 - Low</option>
+                                <option value="2">2</option>
+                                <option value="3">3 - Medium</option>
+                                <option value="4">4</option>
+                                <option value="5">5 - Must Have</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Value ($)</label>
+                            <input type="number" name="estimated_value" step="0.01" placeholder="e.g., 3500">
+                        </div>
+                        <div class="form-group">
+                            <label>Listed Price ($)</label>
+                            <input type="number" name="price" step="0.01" placeholder="e.g., 2500">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Last Known Owner</label>
+                            <input type="text" name="last_known_owner" placeholder="e.g., Private Collection">
+                        </div>
+                        <div class="form-group">
+                            <label>Current Location</label>
+                            <input type="text" name="current_location" placeholder="e.g., Madison, CT">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Acquisition Notes</label>
+                        <textarea name="acquisition_notes" placeholder="Notes on acquisition attempts, contacts made, etc..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Last Sale Record Section -->
+                <div class="form-section">
+                    <h4>Last Sale Record</h4>
+                    <div class="form-row-3">
+                        <div class="form-group">
+                            <label>Sale Price ($)</label>
+                            <input type="number" name="last_sale_price" step="0.01" placeholder="e.g., 4000">
+                        </div>
+                        <div class="form-group">
+                            <label>Sale Date</label>
+                            <input type="date" name="last_sale_date">
+                        </div>
+                        <div class="form-group">
+                            <label>Sale Venue</label>
+                            <input type="text" name="last_sale_venue" placeholder="e.g., The Sporting Art Auction">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Sale Record URL</label>
+                        <input type="url" name="last_sale_url" placeholder="https://...">
+                    </div>
+                </div>
+
+                <!-- Source & Research Section -->
+                <div class="form-section">
+                    <h4>Source & Research</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Location Found</label>
+                            <input type="text" name="location" placeholder="e.g., Madison, CT">
+                        </div>
+                        <div class="form-group">
+                            <label>Image URL</label>
+                            <input type="url" name="image_url" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Listing URL</label>
+                            <input type="url" name="source_listing_url" placeholder="https://... (where to buy)">
+                        </div>
+                        <div class="form-group">
+                            <label>Source URL</label>
+                            <input type="url" name="source_url" placeholder="https://... (original source)">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Research Source URL</label>
+                            <input type="url" name="research_source_url" placeholder="https://... (where we found info)">
+                        </div>
+                        <div class="form-group">
+                            <label>Research Notes</label>
+                            <input type="text" name="research_notes" placeholder="e.g., Found via Invaluable auction records">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>General Notes</label>
+                        <textarea name="notes" placeholder="Any additional notes..."></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Add Artwork</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let selectMode = false;
+        let selectedIds = new Set();
+        let searchTimeout = null;
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const stats = await response.json();
+                document.getElementById('stat-total').textContent = stats.total;
+                document.getElementById('stat-new').textContent = stats.new;
+                document.getElementById('stat-verified').textContent = stats.verified;
+                document.getElementById('stat-acquired').textContent = stats.acquired;
+            } catch (e) {
+                console.error('Failed to load stats:', e);
+            }
+        }
+
+        async function loadArtworks() {
+            const grid = document.getElementById('artwork-grid');
+            const loading = document.getElementById('loading');
+            const emptyState = document.getElementById('empty-state');
+
+            const status = document.getElementById('filter-status').value;
+            const verified = document.getElementById('filter-verified').value;
+            const artType = document.getElementById('filter-art-type').value;
+            const showFalsePositives = document.getElementById('filter-false-positives').checked;
+            const search = document.getElementById('search-input').value.trim();
+
+            grid.innerHTML = '';
+            loading.style.display = 'flex';
+            emptyState.style.display = 'none';
+
+            try {
+                let url = `${API_BASE}/artworks?limit=100&sort_by=images_first`;
+                if (status) url += `&status=${status}`;
+                if (verified === 'verified') url += '&verified_only=true';
+                if (artType) url += `&art_type=${encodeURIComponent(artType)}`;
+                if (showFalsePositives) url += '&include_false_positives=true';
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+
+                const response = await fetch(url);
+                const artworks = await response.json();
+
+                loading.style.display = 'none';
+
+                if (artworks.length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                artworks.forEach(artwork => {
+                    grid.appendChild(createArtworkCard(artwork));
+                });
+
+            } catch (e) {
+                loading.style.display = 'none';
+                showToast('Failed to load artworks', true);
+                console.error(e);
+            }
+        }
+
+        function handleSearch(event) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadArtworks();
+            }, 300);
+        }
+
+        function getViewButton(artwork) {
+            const url = artwork.source_url || '';
+
+            // For manual entries (our seeded database), link to Susan Powell gallery
+            if (url.startsWith('manual://')) {
+                return `<button class="btn-view" onclick="window.open('https://susanpowellfineart.com/artist/dan-brown', '_blank')">Gallery &rarr;</button>`;
+            }
+
+            // For real URLs, show the View button
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return `<button class="btn-view" onclick="window.open('${url}', '_blank')">View &rarr;</button>`;
+            }
+
+            // No valid URL - don't show a button
+            return '';
+        }
+
+        function createArtworkCard(artwork) {
+            const card = document.createElement('div');
+            card.className = 'artwork-card' + (selectedIds.has(artwork.id) ? ' selected' : '');
+            card.dataset.id = artwork.id;
+
+            const confidenceClass = artwork.confidence_score >= 3 ? 'high' :
+                                   artwork.confidence_score >= 1 ? 'medium' : 'low';
+
+            const signals = artwork.positive_signals ?
+                Object.keys(artwork.positive_signals).slice(0, 4) : [];
+
+            const checkboxHtml = selectMode ?
+                `<input type="checkbox" class="artwork-checkbox" ${selectedIds.has(artwork.id) ? 'checked' : ''} onclick="toggleSelection(${artwork.id}, event)">` : '';
+
+            card.innerHTML = `
+                ${checkboxHtml}
+                <a href="/artwork/${artwork.id}" style="text-decoration: none; color: inherit;">
+                    <img class="artwork-image"
+                         src="${artwork.primary_image_url || '/api/static/placeholder.png'}"
+                         alt="${artwork.title}"
+                         onerror="this.src='/api/static/placeholder.svg'">
+                </a>
+                <div class="artwork-info">
+                    <h3 class="artwork-title"><a href="/artwork/${artwork.id}" style="text-decoration: none; color: inherit;">${escapeHtml(artwork.title)}</a></h3>
+                    <div class="artwork-meta">
+                        <span class="artwork-price">${artwork.price ? '$' + artwork.price.toLocaleString() : 'Price N/A'}</span>
+                        <span>${artwork.source_platform}</span>
+                        <span>${artwork.location || 'Location unknown'}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <span class="artwork-confidence confidence-${confidenceClass}">
+                            Score: ${artwork.confidence_score.toFixed(1)}
+                        </span>
+                        ${artwork.is_verified ? '<span class="verified-badge">&check; Verified</span>' : ''}
+                    </div>
+                    ${signals.length > 0 ? `
+                        <div class="artwork-signals">
+                            ${signals.map(s => `<span class="signal-tag">${escapeHtml(s)}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="artwork-actions">
+                        ${!artwork.is_verified ? `
+                            <button class="btn-verify" onclick="verifyArtwork(${artwork.id})">&check; Verify</button>
+                            <button class="btn-reject" onclick="rejectArtwork(${artwork.id})">&cross; False +</button>
+                        ` : ''}
+                        ${getViewButton(artwork)}
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function verifyArtwork(id) {
+            try {
+                await fetch(`${API_BASE}/artworks/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_verified: true })
+                });
+                showToast('Artwork verified as Dan Brown');
+                loadArtworks();
+                loadStats();
+            } catch (e) {
+                showToast('Failed to verify artwork', true);
+            }
+        }
+
+        async function rejectArtwork(id) {
+            try {
+                await fetch(`${API_BASE}/artworks/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ is_false_positive: true })
+                });
+                showToast('Marked as false positive');
+                loadArtworks();
+                loadStats();
+            } catch (e) {
+                showToast('Failed to reject artwork', true);
+            }
+        }
+
+        async function runScraper() {
+            showToast('Starting scraper...');
+            try {
+                const response = await fetch(`${API_BASE}/scrape`, { method: 'POST' });
+                const result = await response.json();
+                showToast(`Scraper complete: ${result.new_artworks} new artworks found`);
+                loadArtworks();
+                loadStats();
+            } catch (e) {
+                showToast('Scraper failed', true);
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Event listeners
+        document.getElementById('filter-status').addEventListener('change', loadArtworks);
+        document.getElementById('filter-verified').addEventListener('change', loadArtworks);
+        document.getElementById('filter-art-type').addEventListener('change', loadArtworks);
+        document.getElementById('filter-false-positives').addEventListener('change', loadArtworks);
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(tabName)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            // Load gallery if switching to it
+            if (tabName === 'gallery') {
+                loadGallery();
+            }
+
+            // Load biography if switching to it
+            if (tabName === 'biography') {
+                loadBiography();
+            }
+        }
+
+        // Gallery functionality
+        let galleryArtworks = [];
+        let currentLightboxIndex = 0;
+
+        async function loadGallery() {
+            const grid = document.getElementById('gallery-grid');
+            const countEl = document.getElementById('gallery-count');
+            const filter = document.getElementById('gallery-filter').value;
+
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/artworks/?limit=100`);
+                let artworks = await response.json();
+
+                // Filter to only artworks with images
+                artworks = artworks.filter(a => a.primary_image_url);
+
+                // Apply category filter
+                if (filter !== 'all') {
+                    artworks = artworks.filter(a => {
+                        const title = a.title.toLowerCase();
+                        const signals = a.positive_signals || {};
+                        const category = (signals.category || '').toLowerCase();
+
+                        switch (filter) {
+                            case 'currency':
+                                return category === 'currency' ||
+                                       title.includes('dollar') ||
+                                       title.includes('lincoln') ||
+                                       title.includes('hamilton') ||
+                                       title.includes('washington') ||
+                                       title.includes('ones') ||
+                                       title.includes('fives') ||
+                                       title.includes('bens') ||
+                                       title.includes('folded') ||
+                                       title.includes('certificate');
+                            case 'postcards':
+                                return category.includes('nantucket') ||
+                                       category.includes('madison') ||
+                                       title.includes('postcard') ||
+                                       title.includes('nantucket') ||
+                                       title.includes('madison') ||
+                                       title.includes('greetings') ||
+                                       title.includes('hawthorne');
+                            case 'landscapes':
+                                return category === 'coastal' ||
+                                       category === 'winter' ||
+                                       category === 'architecture' ||
+                                       category === 'connecticut' ||
+                                       title.includes('sunrise') ||
+                                       title.includes('bay') ||
+                                       title.includes('belfry') ||
+                                       title.includes('cottage') ||
+                                       title.includes('rock point') ||
+                                       title.includes('dune');
+                            case 'stilllife':
+                                return category === 'still life' ||
+                                       category === 'ephemera' ||
+                                       title.includes('envelope') ||
+                                       title.includes('silk') ||
+                                       title.includes('bowler') ||
+                                       title.includes('roaster') ||
+                                       title.includes('goose') ||
+                                       title.includes('basket') ||
+                                       title.includes('eggcup') ||
+                                       title.includes('shelf') ||
+                                       title.includes('cupboard');
+                            case 'newyork':
+                                return category.includes('new york') ||
+                                       title.includes('central park') ||
+                                       title.includes('new york') ||
+                                       title.includes('nyc') ||
+                                       title.includes('manhattan');
+                            case 'rack':
+                                return title.includes('rack') ||
+                                       title.includes('taped') ||
+                                       title.includes('bulletin') ||
+                                       category === 'ephemera';
+                            default:
+                                return true;
+                        }
+                    });
+                }
+
+                galleryArtworks = artworks;
+                countEl.textContent = `${artworks.length} artwork${artworks.length !== 1 ? 's' : ''} with images`;
+
+                if (artworks.length === 0) {
+                    grid.innerHTML = '<div class="empty-state"><h2>No artworks with images</h2><p>Run the image update script to populate gallery.</p></div>';
+                    return;
+                }
+
+                grid.innerHTML = artworks.map((artwork, index) => `
+                    <a href="/artwork/${artwork.id}" class="gallery-item">
+                        <img src="${artwork.primary_image_url}" alt="${escapeHtml(artwork.title)}" loading="lazy">
+                        <div class="overlay">
+                            <div class="title">${escapeHtml(artwork.title)}</div>
+                            <div class="meta">${artwork.positive_signals?.medium || 'Oil'} &middot; ${artwork.positive_signals?.category || 'Artwork'}</div>
+                        </div>
+                    </a>
+                `).join('');
+
+            } catch (e) {
+                grid.innerHTML = '<div class="empty-state"><h2>Failed to load gallery</h2></div>';
+                console.error(e);
+            }
+        }
+
+        function openLightbox(index) {
+            currentLightboxIndex = index;
+            updateLightbox();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function navigateLightbox(direction, event) {
+            if (event) event.stopPropagation();
+            currentLightboxIndex += direction;
+            if (currentLightboxIndex < 0) currentLightboxIndex = galleryArtworks.length - 1;
+            if (currentLightboxIndex >= galleryArtworks.length) currentLightboxIndex = 0;
+            updateLightbox();
+        }
+
+        function updateLightbox() {
+            const artwork = galleryArtworks[currentLightboxIndex];
+            if (!artwork) return;
+
+            // Use higher resolution image
+            const highResUrl = artwork.primary_image_url.replace('w_320,h_320', 'w_1200,h_1200').replace('w_800,h_800', 'w_1200,h_1200');
+
+            document.getElementById('lightbox-img').src = highResUrl;
+            document.getElementById('lightbox-title').textContent = artwork.title;
+
+            const signals = artwork.positive_signals || {};
+            document.getElementById('lightbox-meta').textContent =
+                `${signals.medium || 'Oil'} \u00B7 ${signals.category || 'Artwork'} \u00B7 ${currentLightboxIndex + 1} of ${galleryArtworks.length}`;
+        }
+
+        // Keyboard navigation for lightbox
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+        });
+
+        // Gallery filter change
+        document.getElementById('gallery-filter').addEventListener('change', loadGallery);
+
+        // Selection mode functions
+        function toggleSelectMode() {
+            selectMode = document.getElementById('select-mode').checked;
+            document.getElementById('bulk-controls').classList.toggle('active', selectMode);
+            if (!selectMode) {
+                selectedIds.clear();
+                updateSelectionCount();
+            }
+            loadArtworks();
+        }
+
+        function toggleSelection(id, event) {
+            event.stopPropagation();
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+            } else {
+                selectedIds.add(id);
+            }
+            const card = document.querySelector(`.artwork-card[data-id="${id}"]`);
+            if (card) {
+                card.classList.toggle('selected', selectedIds.has(id));
+            }
+            updateSelectionCount();
+        }
+
+        function updateSelectionCount() {
+            document.getElementById('selected-count').textContent = `${selectedIds.size} selected`;
+        }
+
+        function clearSelection() {
+            selectedIds.clear();
+            document.querySelectorAll('.artwork-card.selected').forEach(card => {
+                card.classList.remove('selected');
+                const checkbox = card.querySelector('.artwork-checkbox');
+                if (checkbox) checkbox.checked = false;
+            });
+            updateSelectionCount();
+        }
+
+        async function bulkVerify() {
+            if (selectedIds.size === 0) {
+                showToast('No artworks selected', true);
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/artworks/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        artwork_ids: Array.from(selectedIds),
+                        action: 'verify'
+                    })
+                });
+                const result = await response.json();
+                showToast(result.message);
+                clearSelection();
+                loadArtworks();
+                loadStats();
+            } catch (e) {
+                showToast('Bulk verify failed', true);
+            }
+        }
+
+        async function bulkReject() {
+            if (selectedIds.size === 0) {
+                showToast('No artworks selected', true);
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/artworks/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        artwork_ids: Array.from(selectedIds),
+                        action: 'reject'
+                    })
+                });
+                const result = await response.json();
+                showToast(result.message);
+                clearSelection();
+                loadArtworks();
+                loadStats();
+            } catch (e) {
+                showToast('Bulk reject failed', true);
+            }
+        }
+
+        // Add artwork modal functions
+        function openAddModal() {
+            document.getElementById('add-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('add-modal').classList.remove('active');
+            document.body.style.overflow = '';
+            document.getElementById('add-artwork-form').reset();
+        }
+
+        async function submitArtwork(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            // Helper function to parse boolean values
+            const parseBoolean = (value) => {
+                if (value === 'true') return true;
+                if (value === 'false') return false;
+                return null;
+            };
+
+            const data = {
+                // Basic info
+                title: formData.get('title'),
+                description: formData.get('description') || null,
+
+                // Physical details
+                medium: formData.get('medium') || null,
+                category: formData.get('category') || null,
+                dimensions: formData.get('dimensions') || null,
+                dimensions_cm: formData.get('dimensions_cm') || null,
+                subject_matter: formData.get('subject_matter') || null,
+
+                // Dating & signature
+                year_created: formData.get('year_created') ? parseInt(formData.get('year_created')) : null,
+                year_created_circa: formData.get('year_created_circa') === 'true',
+                signed: formData.get('signed') || null,
+                inscription: formData.get('inscription') || null,
+
+                // Condition & framing
+                condition: formData.get('condition') || null,
+                framed: parseBoolean(formData.get('framed')),
+                frame_description: formData.get('frame_description') || null,
+
+                // Provenance & history
+                provenance: formData.get('provenance') || null,
+                exhibition_history: formData.get('exhibition_history') || null,
+                literature: formData.get('literature') || null,
+
+                // Acquisition info
+                price: formData.get('price') ? parseFloat(formData.get('price')) : null,
+                acquisition_priority: formData.get('acquisition_priority') ? parseInt(formData.get('acquisition_priority')) : null,
+                estimated_value: formData.get('estimated_value') ? parseFloat(formData.get('estimated_value')) : null,
+                last_known_owner: formData.get('last_known_owner') || null,
+                current_location: formData.get('current_location') || null,
+                acquisition_notes: formData.get('acquisition_notes') || null,
+
+                // Last sale record
+                last_sale_price: formData.get('last_sale_price') ? parseFloat(formData.get('last_sale_price')) : null,
+                last_sale_date: formData.get('last_sale_date') || null,
+                last_sale_venue: formData.get('last_sale_venue') || null,
+                last_sale_url: formData.get('last_sale_url') || null,
+
+                // Source & research
+                location: formData.get('location') || null,
+                image_url: formData.get('image_url') || null,
+                source_url: formData.get('source_url') || null,
+                source_listing_url: formData.get('source_listing_url') || null,
+                research_source_url: formData.get('research_source_url') || null,
+                research_notes: formData.get('research_notes') || null,
+                notes: formData.get('notes') || null,
+                is_verified: true
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/artworks/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to add artwork');
+                }
+
+                const result = await response.json();
+                showToast(`Added: ${result.title}`);
+                closeAddModal();
+                loadArtworks();
+                loadStats();
+            } catch (e) {
+                showToast(e.message, true);
+            }
+        }
+
+        // Biography functionality
+        let biographyLoaded = false;
+
+        async function loadBiography() {
+            // Only load once
+            if (biographyLoaded) return;
+
+            const contentEl = document.getElementById('biography-content');
+
+            try {
+                const response = await fetch(`${API_BASE}/biography`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to load biography');
+                }
+
+                const data = await response.json();
+
+                // Render the biography content (HTML)
+                contentEl.innerHTML = data.content;
+                biographyLoaded = true;
+            } catch (error) {
+                console.error('Error loading biography:', error);
+                contentEl.innerHTML = `
+                    <div class="biography-loading">
+                        <p style="color: var(--danger);">Failed to load biography. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initial load
+        loadStats();
+        loadArtworks();
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            loadStats();
+            loadArtworks();
+        }, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

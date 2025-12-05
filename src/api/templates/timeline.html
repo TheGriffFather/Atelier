@@ -1,0 +1,887 @@
+{% extends "base.html" %}
+
+{% block title %}Timeline | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block nav_timeline %}nav-item-active{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    <!-- Page Header -->
+    <header class="sticky top-0 z-10 bg-gray-850/95 backdrop-blur-sm border-b border-gray-800">
+        <div class="px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-serif font-semibold text-gray-200">Timeline</h1>
+                    <p class="text-sm text-gray-500 mt-1">The life and works of Dan Brown (1949-2022)</p>
+                    <!-- Legend -->
+                    <div class="flex items-center gap-4 mt-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-blue-500/20 border-2 border-blue-400"></span>
+                            <span class="text-xs text-gray-500">Life Events</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-gold-500/20 border-2 border-gold-500"></span>
+                            <span class="text-xs text-gray-500">Artworks</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-3 h-3 rounded-full bg-purple-500/20 border-2 border-purple-400"></span>
+                            <span class="text-xs text-gray-500">Exhibitions</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleViewMode()" id="view-toggle" class="btn-secondary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        <span id="view-mode-text">Compact</span>
+                    </button>
+                    <select id="filter-type" class="form-select py-2" onchange="filterEvents()">
+                        <option value="">All Events</option>
+                        <option value="life">Life Events</option>
+                        <option value="artwork">Artworks</option>
+                        <option value="exhibition">Exhibitions</option>
+                    </select>
+                    <select id="filter-decade" class="form-select py-2" onchange="filterEvents()">
+                        <option value="">All Decades</option>
+                        <option value="1940">1940s</option>
+                        <option value="1950">1950s</option>
+                        <option value="1960">1960s</option>
+                        <option value="1970">1970s</option>
+                        <option value="1980">1980s</option>
+                        <option value="1990">1990s</option>
+                        <option value="2000">2000s</option>
+                        <option value="2010">2010s</option>
+                        <option value="2020">2020s</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Timeline Container -->
+    <div class="px-6 lg:px-8 py-8">
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="spinner"></div>
+            <p class="mt-4 text-sm text-gray-500">Loading timeline...</p>
+        </div>
+
+        <!-- Timeline -->
+        <div id="timeline-container" class="hidden relative">
+            <!-- Timeline Line -->
+            <div class="timeline-line"></div>
+
+            <!-- Timeline Content -->
+            <div id="timeline-content">
+                <!-- Events will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-300 mb-2">No dated artworks found</h3>
+            <p class="text-sm text-gray-500">Add dates to artworks to see them on the timeline.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Artwork Preview Tooltip -->
+<div id="artwork-tooltip" class="artwork-tooltip">
+    <img id="tooltip-image" src="" alt="" class="tooltip-image">
+    <div class="tooltip-info">
+        <h4 id="tooltip-title" class="tooltip-title"></h4>
+        <p id="tooltip-meta" class="tooltip-meta"></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Timeline base styles */
+    .timeline-line {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, transparent, rgba(197, 160, 101, 0.3) 5%, rgba(197, 160, 101, 0.3) 95%, transparent);
+        transform: translateX(-50%);
+    }
+
+    @media (max-width: 768px) {
+        .timeline-line {
+            left: 24px;
+        }
+    }
+
+    /* Timeline decade markers */
+    .decade-marker {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 3rem 0 2rem;
+    }
+
+    .decade-marker::before,
+    .decade-marker::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, transparent, rgba(197, 160, 101, 0.2));
+    }
+
+    .decade-marker::after {
+        background: linear-gradient(to left, transparent, rgba(197, 160, 101, 0.2));
+    }
+
+    .decade-label {
+        padding: 0.5rem 1.5rem;
+        background: rgba(197, 160, 101, 0.1);
+        border: 1px solid rgba(197, 160, 101, 0.3);
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #C5A065;
+        white-space: nowrap;
+    }
+
+    /* Timeline event */
+    .timeline-event {
+        position: relative;
+        display: flex;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .timeline-event:nth-child(odd) {
+        flex-direction: row;
+        padding-right: calc(50% + 2rem);
+    }
+
+    .timeline-event:nth-child(even) {
+        flex-direction: row-reverse;
+        padding-left: calc(50% + 2rem);
+    }
+
+    @media (max-width: 768px) {
+        .timeline-event:nth-child(odd),
+        .timeline-event:nth-child(even) {
+            flex-direction: row;
+            padding-left: 3.5rem;
+            padding-right: 0;
+        }
+    }
+
+    /* Timeline node (the dot on the line) */
+    .timeline-node {
+        position: absolute;
+        left: 50%;
+        top: 1.5rem;
+        transform: translateX(-50%);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #1a1b1e;
+        border: 3px solid #C5A065;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-node::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        background: rgba(197, 160, 101, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .timeline-event:hover .timeline-node::after {
+        opacity: 1;
+    }
+
+    .timeline-node.life-event {
+        border-color: #60a5fa;
+        background: #1e3a5f;
+    }
+
+    .timeline-node.artwork {
+        border-color: #C5A065;
+        cursor: pointer;
+    }
+
+    .timeline-node.artwork:hover {
+        transform: translateX(-50%) scale(1.3);
+        box-shadow: 0 0 20px rgba(197, 160, 101, 0.4);
+    }
+
+    .timeline-node.exhibition {
+        border-color: #a78bfa;
+        background: #3b2d5c;
+        cursor: pointer;
+    }
+
+    .timeline-node.exhibition:hover {
+        transform: translateX(-50%) scale(1.3);
+        box-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+    }
+
+    @media (max-width: 768px) {
+        .timeline-node {
+            left: 24px;
+        }
+    }
+
+    /* Timeline card */
+    .timeline-card {
+        flex: 1;
+        background: rgba(26, 27, 31, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-card:hover {
+        border-color: rgba(197, 160, 101, 0.3);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .timeline-card.life-event {
+        border-left: 3px solid #60a5fa;
+    }
+
+    .timeline-card.artwork {
+        border-left: 3px solid #C5A065;
+        cursor: pointer;
+    }
+
+    .timeline-card.exhibition {
+        border-left: 3px solid #a78bfa;
+        cursor: pointer;
+    }
+
+    .timeline-card.exhibition:hover {
+        border-color: rgba(167, 139, 250, 0.5);
+    }
+
+    .timeline-year.exhibition {
+        color: #a78bfa;
+    }
+
+    /* Exhibition badge styles */
+    .exhibition-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .exhibition-badge.solo {
+        background: rgba(167, 139, 250, 0.2);
+        color: #a78bfa;
+    }
+
+    .exhibition-badge.group {
+        background: rgba(96, 165, 250, 0.2);
+        color: #60a5fa;
+    }
+
+    .exhibition-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #666;
+    }
+
+    .exhibition-location {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .exhibition-artwork-count {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: #C5A065;
+    }
+
+    .timeline-year {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #C5A065;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-title {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.125rem;
+        color: #e0e0e0;
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-description {
+        font-size: 0.875rem;
+        color: #909296;
+        line-height: 1.5;
+    }
+
+    /* Artwork preview in timeline */
+    .artwork-preview {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .artwork-preview-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+    }
+
+    .timeline-card:hover .artwork-preview-image {
+        transform: scale(1.05);
+    }
+
+    .artwork-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .artwork-preview-medium {
+        font-size: 0.75rem;
+        color: #666;
+    }
+
+    /* Compact view */
+    .timeline-compact .timeline-event {
+        margin-bottom: 1rem;
+    }
+
+    .timeline-compact .timeline-card {
+        padding: 0.75rem 1rem;
+    }
+
+    .timeline-compact .artwork-preview {
+        display: none;
+    }
+
+    .timeline-compact .timeline-title {
+        font-size: 1rem;
+        margin-bottom: 0.25rem;
+    }
+
+    /* Artwork tooltip */
+    .artwork-tooltip {
+        position: fixed;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.2s, transform 0.2s;
+        background: #1a1b1e;
+        border: 1px solid rgba(197, 160, 101, 0.3);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        max-width: 320px;
+    }
+
+    .artwork-tooltip.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .tooltip-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .tooltip-info {
+        padding: 1rem;
+    }
+
+    .tooltip-title {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1rem;
+        color: #e0e0e0;
+        margin-bottom: 0.25rem;
+    }
+
+    .tooltip-meta {
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    /* Year cluster for artworks with same year */
+    .year-cluster {
+        margin-bottom: 2rem;
+    }
+
+    .year-cluster-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .year-cluster-year {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #C5A065;
+        font-family: 'Playfair Display', Georgia, serif;
+    }
+
+    .year-cluster-count {
+        font-size: 0.75rem;
+        color: #666;
+        background: rgba(197, 160, 101, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+    }
+
+    .year-cluster-artworks {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+
+    .cluster-artwork {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .cluster-artwork:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .cluster-artwork img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .cluster-artwork-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        align-items: flex-end;
+        padding: 0.75rem;
+    }
+
+    .cluster-artwork:hover .cluster-artwork-overlay {
+        opacity: 1;
+    }
+
+    .cluster-artwork-title {
+        font-size: 0.8rem;
+        color: #e0e0e0;
+        line-height: 1.3;
+    }
+</style>
+
+<script>
+    // State
+    let allEvents = [];
+    let filteredEvents = [];
+    let isCompactView = false;
+    let currentDecadeFilter = '';
+    let currentTypeFilter = '';
+
+    // Life events data for Dan Brown
+    const lifeEvents = [
+        { year: 1949, type: 'life', title: 'Birth', description: 'Dan Brown was born in Connecticut.' },
+        { year: 1967, type: 'life', title: 'High School Graduation', description: 'Graduated from high school and began pursuing art.' },
+        { year: 1971, type: 'life', title: 'Art School', description: 'Studied at art school, developing his trompe l\'oeil technique.' },
+        { year: 1975, type: 'life', title: 'Professional Career Begins', description: 'Started working as a professional artist and illustrator.' },
+        { year: 1978, type: 'life', title: 'Commercial Illustration', description: 'Began commercial illustration work, including book covers for major publishers.' },
+        { year: 1985, type: 'life', title: 'Gallery Representation', description: 'Gained representation at Susan Powell Fine Art gallery in Madison, CT.' },
+        { year: 2022, type: 'life', title: 'Passing', description: 'Dan Brown passed away, leaving behind a remarkable body of work.' }
+    ];
+
+    // Load timeline data
+    async function loadTimeline() {
+        const loading = document.getElementById('loading');
+        const container = document.getElementById('timeline-container');
+        const emptyState = document.getElementById('empty-state');
+
+        try {
+            // Fetch artworks and exhibitions in parallel
+            const [artworks, exhibitions] = await Promise.all([
+                API.get('/artworks?limit=200'),
+                API.get('/exhibitions?limit=200')
+            ]);
+
+            // Filter to only artworks with years
+            const datedArtworks = artworks.filter(a => a.year_created || a.year_created_circa);
+
+            // Convert artworks to timeline events
+            const artworkEvents = datedArtworks.map(artwork => ({
+                year: artwork.year_created || artwork.year_created_circa,
+                yearCirca: !!artwork.year_created_circa,
+                type: 'artwork',
+                title: artwork.title,
+                description: artwork.description || '',
+                medium: artwork.medium,
+                imageUrl: artwork.primary_image_url,
+                artworkId: artwork.id,
+                artwork: artwork
+            }));
+
+            // Convert exhibitions to timeline events
+            const exhibitionEvents = exhibitions.map(exhibition => ({
+                year: exhibition.year,
+                type: 'exhibition',
+                title: exhibition.title || exhibition.venue_name,
+                description: exhibition.description || '',
+                venueName: exhibition.venue_name,
+                venueCity: exhibition.venue_city,
+                venueState: exhibition.venue_state,
+                isSolo: exhibition.is_solo,
+                exhibitionType: exhibition.exhibition_type,
+                artworkCount: exhibition.artwork_count || 0,
+                exhibitionId: exhibition.id,
+                exhibition: exhibition
+            }));
+
+            // Combine all events and sort by year
+            allEvents = [...lifeEvents, ...artworkEvents, ...exhibitionEvents].sort((a, b) => a.year - b.year);
+
+            loading.classList.add('hidden');
+
+            if (allEvents.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            filteredEvents = [...allEvents];
+            renderTimeline();
+
+        } catch (e) {
+            console.error('Failed to load timeline:', e);
+            loading.innerHTML = '<p class="text-danger-400">Failed to load timeline</p>';
+        }
+    }
+
+    // Render timeline
+    function renderTimeline() {
+        const content = document.getElementById('timeline-content');
+        let html = '';
+
+        // Group events by decade
+        const decades = {};
+        filteredEvents.forEach(event => {
+            const decade = Math.floor(event.year / 10) * 10;
+            if (!decades[decade]) {
+                decades[decade] = [];
+            }
+            decades[decade].push(event);
+        });
+
+        // Render each decade
+        Object.keys(decades).sort((a, b) => a - b).forEach((decade, decadeIndex) => {
+            // Decade marker
+            html += `
+                <div class="decade-marker" style="animation-delay: ${decadeIndex * 0.1}s;">
+                    <span class="decade-label">${decade}s</span>
+                </div>
+            `;
+
+            // Group events by type within the decade
+            const artworkYearGroups = {};
+            const lifeEventsInDecade = [];
+            const exhibitionsInDecade = [];
+
+            decades[decade].forEach(event => {
+                if (event.type === 'life') {
+                    lifeEventsInDecade.push(event);
+                } else if (event.type === 'exhibition') {
+                    exhibitionsInDecade.push(event);
+                } else {
+                    if (!artworkYearGroups[event.year]) {
+                        artworkYearGroups[event.year] = [];
+                    }
+                    artworkYearGroups[event.year].push(event);
+                }
+            });
+
+            // Render life events first
+            lifeEventsInDecade.forEach((event, eventIndex) => {
+                html += renderTimelineEvent(event, eventIndex);
+            });
+
+            // Get all years with events (artworks and exhibitions)
+            const artworkYears = Object.keys(artworkYearGroups).map(Number);
+            const exhibitionYears = exhibitionsInDecade.map(e => e.year);
+            const allYears = [...new Set([...artworkYears, ...exhibitionYears])].sort((a, b) => a - b);
+
+            // Render in chronological order by year
+            allYears.forEach(year => {
+                // Render exhibitions for this year
+                const exhibitionsThisYear = exhibitionsInDecade.filter(e => e.year === year);
+                exhibitionsThisYear.forEach((event, eventIndex) => {
+                    html += renderTimelineEvent(event, eventIndex);
+                });
+
+                // Render artwork year clusters
+                const artworks = artworkYearGroups[year];
+                if (artworks) {
+                    if (artworks.length === 1) {
+                        // Single artwork - render as regular event
+                        html += renderTimelineEvent(artworks[0], 0);
+                    } else {
+                        // Multiple artworks - render as cluster
+                        html += renderYearCluster(year, artworks);
+                    }
+                }
+            });
+        });
+
+        content.innerHTML = html;
+
+        // Add hover listeners for artwork tooltips
+        document.querySelectorAll('[data-artwork-id]').forEach(el => {
+            el.addEventListener('mouseenter', showTooltip);
+            el.addEventListener('mousemove', moveTooltip);
+            el.addEventListener('mouseleave', hideTooltip);
+        });
+    }
+
+    // Render single timeline event
+    function renderTimelineEvent(event, index) {
+        const isLife = event.type === 'life';
+        const isExhibition = event.type === 'exhibition';
+        const isArtwork = event.type === 'artwork';
+        const yearDisplay = event.yearCirca ? `c. ${event.year}` : event.year;
+
+        // Build location string for exhibitions
+        let locationStr = '';
+        if (isExhibition) {
+            const parts = [event.venueCity, event.venueState].filter(Boolean);
+            locationStr = parts.join(', ');
+        }
+
+        return `
+            <div class="timeline-event" style="animation-delay: ${index * 0.05}s;">
+                <div class="timeline-node ${event.type}"
+                     ${isArtwork ? `data-artwork-id="${event.artworkId}" data-image="${event.imageUrl || ''}" data-title="${escapeHtml(event.title)}" data-medium="${escapeHtml(event.medium || '')}"` : ''}
+                     ${isArtwork ? `onclick="window.location.href='/artwork/${event.artworkId}'"` : ''}>
+                </div>
+                <div class="timeline-card ${event.type}"
+                     ${isArtwork ? `onclick="window.location.href='/artwork/${event.artworkId}'"` : ''}>
+                    <div class="timeline-year ${event.type}">${yearDisplay}</div>
+                    <h3 class="timeline-title">${escapeHtml(event.title)}</h3>
+                    ${event.description ? `<p class="timeline-description">${escapeHtml(event.description)}</p>` : ''}
+                    ${isExhibition ? `
+                        <div class="exhibition-meta">
+                            <span class="exhibition-badge ${event.isSolo ? 'solo' : 'group'}">
+                                ${event.isSolo ? 'Solo Show' : 'Group Show'}
+                            </span>
+                            ${event.venueName && event.venueName !== event.title ? `
+                                <span class="exhibition-location">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    ${escapeHtml(event.venueName)}
+                                </span>
+                            ` : ''}
+                            ${locationStr ? `
+                                <span class="text-gray-500">${escapeHtml(locationStr)}</span>
+                            ` : ''}
+                            ${event.artworkCount > 0 ? `
+                                <span class="exhibition-artwork-count">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    ${event.artworkCount} artwork${event.artworkCount > 1 ? 's' : ''}
+                                </span>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                    ${isArtwork && event.imageUrl ? `
+                        <div class="artwork-preview">
+                            <img src="${event.imageUrl}" alt="${escapeHtml(event.title)}" class="artwork-preview-image" loading="lazy">
+                            <div class="artwork-preview-info">
+                                ${event.medium ? `<p class="artwork-preview-medium">${escapeHtml(event.medium)}</p>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Render year cluster for multiple artworks
+    function renderYearCluster(year, artworks) {
+        const artworksWithImages = artworks.filter(a => a.imageUrl);
+        const artworksWithoutImages = artworks.filter(a => !a.imageUrl);
+
+        return `
+            <div class="year-cluster">
+                <div class="year-cluster-header">
+                    <span class="year-cluster-year">${year}</span>
+                    <span class="year-cluster-count">${artworks.length} artwork${artworks.length > 1 ? 's' : ''}</span>
+                </div>
+                ${artworksWithImages.length > 0 ? `
+                    <div class="year-cluster-artworks">
+                        ${artworksWithImages.map(artwork => `
+                            <div class="cluster-artwork"
+                                 onclick="window.location.href='/artwork/${artwork.artworkId}'"
+                                 data-artwork-id="${artwork.artworkId}"
+                                 data-image="${artwork.imageUrl}"
+                                 data-title="${escapeHtml(artwork.title)}"
+                                 data-medium="${escapeHtml(artwork.medium || '')}">
+                                <img src="${artwork.imageUrl}" alt="${escapeHtml(artwork.title)}" loading="lazy">
+                                <div class="cluster-artwork-overlay">
+                                    <span class="cluster-artwork-title">${escapeHtml(artwork.title)}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                ${artworksWithoutImages.length > 0 ? `
+                    <div class="mt-3 space-y-2">
+                        ${artworksWithoutImages.map(artwork => `
+                            <a href="/artwork/${artwork.artworkId}" class="block text-sm text-gray-400 hover:text-gold-500 transition-colors">
+                                ${escapeHtml(artwork.title)}
+                            </a>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Tooltip functions
+    function showTooltip(e) {
+        const el = e.currentTarget;
+        const imageUrl = el.dataset.image;
+        const title = el.dataset.title;
+        const medium = el.dataset.medium;
+
+        if (!imageUrl) return;
+
+        const tooltip = document.getElementById('artwork-tooltip');
+        document.getElementById('tooltip-image').src = imageUrl;
+        document.getElementById('tooltip-title').textContent = title;
+        document.getElementById('tooltip-meta').textContent = medium || 'Artwork';
+
+        tooltip.classList.add('visible');
+        moveTooltip(e);
+    }
+
+    function moveTooltip(e) {
+        const tooltip = document.getElementById('artwork-tooltip');
+        const padding = 20;
+        let x = e.clientX + padding;
+        let y = e.clientY + padding;
+
+        // Keep tooltip in viewport
+        const rect = tooltip.getBoundingClientRect();
+        if (x + rect.width > window.innerWidth) {
+            x = e.clientX - rect.width - padding;
+        }
+        if (y + rect.height > window.innerHeight) {
+            y = e.clientY - rect.height - padding;
+        }
+
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+    }
+
+    function hideTooltip() {
+        document.getElementById('artwork-tooltip').classList.remove('visible');
+    }
+
+    // Toggle view mode
+    function toggleViewMode() {
+        isCompactView = !isCompactView;
+        const container = document.getElementById('timeline-container');
+        const text = document.getElementById('view-mode-text');
+
+        container.classList.toggle('timeline-compact', isCompactView);
+        text.textContent = isCompactView ? 'Expanded' : 'Compact';
+    }
+
+    // Filter events by type and decade
+    function filterEvents() {
+        const decade = document.getElementById('filter-decade').value;
+        const type = document.getElementById('filter-type').value;
+        currentDecadeFilter = decade;
+        currentTypeFilter = type;
+
+        filteredEvents = allEvents.filter(event => {
+            // Type filter
+            if (type && event.type !== type) {
+                return false;
+            }
+
+            // Decade filter
+            if (decade) {
+                const decadeStart = parseInt(decade);
+                const decadeEnd = decadeStart + 9;
+                if (event.year < decadeStart || event.year > decadeEnd) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        renderTimeline();
+    }
+
+    // Legacy function for backward compatibility
+    function filterByDecade() {
+        filterEvents();
+    }
+
+    // Initialize
+    loadTimeline();
+</script>
+{% endblock %}

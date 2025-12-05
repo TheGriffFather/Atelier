@@ -1,0 +1,684 @@
+{% extends "base.html" %}
+
+{% block title %}Display Frame | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block nav_display %}nav-item-active{% endblock %}
+
+{% block content %}
+<div class="h-full flex overflow-hidden">
+    <!-- Left Panel - Frame Preview -->
+    <div class="flex-1 bg-gray-900 flex flex-col items-center justify-center p-6 lg:p-8 relative min-w-0 overflow-hidden">
+        <!-- Spotlight effect -->
+        <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(40, 45, 55, 0.4) 0%, rgba(20, 22, 28, 0.7) 40%, rgba(10, 10, 12, 1) 70%);"></div>
+
+        <!-- Frame Container - fills available space -->
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full">
+            <div id="frame-container" class="frame-preview-wood">
+                <div class="frame-inner">
+                    <img id="preview-image" src="" alt="" class="preview-image">
+                </div>
+            </div>
+
+            <!-- Title Overlay -->
+            <div id="frame-info" class="mt-4 text-center opacity-100 transition-opacity duration-300 flex-shrink-0">
+                <p id="frame-title" class="text-xl font-serif text-gray-200">Loading...</p>
+                <p class="text-sm text-gold-500 mt-1">Dan Brown (1949-2022)</p>
+            </div>
+        </div>
+
+        <!-- Fullscreen Button -->
+        <button onclick="enterFullscreen()" class="absolute top-4 right-4 btn-icon bg-gray-800/80 hover:bg-gray-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Right Panel - Settings -->
+    <div class="w-[420px] flex-shrink-0 bg-gray-850 border-l border-gray-800 overflow-y-auto no-scrollbar">
+        <div class="p-6 space-y-6">
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-serif font-semibold text-gray-200">Display Settings</h1>
+                <button onclick="launchFrame()" class="btn-ghost py-1.5 px-3 text-sm border border-gold-500/50 text-gold-500 hover:bg-gold-500/10 hover:border-gold-500 rounded-lg transition-all flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Launch Frame
+                </button>
+            </div>
+
+            <!-- Display Status - Circular Progress -->
+            <div class="glass-card p-5">
+                <h3 class="text-sm font-medium text-gray-400 mb-4">Display Status</h3>
+                <div class="flex items-center justify-around">
+                    <!-- Active Artworks -->
+                    <div class="text-center">
+                        <div class="circular-stat mx-auto">
+                            <svg viewBox="0 0 36 36" class="w-20 h-20">
+                                <path class="text-gray-700" stroke="currentColor" stroke-width="3" fill="none"
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="active-ring" class="text-gold-500" stroke="currentColor" stroke-width="3" fill="none"
+                                      stroke-linecap="round" stroke-dasharray="75, 100"
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span id="stat-selected" class="text-2xl font-serif text-gray-200">--</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Active Artworks</p>
+                    </div>
+
+                    <!-- Next Rotation -->
+                    <div class="text-center">
+                        <div class="circular-stat mx-auto">
+                            <svg viewBox="0 0 36 36" class="w-20 h-20">
+                                <path class="text-gray-700" stroke="currentColor" stroke-width="3" fill="none"
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path id="rotation-ring" class="text-success-500" stroke="currentColor" stroke-width="3" fill="none"
+                                      stroke-linecap="round" stroke-dasharray="45, 100"
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span id="stat-interval" class="text-xl font-serif text-gray-200">--</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Next Rotation</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Frame Style -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Frame Style</h3>
+                <div class="flex items-center gap-3">
+                    <label class="frame-style-option active" data-style="wood">
+                        <input type="radio" name="frame_style" value="wood" class="sr-only" checked onchange="updateFrameStyle()">
+                        <div class="frame-thumb frame-thumb-wood">
+                            <div class="frame-thumb-inner"></div>
+                        </div>
+                    </label>
+                    <label class="frame-style-option" data-style="gold">
+                        <input type="radio" name="frame_style" value="gold" class="sr-only" onchange="updateFrameStyle()">
+                        <div class="frame-thumb frame-thumb-gold">
+                            <div class="frame-thumb-inner"></div>
+                        </div>
+                    </label>
+                    <label class="frame-style-option" data-style="black">
+                        <input type="radio" name="frame_style" value="black" class="sr-only" onchange="updateFrameStyle()">
+                        <div class="frame-thumb frame-thumb-black">
+                            <div class="frame-thumb-inner"></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Rotation Interval -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Rotation Interval</h3>
+                <select id="rotation-interval" class="form-select w-full" onchange="updateInterval()">
+                    <option value="30">30 seconds</option>
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                    <option value="600">10 minutes</option>
+                    <option value="1800">30 minutes</option>
+                    <option value="3600" selected>1 Hour</option>
+                    <option value="7200">2 hours</option>
+                    <option value="14400">4 hours</option>
+                    <option value="86400">1 day</option>
+                </select>
+            </div>
+
+            <!-- Toggle Options -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-300">Show Title Overlay</span>
+                    <button id="toggle-title" class="toggle active" onclick="toggleSetting('title')">
+                        <span class="toggle-knob"></span>
+                    </button>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-300">Verified Works Only</span>
+                    <button id="toggle-verified" class="toggle active" onclick="toggleSetting('verified')">
+                        <span class="toggle-knob"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Artwork Selection -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Artwork Selection</h3>
+                <div id="artwork-loading" class="flex items-center justify-center py-8">
+                    <div class="spinner"></div>
+                </div>
+                <div id="artwork-grid" class="hidden grid grid-cols-4 gap-2 max-h-[280px] overflow-y-auto no-scrollbar">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Sticky Save Button -->
+        <div class="sticky bottom-0 bg-gray-850 border-t border-gray-800 p-4">
+            <button onclick="saveSettings()" class="w-full py-3 bg-gold-500 hover:bg-gold-600 text-gray-900 font-semibold rounded-lg transition-colors">
+                Save Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Overlay -->
+<div id="fullscreen" class="lightbox">
+    <button class="absolute top-4 right-4 btn-icon bg-gray-800/80 hover:bg-gray-700" onclick="exitFullscreen()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+
+    <button class="absolute left-4 top-1/2 -translate-y-1/2 btn-icon bg-gray-800/80 hover:bg-gray-700 w-12 h-12" onclick="prevArtwork()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </button>
+
+    <div class="text-center">
+        <img id="fullscreen-image" src="" alt="" class="max-h-[80vh] max-w-[90vw] object-contain rounded-lg">
+        <p id="fullscreen-title" class="text-xl font-serif mt-4 text-gray-200">-</p>
+        <p class="text-sm text-gold-500 mt-1">Dan Brown (1949-2022)</p>
+    </div>
+
+    <button class="absolute right-4 top-1/2 -translate-y-1/2 btn-icon bg-gray-800/80 hover:bg-gray-700 w-12 h-12" onclick="nextArtwork()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Toggle switch - concept art style */
+    .toggle {
+        @apply relative w-12 h-6 bg-gray-700 rounded-full cursor-pointer transition-colors;
+    }
+    .toggle.active {
+        @apply bg-gold-500;
+    }
+    .toggle-knob {
+        @apply absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .toggle.active .toggle-knob {
+        @apply translate-x-6;
+    }
+
+    /* Frame style option */
+    .frame-style-option {
+        @apply relative w-16 h-16 rounded-lg border-2 border-gray-700 cursor-pointer transition-all overflow-hidden;
+        @apply hover:border-gray-500;
+    }
+    .frame-style-option.active {
+        @apply border-gold-500;
+        box-shadow: 0 0 12px rgba(197, 160, 101, 0.3);
+    }
+
+    /* Realistic frame thumbnails */
+    .frame-thumb {
+        @apply w-full h-full flex items-center justify-center;
+        padding: 6px;
+    }
+    .frame-thumb-inner {
+        @apply w-full h-full bg-gray-900;
+    }
+
+    /* Wood frame thumbnail */
+    .frame-thumb-wood {
+        background:
+            repeating-linear-gradient(
+                90deg,
+                #5a4738 0px,
+                #4a3728 2px,
+                #6a5748 4px,
+                #5a4738 6px
+            ),
+            linear-gradient(135deg, #5a4738 0%, #3d2d22 50%, #4a3728 100%);
+        box-shadow:
+            inset 1px 1px 3px rgba(255,255,255,0.1),
+            inset -1px -1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* Gold frame thumbnail */
+    .frame-thumb-gold {
+        background:
+            linear-gradient(135deg, #d4a94d 0%, #8b6914 30%, #d4a94d 50%, #8b6914 70%, #d4a94d 100%);
+        box-shadow:
+            inset 1px 1px 3px rgba(255,255,255,0.4),
+            inset -1px -1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* Black frame thumbnail */
+    .frame-thumb-black {
+        background: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 50%, #2a2a2a 100%);
+        box-shadow:
+            inset 1px 1px 3px rgba(255,255,255,0.05),
+            inset -1px -1px 3px rgba(0,0,0,0.3);
+    }
+
+    /* Frame preview styles - realistic wooden frame */
+    .frame-preview-wood {
+        @apply relative;
+        padding: 20px;
+        background: linear-gradient(135deg, #5a4738 0%, #3d2d22 50%, #4a3728 100%);
+        border-radius: 4px;
+        box-shadow:
+            inset 2px 2px 6px rgba(255,255,255,0.1),
+            inset -2px -2px 6px rgba(0,0,0,0.3),
+            0 20px 60px rgba(0,0,0,0.6),
+            0 0 0 4px #3d2d22,
+            0 0 0 6px #5a4738;
+    }
+    .frame-preview-wood .frame-inner {
+        background: #1a1a1a;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .frame-preview-gold {
+        @apply relative;
+        padding: 20px;
+        background: linear-gradient(135deg, #d4a94d 0%, #8b6914 50%, #b8860b 100%);
+        border-radius: 4px;
+        box-shadow:
+            inset 2px 2px 6px rgba(255,255,255,0.3),
+            inset -2px -2px 6px rgba(0,0,0,0.3),
+            0 20px 60px rgba(0,0,0,0.6),
+            0 0 0 4px #8b6914,
+            0 0 0 6px #d4a94d;
+    }
+    .frame-preview-gold .frame-inner {
+        background: #1a1a1a;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .frame-preview-black {
+        @apply relative;
+        padding: 16px;
+        background: linear-gradient(135deg, #3a3a3a 0%, #1a1a1a 50%, #2a2a2a 100%);
+        border-radius: 4px;
+        box-shadow:
+            inset 2px 2px 6px rgba(255,255,255,0.05),
+            inset -2px -2px 6px rgba(0,0,0,0.3),
+            0 20px 60px rgba(0,0,0,0.6),
+            0 0 0 2px #1a1a1a,
+            0 0 0 4px #3a3a3a;
+    }
+    .frame-preview-black .frame-inner {
+        background: #0a0a0a;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+    }
+
+    /* Radial gradient for spotlight effect */
+    .bg-gradient-radial {
+        background: radial-gradient(circle at center, var(--tw-gradient-from) 0%, var(--tw-gradient-via) 50%, var(--tw-gradient-to) 100%);
+    }
+
+    /* Artwork selection item - with gold glow when selected */
+    .artwork-select-item {
+        position: relative;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .artwork-select-item:not(.selected):hover {
+        box-shadow: 0 0 0 1px rgba(75, 85, 99, 1);
+    }
+    .artwork-select-item.selected {
+        box-shadow: 0 0 0 2px rgba(197, 160, 101, 1), 0 0 15px rgba(197, 160, 101, 0.4);
+    }
+
+    /* Checkmark overlay - absolute positioning over entire item */
+    .artwork-select-item .check-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: all 0.2s ease;
+    }
+    .artwork-select-item:hover .check-overlay {
+        opacity: 1;
+    }
+    .artwork-select-item.selected .check-overlay {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.4);
+    }
+    .artwork-select-item .check-overlay svg {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: white;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        transition: transform 0.2s ease;
+        transform: scale(0);
+    }
+    .artwork-select-item.selected .check-overlay svg {
+        color: #c5a065;
+        transform: scale(1);
+    }
+    .artwork-select-item:hover:not(.selected) .check-overlay svg {
+        transform: scale(1);
+        color: rgba(156, 163, 175, 1);
+    }
+
+    /* Circular stat positioning */
+    .circular-stat {
+        @apply relative w-20 h-20;
+    }
+
+    /* Preview image - responsive sizing that fills container */
+    .preview-image {
+        display: block;
+        max-width: 100%;
+        max-height: calc(100vh - 200px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+
+    /* Frame container - limit max size but allow scaling */
+    #frame-container {
+        max-width: 100%;
+        max-height: calc(100vh - 180px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .frame-inner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+
+<script>
+    let artworks = [];
+    let allArtworks = [];
+    let currentIndex = 0;
+    let rotationTimer = null;
+    let rotationProgress = 0;
+    let isPlaying = true;
+    let settings = {
+        frameStyle: 'wood',
+        interval: 3600,
+        showTitle: true,
+        verifiedOnly: true,
+        shuffle: true,
+        selectedIds: []
+    };
+
+    // Load settings from localStorage
+    function loadSettings() {
+        const saved = localStorage.getItem('displaySettings');
+        if (saved) {
+            settings = { ...settings, ...JSON.parse(saved) };
+        }
+        applySettings();
+    }
+
+    function applySettings() {
+        // Frame style
+        updateFrameStyleUI(settings.frameStyle);
+
+        document.getElementById('rotation-interval').value = settings.interval;
+        document.getElementById('toggle-title').classList.toggle('active', settings.showTitle);
+        document.getElementById('toggle-verified').classList.toggle('active', settings.verifiedOnly);
+
+        updateFrameStyle();
+        updateInterval();
+        updateTitleVisibility();
+    }
+
+    function updateFrameStyleUI(style) {
+        document.querySelectorAll('.frame-style-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.style === style);
+            opt.querySelector('input').checked = opt.dataset.style === style;
+        });
+    }
+
+    function saveSettings() {
+        const selectedStyle = document.querySelector('input[name="frame_style"]:checked');
+        settings.frameStyle = selectedStyle ? selectedStyle.value : 'wood';
+        settings.interval = parseInt(document.getElementById('rotation-interval').value);
+        settings.showTitle = document.getElementById('toggle-title').classList.contains('active');
+        settings.verifiedOnly = document.getElementById('toggle-verified').classList.contains('active');
+
+        // Get selected artwork IDs
+        const selected = document.querySelectorAll('.artwork-select-item.selected');
+        settings.selectedIds = Array.from(selected).map(el => parseInt(el.dataset.id));
+
+        localStorage.setItem('displaySettings', JSON.stringify(settings));
+        showToast('Settings saved!', 'success');
+
+        loadArtworks();
+    }
+
+    function launchFrame() {
+        // Build URL with current settings as query parameters
+        const params = new URLSearchParams();
+        params.set('interval', settings.interval);
+        params.set('showTitle', settings.showTitle);
+        params.set('verifiedOnly', settings.verifiedOnly);
+        params.set('shuffle', settings.shuffle !== undefined ? settings.shuffle : true);
+        params.set('frameStyle', settings.frameStyle || 'wood');
+
+        const frameUrl = '/frame?' + params.toString();
+        window.open(frameUrl, '_blank');
+    }
+
+    async function loadArtworks() {
+        const loading = document.getElementById('artwork-loading');
+        const grid = document.getElementById('artwork-grid');
+
+        try {
+            const verifiedParam = settings.verifiedOnly ? '&verified_only=true' : '';
+            allArtworks = await API.get(`/artworks?limit=100${verifiedParam}`);
+
+            // Filter to only artworks with images
+            allArtworks = allArtworks.filter(a => a.primary_image_url);
+
+            // Render selection grid with gold glow borders and centered checkmark overlay
+            grid.innerHTML = allArtworks.map(artwork => {
+                const isSelected = settings.selectedIds.length === 0 || settings.selectedIds.includes(artwork.id);
+                return `
+                    <div class="artwork-select-item ${isSelected ? 'selected' : ''} aspect-square"
+                         data-id="${artwork.id}"
+                         onclick="toggleArtworkSelection(this)">
+                        <img src="${artwork.primary_image_url}" alt="${escapeHtml(artwork.title)}"
+                             class="w-full h-full object-cover" loading="lazy">
+                        <div class="check-overlay">
+                            <svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            loading.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            // Set display artworks
+            artworks = settings.selectedIds.length > 0
+                ? allArtworks.filter(a => settings.selectedIds.includes(a.id))
+                : [...allArtworks];
+
+            if (settings.shuffle) shuffleArray(artworks);
+
+            updateStats();
+
+            if (artworks.length > 0) {
+                showArtwork(0);
+                startRotation();
+            }
+        } catch (e) {
+            console.error(e);
+            showToast('Failed to load artworks', 'error');
+        }
+    }
+
+    function toggleArtworkSelection(el) {
+        el.classList.toggle('selected');
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function showArtwork(index) {
+        if (artworks.length === 0) return;
+
+        currentIndex = index;
+        const artwork = artworks[index];
+
+        const imageUrl = artwork.primary_image_url
+            .replace('w_320,h_320', 'w_800,h_800')
+            .replace('w_800,h_800', 'w_1200,h_1200');
+
+        document.getElementById('preview-image').src = imageUrl;
+        document.getElementById('frame-title').textContent = artwork.title;
+        document.getElementById('fullscreen-image').src = imageUrl;
+        document.getElementById('fullscreen-title').textContent = artwork.title;
+    }
+
+    function nextArtwork() {
+        const next = (currentIndex + 1) % artworks.length;
+        showArtwork(next);
+        resetRotation();
+    }
+
+    function prevArtwork() {
+        const prev = (currentIndex - 1 + artworks.length) % artworks.length;
+        showArtwork(prev);
+        resetRotation();
+    }
+
+    function startRotation() {
+        if (rotationTimer) clearInterval(rotationTimer);
+        rotationProgress = 0;
+        updateRotationRing();
+
+        rotationTimer = setInterval(() => {
+            if (isPlaying) {
+                rotationProgress += 1;
+                updateRotationRing();
+
+                if (rotationProgress >= settings.interval) {
+                    rotationProgress = 0;
+                    nextArtwork();
+                }
+            }
+        }, 1000);
+    }
+
+    function resetRotation() {
+        rotationProgress = 0;
+        updateRotationRing();
+        if (isPlaying) startRotation();
+    }
+
+    function updateRotationRing() {
+        const percent = (rotationProgress / settings.interval) * 100;
+        const remaining = settings.interval - rotationProgress;
+
+        document.getElementById('rotation-ring').setAttribute('stroke-dasharray', `${100 - percent}, 100`);
+        document.getElementById('stat-interval').textContent = formatTime(remaining);
+    }
+
+    function formatTime(seconds) {
+        if (seconds < 60) return `${seconds}s`;
+        if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+        return `${Math.floor(seconds / 3600)}h`;
+    }
+
+    function togglePlay() {
+        isPlaying = !isPlaying;
+    }
+
+    function updateFrameStyle() {
+        const selected = document.querySelector('input[name="frame_style"]:checked');
+        const style = selected ? selected.value : 'wood';
+        const container = document.getElementById('frame-container');
+
+        container.className = `frame-preview-${style}`;
+        settings.frameStyle = style;
+
+        // Update UI
+        updateFrameStyleUI(style);
+    }
+
+    function updateInterval() {
+        settings.interval = parseInt(document.getElementById('rotation-interval').value);
+        resetRotation();
+    }
+
+    function toggleSetting(name) {
+        const toggle = document.getElementById(`toggle-${name}`);
+        toggle.classList.toggle('active');
+
+        if (name === 'title') {
+            updateTitleVisibility();
+        } else if (name === 'verified') {
+            settings.verifiedOnly = toggle.classList.contains('active');
+            loadArtworks();
+        }
+    }
+
+    function updateTitleVisibility() {
+        const visible = document.getElementById('toggle-title').classList.contains('active');
+        const info = document.getElementById('frame-info');
+        info.classList.toggle('opacity-100', visible);
+        info.classList.toggle('opacity-0', !visible);
+        settings.showTitle = visible;
+    }
+
+    function updateStats() {
+        const selectedCount = artworks.length;
+        const totalCount = allArtworks.length;
+        const percent = totalCount > 0 ? (selectedCount / totalCount) * 100 : 0;
+
+        document.getElementById('stat-selected').textContent = selectedCount;
+        document.getElementById('active-ring').setAttribute('stroke-dasharray', `${percent}, 100`);
+    }
+
+    function enterFullscreen() {
+        document.getElementById('fullscreen').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function exitFullscreen() {
+        document.getElementById('fullscreen').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') exitFullscreen();
+        if (e.key === 'ArrowLeft') prevArtwork();
+        if (e.key === 'ArrowRight') nextArtwork();
+        if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+        if (e.key === 'f') enterFullscreen();
+    });
+
+    // Initialize
+    loadSettings();
+    loadArtworks();
+</script>
+{% endblock %}

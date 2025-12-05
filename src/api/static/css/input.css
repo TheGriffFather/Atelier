@@ -1,0 +1,596 @@
+/* Dan Brown Art Tracker - Digital Atelier Theme */
+/* Tailwind CSS Input File */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   BASE LAYER - Global Defaults
+   ============================================ */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-gray-900 text-gray-200 font-sans antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-gray-200 tracking-tight;
+  }
+
+  h1 { @apply text-4xl md:text-5xl font-semibold; }
+  h2 { @apply text-2xl md:text-3xl font-semibold; }
+  h3 { @apply text-xl md:text-2xl font-medium; }
+  h4 { @apply text-lg font-medium; }
+
+  /* Custom scrollbar for webkit */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
+
+  /* Focus outline styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-gold-500/50 ring-offset-2 ring-offset-gray-900;
+  }
+}
+
+/* ============================================
+   COMPONENTS LAYER - Reusable Components
+   ============================================ */
+@layer components {
+  /* Hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Glass morphism card - enhanced with subtle glow and stronger blur */
+  .glass-card {
+    @apply relative overflow-hidden rounded-2xl;
+    @apply bg-gray-800/40 border border-gray-600/30;
+    @apply backdrop-blur-md;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+    @apply hover:bg-gray-700/50 hover:border-gray-500/40;
+    @apply hover:shadow-soft;
+  }
+
+  /* Solid card */
+  .solid-card {
+    @apply bg-gray-800 rounded-xl border border-gray-700/50;
+    @apply transition-all duration-300;
+  }
+
+  .solid-card-hover {
+    @apply solid-card;
+    @apply hover:bg-gray-750 hover:border-gray-600/50;
+    @apply hover:-translate-y-1 hover:shadow-soft;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2.5 rounded-lg;
+    @apply bg-gold-600 text-gray-900;
+    @apply font-medium text-sm;
+    @apply transition-all duration-200;
+    @apply hover:bg-gold-500 hover:shadow-soft;
+    @apply active:scale-[0.98];
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2.5 rounded-lg;
+    @apply bg-gray-700 text-gray-200;
+    @apply font-medium text-sm;
+    @apply border border-gray-600;
+    @apply transition-all duration-200;
+    @apply hover:bg-gray-600 hover:border-gray-500;
+    @apply active:scale-[0.98];
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2;
+    @apply px-4 py-2.5 rounded-lg;
+    @apply text-gray-400;
+    @apply font-medium text-sm;
+    @apply transition-all duration-200;
+    @apply hover:bg-gray-800 hover:text-gray-200;
+    @apply active:scale-[0.98];
+  }
+
+  /* Icon button */
+  .btn-icon {
+    @apply inline-flex items-center justify-center;
+    @apply w-10 h-10 rounded-lg;
+    @apply text-gray-400;
+    @apply transition-all duration-200;
+    @apply hover:bg-gray-800 hover:text-gray-200;
+    @apply active:scale-95;
+  }
+
+  /* Success/Danger buttons */
+  .btn-success {
+    @apply btn-primary bg-success-500 hover:bg-success-400;
+  }
+
+  .btn-danger {
+    @apply btn-primary bg-danger-500 hover:bg-danger-400 text-white;
+  }
+
+  /* Form inputs */
+  .form-input {
+    @apply w-full px-4 py-2.5 rounded-lg;
+    @apply bg-gray-800 border border-gray-700;
+    @apply text-gray-200 placeholder-gray-500;
+    @apply text-sm;
+    @apply transition-all duration-200;
+    @apply focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/30;
+  }
+
+  .form-select {
+    @apply form-input appearance-none cursor-pointer;
+    @apply bg-no-repeat bg-right pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23909296'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-size: 1.25rem;
+    background-position: right 0.75rem center;
+  }
+
+  .form-textarea {
+    @apply form-input resize-y min-h-[100px];
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-gray-400 mb-1.5;
+  }
+
+  /* Form checkbox (custom styled) */
+  .form-checkbox {
+    @apply w-4 h-4 rounded;
+    @apply bg-gray-800 border-gray-600;
+    @apply text-gold-500;
+    @apply focus:ring-gold-500/30 focus:ring-offset-0;
+    @apply transition-colors duration-200;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center gap-1;
+    @apply px-2.5 py-1 rounded-full;
+    @apply text-xs font-medium;
+  }
+
+  .badge-gold {
+    @apply badge bg-gold-600/90 text-gray-900;
+  }
+
+  .badge-success {
+    @apply badge bg-success-500/20 text-success-400;
+  }
+
+  .badge-warning {
+    @apply badge bg-gold-500/20 text-gold-400;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger-500/20 text-danger-400;
+  }
+
+  .badge-neutral {
+    @apply badge bg-gray-700/50 text-gray-400;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply glass-card p-6;
+  }
+
+  .stat-label {
+    @apply text-sm font-medium text-gray-400 uppercase tracking-wider;
+  }
+
+  .stat-value {
+    @apply text-4xl font-serif mt-2 text-gray-200;
+  }
+
+  /* Sidebar navigation item */
+  .nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg;
+    @apply text-gray-400 font-medium;
+    @apply transition-all duration-200;
+    @apply hover:bg-gray-800/50 hover:text-gray-200;
+  }
+
+  .nav-item-active {
+    @apply nav-item bg-gray-800/50 text-gold-500;
+    @apply relative;
+  }
+
+  .nav-item-active::before {
+    content: '';
+    @apply absolute left-0 top-1/2 -translate-y-1/2;
+    @apply h-8 w-1 bg-gold-500 rounded-r-full;
+  }
+
+  .nav-item.nav-disabled {
+    @apply opacity-50 cursor-not-allowed pointer-events-none;
+  }
+
+  /* Filter Pills (Concept Art Style) */
+  .filter-pill {
+    @apply inline-flex items-center gap-1.5 px-4 py-2 rounded-full;
+    @apply text-sm font-medium;
+    @apply bg-gray-800/60 text-gray-400 border border-gray-700/50;
+    @apply transition-all duration-200;
+    @apply hover:bg-gray-700/60 hover:text-gray-200 hover:border-gray-600;
+    @apply cursor-pointer;
+  }
+
+  .filter-pill.active {
+    @apply bg-gold-500/20 text-gold-400 border-gold-500/40;
+  }
+
+  .filter-pill-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  /* Circular Stat (for stat cards with ring indicator) */
+  .circular-stat {
+    @apply relative flex-shrink-0;
+  }
+
+  /* Circular Progress Indicator */
+  .circular-progress {
+    @apply relative w-20 h-20;
+  }
+
+  .circular-progress svg {
+    @apply w-full h-full transform -rotate-90;
+  }
+
+  .circular-progress-track {
+    fill: none;
+    stroke: theme('colors.gray.700');
+    stroke-width: 4;
+  }
+
+  .circular-progress-fill {
+    fill: none;
+    stroke: theme('colors.gold.500');
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s ease-in-out;
+  }
+
+  .circular-progress-value {
+    @apply absolute inset-0 flex flex-col items-center justify-center;
+  }
+
+  .circular-progress-number {
+    @apply text-2xl font-serif text-gray-200;
+  }
+
+  .circular-progress-label {
+    @apply text-xs text-gray-500;
+  }
+
+  /* Artwork Card (Concept Art Style) */
+  .artwork-card {
+    @apply relative rounded-xl overflow-hidden;
+    @apply bg-gray-800/50 border border-gray-700/30;
+    @apply transition-all duration-300;
+  }
+
+  .artwork-card:hover {
+    @apply border-gold-500/30;
+    @apply shadow-soft;
+  }
+
+  .artwork-card-image {
+    @apply w-full aspect-square object-cover;
+    @apply transition-transform duration-500;
+  }
+
+  .artwork-card:hover .artwork-card-image {
+    @apply scale-105;
+  }
+
+  .artwork-card-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/20 to-transparent;
+    @apply opacity-0 transition-opacity duration-300;
+    @apply flex flex-col justify-end p-4;
+  }
+
+  .artwork-card:hover .artwork-card-overlay {
+    @apply opacity-100;
+  }
+
+  .artwork-card-info {
+    @apply p-4 bg-gray-800/80;
+  }
+
+  .artwork-card-title {
+    @apply font-serif text-gray-200 line-clamp-2;
+  }
+
+  .artwork-card-year {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  .artwork-card-badge {
+    @apply absolute top-3 right-3;
+    @apply px-2 py-1 rounded text-xs font-medium;
+    @apply bg-gold-500/90 text-gray-900;
+  }
+
+  /* Frame Preview (for Display Settings) */
+  .frame-preview {
+    @apply relative rounded-lg overflow-hidden;
+    @apply bg-gray-900;
+    box-shadow:
+      inset 0 0 60px rgba(0,0,0,0.8),
+      0 25px 50px rgba(0,0,0,0.5);
+  }
+
+  .frame-preview-inner {
+    @apply relative m-8;
+    @apply rounded overflow-hidden;
+    box-shadow:
+      0 0 0 8px #4a3728,
+      0 0 0 10px #3d2d22,
+      0 0 0 14px #5a4738,
+      5px 5px 20px rgba(0,0,0,0.5);
+  }
+
+  .frame-preview-inner.frame-gold {
+    box-shadow:
+      0 0 0 8px #b8860b,
+      0 0 0 10px #8b6914,
+      0 0 0 14px #d4a94d,
+      5px 5px 20px rgba(0,0,0,0.5);
+  }
+
+  .frame-preview-inner.frame-black {
+    box-shadow:
+      0 0 0 8px #2a2a2a,
+      0 0 0 10px #1a1a1a,
+      0 0 0 14px #3a3a3a,
+      5px 5px 20px rgba(0,0,0,0.5);
+  }
+
+  /* Frame Style Selector */
+  .frame-style-option {
+    @apply w-14 h-14 rounded-lg border-2 border-gray-700;
+    @apply flex items-center justify-center cursor-pointer;
+    @apply transition-all duration-200;
+    @apply hover:border-gray-500;
+  }
+
+  .frame-style-option.active {
+    @apply border-gold-500;
+  }
+
+  .frame-style-option .frame-icon {
+    @apply w-10 h-10 rounded;
+  }
+
+  /* Toggle Switch */
+  .toggle {
+    @apply relative w-12 h-6 rounded-full cursor-pointer;
+    @apply bg-gray-700 transition-colors duration-200;
+  }
+
+  .toggle.active {
+    @apply bg-gold-500;
+  }
+
+  .toggle-knob {
+    @apply absolute top-1 left-1 w-4 h-4 rounded-full;
+    @apply bg-white transition-transform duration-200;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .toggle.active .toggle-knob {
+    @apply translate-x-6;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent;
+  }
+
+  .divider-gold {
+    @apply h-px bg-gradient-to-r from-transparent via-gold-500/30 to-transparent;
+  }
+
+  /* Toast notification */
+  .toast {
+    @apply fixed bottom-6 right-6 z-50;
+    @apply px-5 py-3.5 rounded-lg;
+    @apply bg-gray-800 border-l-4 border-gold-500;
+    @apply shadow-soft-lg;
+    @apply text-sm font-medium;
+    @apply transform translate-x-[150%] transition-transform duration-300;
+  }
+
+  .toast.show {
+    @apply translate-x-0;
+  }
+
+  .toast.error {
+    @apply border-danger-500;
+  }
+
+  .toast.success {
+    @apply border-success-500;
+  }
+
+  /* Spinner */
+  .spinner {
+    @apply w-8 h-8 rounded-full animate-spin;
+    border-width: 3px;
+    @apply border-gray-700 border-t-gold-500;
+  }
+
+  .spinner-sm {
+    @apply w-5 h-5 rounded-full;
+    @apply border-2 border-gray-700 border-t-gold-500;
+    @apply animate-spin;
+  }
+
+  /* Accordion */
+  .accordion {
+    @apply border-t border-gold-500/30;
+  }
+
+  .accordion-header {
+    @apply flex items-center justify-between w-full;
+    @apply py-4 text-left;
+    @apply text-lg text-gold-500 font-medium;
+    @apply transition-colors duration-200;
+    @apply hover:text-gold-400;
+  }
+
+  .accordion-icon {
+    @apply w-5 h-5 text-gold-500 transition-transform duration-200;
+  }
+
+  .accordion-icon.open {
+    @apply rotate-180;
+  }
+
+  .accordion-content {
+    @apply pb-4 space-y-3;
+  }
+
+  /* Data row (for detail pages) */
+  .data-row {
+    @apply flex justify-between items-start py-3;
+    @apply border-b border-gray-700/50;
+  }
+
+  .data-row:last-child {
+    @apply border-b-0;
+  }
+
+  .data-label {
+    @apply text-sm text-gray-400;
+  }
+
+  .data-value {
+    @apply text-sm font-medium text-gray-200 text-right;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    @apply fixed inset-0 z-50;
+    @apply bg-black/80 backdrop-blur-sm;
+    @apply flex items-center justify-center p-4;
+    @apply opacity-0 invisible transition-all duration-300;
+  }
+
+  .modal-overlay.active {
+    @apply opacity-100 visible;
+  }
+
+  .modal-content {
+    @apply bg-gray-800 rounded-2xl;
+    @apply max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+    @apply border border-gray-700;
+    @apply shadow-soft-lg;
+    @apply transform scale-95 transition-transform duration-300;
+  }
+
+  .modal-overlay.active .modal-content {
+    @apply scale-100;
+  }
+
+  /* Lightbox */
+  .lightbox {
+    @apply fixed inset-0 z-50;
+    @apply bg-black/95 backdrop-blur-md;
+    @apply flex items-center justify-center;
+    @apply opacity-0 invisible transition-all duration-300;
+    @apply cursor-zoom-out;
+  }
+
+  .lightbox.active {
+    @apply opacity-100 visible;
+  }
+}
+
+/* ============================================
+   UTILITIES LAYER - Custom Utilities
+   ============================================ */
+@layer utilities {
+  /* Text gradient */
+  .text-gradient {
+    @apply bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent;
+  }
+
+  /* Line clamp */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Aspect ratios */
+  .aspect-artwork {
+    aspect-ratio: 4 / 3;
+  }
+
+  .aspect-portrait {
+    aspect-ratio: 3 / 4;
+  }
+
+  /* Animation delays */
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+}

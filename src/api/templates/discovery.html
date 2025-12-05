@@ -1,0 +1,747 @@
+{% extends "base.html" %}
+
+{% block title %}Discovery Hub | Dan Brown Catalogue Raisonne{% endblock %}
+
+{% block nav_discovery %}nav-item-active{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-3xl font-serif font-semibold text-gray-100">Discovery Hub</h1>
+            </div>
+            <p class="text-gray-400">Search eBay and auction sites for Dan Brown artwork</p>
+            <p class="text-xs text-gray-500 mt-1" id="last-scanned">Last scanned: Never</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="openNewSearchModal()" class="btn-secondary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+                </svg>
+                New Search
+            </button>
+            <button onclick="runAllSearches()" class="btn-primary" id="btn-run-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Scan Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="solid-card p-5 cursor-pointer hover:border-gold-500/30 transition-colors" onclick="filterResults('all')">
+            <p class="text-sm text-gray-400 mb-1">Active Searches</p>
+            <p class="text-3xl font-serif text-gold-500" id="stat-searches">--</p>
+        </div>
+        <div class="solid-card p-5 cursor-pointer hover:border-gold-500/30 transition-colors" onclick="filterResults('new')">
+            <p class="text-sm text-gray-400 mb-1">New Finds</p>
+            <p class="text-3xl font-serif text-gold-500" id="stat-new">--</p>
+        </div>
+        <div class="solid-card p-5 cursor-pointer hover:border-gold-500/30 transition-colors" onclick="filterResults('confirmed')">
+            <p class="text-sm text-gray-400 mb-1">Confirmed</p>
+            <p class="text-3xl font-serif text-green-500" id="stat-confirmed">--</p>
+        </div>
+        <div class="solid-card p-5 cursor-pointer hover:border-gold-500/30 transition-colors" onclick="filterResults('watching')">
+            <p class="text-sm text-gray-400 mb-1">Watching</p>
+            <p class="text-3xl font-serif text-blue-500" id="stat-watching">--</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-2 mb-6 border-b border-gray-700 pb-2">
+        <button class="tab-btn active" data-tab="searches" onclick="switchTab('searches')">
+            Saved Searches
+        </button>
+        <button class="tab-btn" data-tab="results" onclick="switchTab('results')">
+            All Results
+        </button>
+    </div>
+
+    <!-- Saved Searches Tab -->
+    <div id="tab-searches" class="tab-content">
+        <div id="searches-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Searches loaded dynamically -->
+        </div>
+        <div id="searches-empty" class="hidden text-center py-12">
+            <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <h3 class="text-xl text-gray-400 mb-2">No saved searches yet</h3>
+            <p class="text-gray-500 mb-4">Create your first search to start monitoring for Dan Brown artwork</p>
+            <button onclick="openNewSearchModal()" class="btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
+                </svg>
+                Create Search
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Tab -->
+    <div id="tab-results" class="tab-content hidden">
+        <!-- Filter bar -->
+        <div class="flex items-center gap-4 mb-6">
+            <select id="filter-status" class="form-select w-auto" onchange="loadResults()">
+                <option value="">All Statuses</option>
+                <option value="new">New</option>
+                <option value="reviewing">Reviewing</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="watching">Watching</option>
+                <option value="rejected">Rejected</option>
+            </select>
+            <select id="filter-search" class="form-select w-auto" onchange="loadResults()">
+                <option value="">All Searches</option>
+                <!-- Populated dynamically -->
+            </select>
+        </div>
+
+        <div id="results-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <!-- Results loaded dynamically -->
+        </div>
+        <div id="results-empty" class="hidden text-center py-12">
+            <svg class="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <h3 class="text-xl text-gray-400 mb-2">No results yet</h3>
+            <p class="text-gray-500">Run a search to find listings</p>
+        </div>
+    </div>
+</div>
+
+<!-- New Search Modal -->
+<div id="modal-new-search" class="modal-overlay" onclick="closeModal('modal-new-search')">
+    <div class="modal-content max-w-lg" style="border-radius: 24px; overflow: hidden;" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif text-gray-100">New Saved Search</h2>
+            <button onclick="closeModal('modal-new-search')" class="text-gray-400 hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <form id="form-new-search" class="p-6 space-y-4" onsubmit="createSearch(event)">
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Search Name</label>
+                <input type="text" name="name" required class="form-input" placeholder="e.g., Dan Brown Trompe l'oeil">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Search Query</label>
+                <input type="text" name="query" required class="form-input" placeholder="e.g., Dan Brown trompe l'oeil painting">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Min Price ($)</label>
+                    <input type="number" name="min_price" class="form-input" placeholder="0">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Max Price ($)</label>
+                    <input type="number" name="max_price" class="form-input" placeholder="No limit">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Run Every</label>
+                <select name="run_interval_hours" class="form-select">
+                    <option value="6">6 hours</option>
+                    <option value="12">12 hours</option>
+                    <option value="24" selected>24 hours (daily)</option>
+                    <option value="168">Weekly</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-400 mb-1">Notes (optional)</label>
+                <textarea name="notes" class="form-textarea" rows="2" placeholder="Why this search matters..."></textarea>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="btn-primary flex-1">Create Search</button>
+                <button type="button" onclick="closeModal('modal-new-search')" class="btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Result Detail Modal -->
+<div id="modal-result-detail" class="modal-overlay" onclick="closeModal('modal-result-detail')">
+    <div class="modal-content max-w-2xl" style="border-radius: 24px; overflow: hidden;" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif text-gray-100" id="result-detail-title">Listing Details</h2>
+            <button onclick="closeModal('modal-result-detail')" class="text-gray-400 hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div id="result-detail-content" class="p-6">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<style>
+.tab-btn {
+    padding: 0.5rem 1rem;
+    color: #9ca3af;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+}
+.tab-btn:hover {
+    color: #e5e7eb;
+    background: rgba(255,255,255,0.05);
+}
+.tab-btn.active {
+    color: #d4af37;
+    background: rgba(212, 175, 55, 0.1);
+}
+.search-card {
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid rgba(55, 65, 81, 0.5);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.2s;
+}
+.search-card:hover {
+    border-color: rgba(212, 175, 55, 0.3);
+}
+.result-card {
+    background: rgba(31, 41, 55, 0.5);
+    border: 1px solid rgba(55, 65, 81, 0.5);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+.result-card:hover {
+    border-color: rgba(212, 175, 55, 0.3);
+    transform: translateY(-2px);
+}
+.result-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background: #1f2937;
+}
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.status-new { background: rgba(212, 175, 55, 0.2); color: #d4af37; }
+.status-reviewing { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.status-confirmed { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+.status-watching { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+.status-rejected { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.confidence-bar {
+    height: 4px;
+    background: rgba(55, 65, 81, 0.5);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.confidence-fill {
+    height: 100%;
+    transition: width 0.3s;
+}
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(55, 65, 81, 0.5);
+    background: transparent;
+    transition: all 0.2s;
+}
+</style>
+
+<script>
+let savedSearches = [];
+let alertResults = [];
+let currentTab = 'searches';
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadSearches();
+});
+
+// Tab switching
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('hidden', content.id !== `tab-${tab}`);
+    });
+
+    if (tab === 'results') {
+        loadResults();
+    }
+}
+
+// Load stats
+async function loadStats() {
+    try {
+        const stats = await API.get('/alerts/stats');
+        document.getElementById('stat-searches').textContent = stats.active_searches || 0;
+        document.getElementById('stat-new').textContent = stats.new_results || 0;
+        document.getElementById('stat-confirmed').textContent = stats.confirmed_results || 0;
+        document.getElementById('stat-watching').textContent = stats.watching_results || 0;
+
+        // Update last scanned time
+        if (stats.last_scan) {
+            const lastScan = new Date(stats.last_scan);
+            const now = new Date();
+            const diffMs = now - lastScan;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            let timeAgo;
+            if (diffMins < 1) timeAgo = 'just now';
+            else if (diffMins < 60) timeAgo = `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+            else if (diffHours < 24) timeAgo = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            else timeAgo = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+
+            document.getElementById('last-scanned').textContent = `Last scanned: ${timeAgo}`;
+        }
+    } catch (e) {
+        console.error('Failed to load stats:', e);
+    }
+}
+
+// Load saved searches
+async function loadSearches() {
+    try {
+        const data = await API.get('/alerts/searches');
+        savedSearches = data.searches || [];
+
+        const container = document.getElementById('searches-container');
+        const empty = document.getElementById('searches-empty');
+
+        // Also populate the filter dropdown
+        const filterSelect = document.getElementById('filter-search');
+        filterSelect.innerHTML = '<option value="">All Searches</option>';
+        savedSearches.forEach(s => {
+            filterSelect.innerHTML += `<option value="${s.id}">${escapeHtml(s.name)}</option>`;
+        });
+
+        if (savedSearches.length === 0) {
+            container.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        empty.classList.add('hidden');
+
+        container.innerHTML = savedSearches.map(search => `
+            <div class="search-card">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-100">${escapeHtml(search.name)}</h3>
+                        <p class="text-sm text-gray-500">${escapeHtml(search.query)}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${search.new_results > 0 ? `<span class="status-badge status-new">${search.new_results} new</span>` : ''}
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 text-sm text-gray-400 mb-4">
+                    <span>${search.total_results} results</span>
+                    <span>Every ${search.run_interval_hours}h</span>
+                    ${search.last_run ? `<span>Last: ${new Date(search.last_run).toLocaleDateString()}</span>` : '<span>Never run</span>'}
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="runSearch(${search.id})" class="btn-secondary text-sm flex-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Run Now
+                    </button>
+                    <button onclick="openEditSearchModal(${search.id})" class="btn-secondary text-sm" title="Edit search">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                    <button onclick="viewSearchResults(${search.id})" class="btn-secondary text-sm" title="View results">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                    <button onclick="deleteSearch(${search.id})" class="btn-secondary text-sm text-red-400 hover:text-red-300" title="Delete search">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('Failed to load searches:', e);
+        showToast('Failed to load searches', 'error');
+    }
+}
+
+// Load results
+async function loadResults() {
+    try {
+        const status = document.getElementById('filter-status').value;
+        const searchId = document.getElementById('filter-search').value;
+
+        let url = '/alerts/results?limit=50';
+        if (status) url += `&status=${status}`;
+        if (searchId) url += `&search_id=${searchId}`;
+
+        const data = await API.get(url);
+        alertResults = data.results || [];
+
+        const container = document.getElementById('results-container');
+        const empty = document.getElementById('results-empty');
+
+        if (alertResults.length === 0) {
+            container.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+        empty.classList.add('hidden');
+
+        container.innerHTML = alertResults.map(result => `
+            <div class="result-card">
+                <div class="cursor-pointer" onclick="openResultDetail(${result.id})">
+                    ${result.image_url ?
+                        `<img src="${escapeHtml(result.image_url)}" alt="${escapeHtml(result.title)}" onerror="this.src='/api/static/placeholder.png'">` :
+                        `<div class="w-full h-[180px] bg-gray-800 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>`
+                    }
+                    <div class="p-4 pb-2">
+                        <div class="flex items-start justify-between gap-2 mb-2">
+                            <h3 class="text-sm font-medium text-gray-200 line-clamp-2">${escapeHtml(result.title)}</h3>
+                            <span class="status-badge status-${result.status}">${result.status}</span>
+                        </div>
+                        ${result.price ? `<p class="text-gold-500 font-medium mb-2">${formatCurrency(result.price, result.currency)}</p>` : ''}
+                        ${result.confidence_score !== null ? `
+                            <div class="confidence-bar mb-2">
+                                <div class="confidence-fill" style="width: ${(result.confidence_score * 100).toFixed(0)}%; background: ${getConfidenceColor(result.confidence_score)};"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">${(result.confidence_score * 100).toFixed(0)}% confidence</p>
+                        ` : ''}
+                        <p class="text-xs text-gray-500 mt-2">Found ${new Date(result.date_found).toLocaleDateString()}</p>
+                    </div>
+                </div>
+                <!-- Quick Action Buttons -->
+                <div class="px-4 pb-4 flex gap-2">
+                    <button onclick="event.stopPropagation(); dismissResult(${result.id})" class="quick-action-btn flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10" title="Not Dan Brown's work">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Dismiss
+                    </button>
+                    <button onclick="event.stopPropagation(); promoteToArtwork(${result.id})" class="quick-action-btn flex-1 text-green-400 hover:text-green-300 hover:bg-green-500/10" title="Add to catalog">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('Failed to load results:', e);
+        showToast('Failed to load results', 'error');
+    }
+}
+
+// Filter results by status
+function filterResults(status) {
+    switchTab('results');
+    const filterSelect = document.getElementById('filter-status');
+    filterSelect.value = status === 'all' ? '' : status;
+    loadResults();
+}
+
+// Create or update search
+async function createSearch(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const editId = form.getAttribute('data-edit-id');
+
+    const data = {
+        name: formData.get('name'),
+        query: formData.get('query'),
+        min_price: formData.get('min_price') ? parseFloat(formData.get('min_price')) : null,
+        max_price: formData.get('max_price') ? parseFloat(formData.get('max_price')) : null,
+        run_interval_hours: parseInt(formData.get('run_interval_hours')),
+        notes: formData.get('notes') || null,
+    };
+
+    try {
+        if (editId) {
+            await API.patch(`/alerts/searches/${editId}`, data);
+            showToast('Search updated successfully', 'success');
+        } else {
+            await API.post('/alerts/searches', data);
+            showToast('Search created successfully', 'success');
+        }
+        closeModal('modal-new-search');
+        form.reset();
+        form.removeAttribute('data-edit-id');
+        loadSearches();
+        loadStats();
+    } catch (e) {
+        console.error('Failed to save search:', e);
+        showToast('Failed to save search', 'error');
+    }
+}
+
+// Run a single search
+async function runSearch(searchId) {
+    const btn = event.target.closest('button');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Running...';
+    btn.disabled = true;
+
+    try {
+        const result = await API.post(`/alerts/searches/${searchId}/run`, {});
+        showToast(`Found ${result.new_results} new listings`, 'success');
+        loadSearches();
+        loadStats();
+    } catch (e) {
+        console.error('Failed to run search:', e);
+        showToast('Failed to run search', 'error');
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}
+
+// Run all searches
+async function runAllSearches() {
+    const btn = document.getElementById('btn-run-all');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Running...';
+    btn.disabled = true;
+
+    try {
+        await API.post('/alerts/searches/run-all', {});
+        showToast('Running all searches in background', 'success');
+        // Refresh after a delay
+        setTimeout(() => {
+            loadSearches();
+            loadStats();
+        }, 5000);
+    } catch (e) {
+        console.error('Failed to run all searches:', e);
+        showToast('Failed to run searches', 'error');
+    } finally {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }
+}
+
+// View results for a specific search
+function viewSearchResults(searchId) {
+    switchTab('results');
+    document.getElementById('filter-search').value = searchId;
+    loadResults();
+}
+
+// Delete search
+async function deleteSearch(searchId) {
+    if (!confirm('Delete this search and all its results?')) return;
+
+    try {
+        await API.delete(`/alerts/searches/${searchId}`);
+        showToast('Search deleted', 'success');
+        loadSearches();
+        loadStats();
+    } catch (e) {
+        console.error('Failed to delete search:', e);
+        showToast('Failed to delete search', 'error');
+    }
+}
+
+// Open result detail modal
+function openResultDetail(resultId) {
+    const result = alertResults.find(r => r.id === resultId);
+    if (!result) return;
+
+    document.getElementById('result-detail-title').textContent = result.title;
+    document.getElementById('result-detail-content').innerHTML = `
+        <div class="flex gap-6">
+            ${result.image_url ? `
+                <div class="w-64 flex-shrink-0">
+                    <img src="${escapeHtml(result.image_url)}" alt="${escapeHtml(result.title)}" class="w-full rounded-lg">
+                </div>
+            ` : ''}
+            <div class="flex-1">
+                <div class="space-y-3 mb-6">
+                    ${result.price ? `
+                        <div>
+                            <span class="text-sm text-gray-500">Price</span>
+                            <p class="text-xl text-gold-500 font-medium">${formatCurrency(result.price, result.currency)}</p>
+                        </div>
+                    ` : ''}
+                    ${result.seller_name ? `
+                        <div>
+                            <span class="text-sm text-gray-500">Seller</span>
+                            <p class="text-gray-200">${escapeHtml(result.seller_name)}</p>
+                        </div>
+                    ` : ''}
+                    ${result.location ? `
+                        <div>
+                            <span class="text-sm text-gray-500">Location</span>
+                            <p class="text-gray-200">${escapeHtml(result.location)}</p>
+                        </div>
+                    ` : ''}
+                    ${result.confidence_score !== null ? `
+                        <div>
+                            <span class="text-sm text-gray-500">Confidence Score</span>
+                            <div class="flex items-center gap-2">
+                                <div class="confidence-bar flex-1">
+                                    <div class="confidence-fill" style="width: ${(result.confidence_score * 100).toFixed(0)}%; background: ${getConfidenceColor(result.confidence_score)};"></div>
+                                </div>
+                                <span class="text-sm" style="color: ${getConfidenceColor(result.confidence_score)}">${(result.confidence_score * 100).toFixed(0)}%</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div>
+                        <span class="text-sm text-gray-500">Status</span>
+                        <div class="mt-1">
+                            <select id="result-status-select" class="input-field" onchange="updateResultStatus(${result.id}, this.value)">
+                                <option value="new" ${result.status === 'new' ? 'selected' : ''}>New</option>
+                                <option value="reviewing" ${result.status === 'reviewing' ? 'selected' : ''}>Reviewing</option>
+                                <option value="confirmed" ${result.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                <option value="watching" ${result.status === 'watching' ? 'selected' : ''}>Watching</option>
+                                <option value="rejected" ${result.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                ${result.description ? `
+                    <div class="mb-6">
+                        <span class="text-sm text-gray-500">Description</span>
+                        <p class="text-gray-300 text-sm mt-1">${escapeHtml(result.description)}</p>
+                    </div>
+                ` : ''}
+
+                <div class="flex gap-3">
+                    <a href="${escapeHtml(result.source_url)}" target="_blank" class="btn-primary flex-1">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        View on eBay
+                    </a>
+                    <button onclick="promoteToArtwork(${result.id})" class="btn-secondary">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Add to Catalog
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('modal-result-detail').classList.add('active');
+}
+
+// Update result status
+async function updateResultStatus(resultId, status) {
+    try {
+        await API.patch(`/alerts/results/${resultId}`, { status });
+        showToast('Status updated', 'success');
+        loadResults();
+        loadStats();
+    } catch (e) {
+        console.error('Failed to update status:', e);
+        showToast('Failed to update status', 'error');
+    }
+}
+
+// Promote to artwork
+async function promoteToArtwork(resultId) {
+    try {
+        const result = await API.post(`/alerts/results/${resultId}/promote`, {});
+        showToast('Added to artwork catalog', 'success');
+        closeModal('modal-result-detail');
+        loadResults();
+        loadStats();
+        // Navigate to the new artwork
+        window.location.href = `/artwork/${result.artwork_id}`;
+    } catch (e) {
+        console.error('Failed to promote:', e);
+        showToast(e.message || 'Failed to add to catalog', 'error');
+    }
+}
+
+// Dismiss result (mark as rejected)
+async function dismissResult(resultId) {
+    try {
+        await API.patch(`/alerts/results/${resultId}`, { status: 'rejected' });
+        showToast('Result dismissed', 'success');
+        loadResults();
+        loadStats();
+    } catch (e) {
+        console.error('Failed to dismiss:', e);
+        showToast('Failed to dismiss result', 'error');
+    }
+}
+
+// Modal helpers
+function openNewSearchModal() {
+    document.getElementById('form-new-search').reset();
+    document.getElementById('form-new-search').removeAttribute('data-edit-id');
+    document.getElementById('modal-new-search').querySelector('h2').textContent = 'New Saved Search';
+    document.getElementById('form-new-search').querySelector('button[type="submit"]').textContent = 'Create Search';
+    document.getElementById('modal-new-search').classList.add('active');
+}
+
+function openEditSearchModal(searchId) {
+    const search = savedSearches.find(s => s.id === searchId);
+    if (!search) return;
+
+    const form = document.getElementById('form-new-search');
+    form.setAttribute('data-edit-id', searchId);
+    form.querySelector('[name="name"]').value = search.name;
+    form.querySelector('[name="query"]').value = search.query;
+    form.querySelector('[name="min_price"]').value = search.min_price || '';
+    form.querySelector('[name="max_price"]').value = search.max_price || '';
+    form.querySelector('[name="run_interval_hours"]').value = search.run_interval_hours;
+    form.querySelector('[name="notes"]').value = search.notes || '';
+
+    document.getElementById('modal-new-search').querySelector('h2').textContent = 'Edit Saved Search';
+    form.querySelector('button[type="submit"]').textContent = 'Save Changes';
+    document.getElementById('modal-new-search').classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+// Utility functions
+function getConfidenceColor(score) {
+    if (score >= 0.7) return '#22c55e';  // green
+    if (score >= 0.4) return '#d4af37';  // gold
+    return '#ef4444';  // red
+}
+</script>
+
+{% endblock %}

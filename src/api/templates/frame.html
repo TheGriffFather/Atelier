@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Dan Brown Art Frame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #C5A065;
+            --accent-bright: #d4af37;
+            --bg-overlay: rgba(26, 27, 30, 0.95);
+            --bg-dark: #1a1b1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #909296;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a0a;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text-primary);
+            touch-action: pan-x pan-y;
+        }
+
+        /* Main Display */
+        .frame-display {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        .artwork-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+
+        .artwork-container.swiping {
+            transition: none;
+        }
+
+        .artwork-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Swipe Indicators */
+        .swipe-indicator {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .swipe-indicator.left {
+            left: 0;
+            background: linear-gradient(to right, rgba(0,0,0,0.5), transparent);
+            padding-left: 10px;
+        }
+
+        .swipe-indicator.right {
+            right: 0;
+            background: linear-gradient(to left, rgba(0,0,0,0.5), transparent);
+            padding-right: 10px;
+        }
+
+        .swipe-indicator.visible {
+            opacity: 1;
+        }
+
+        /* Title Bar (subtle, auto-hide) */
+        .title-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 3rem 2rem 1.5rem;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .title-bar.visible {
+            opacity: 1;
+        }
+
+        .artwork-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: -0.01em;
+        }
+
+        .artwork-artist {
+            font-size: 0.9rem;
+            color: var(--accent);
+            text-align: center;
+            margin-top: 0.25rem;
+        }
+
+        /* Progress Dots */
+        .progress-dots {
+            position: fixed;
+            bottom: 0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 6;
+        }
+
+        .progress-dots.visible {
+            opacity: 1;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .dot.active {
+            background: var(--accent);
+            transform: scale(1.3);
+        }
+
+        /* Details Overlay */
+        .details-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-overlay);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .details-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .details-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .details-image {
+            width: 100%;
+            max-height: 40vh;
+            object-fit: contain;
+            margin-bottom: 2rem;
+        }
+
+        .details-content {
+            flex: 1;
+        }
+
+        .details-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.75rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+
+        .details-artist {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        .details-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .details-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .details-section p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .details-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .meta-item {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .meta-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .meta-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        /* Settings Overlay */
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-overlay);
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .settings-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .settings-title {
+            font-size: 1.5rem;
+            font-weight: 300;
+        }
+
+        .settings-close {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .settings-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .setting-label {
+            font-size: 1rem;
+        }
+
+        .setting-value {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .toggle {
+            width: 56px;
+            height: 32px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: var(--accent);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            min-width: 150px;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: black;
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .btn-exit {
+            background: rgba(255,100,100,0.2);
+            color: #ff6666;
+            margin-top: 2rem;
+        }
+
+        /* Long Press Indicator */
+        .long-press-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .long-press-indicator.visible {
+            opacity: 1;
+        }
+
+        .long-press-indicator::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            animation: pulse-ring 0.8s ease-out;
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Rotation Timer Display */
+        .timer-display {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 5;
+        }
+
+        .timer-display.visible {
+            opacity: 1;
+        }
+
+        /* Pause indicator */
+        .pause-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .pause-indicator.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Display -->
+    <div class="frame-display" id="frame-display">
+        <div class="artwork-container" id="artwork-container">
+            <img class="artwork-image" id="artwork-image" src="" alt="">
+        </div>
+
+        <div class="swipe-indicator left" id="swipe-left">&larr;</div>
+        <div class="swipe-indicator right" id="swipe-right">&rarr;</div>
+
+        <div class="title-bar" id="title-bar">
+            <div class="artwork-title" id="artwork-title">-</div>
+            <div class="artwork-artist">Dan Brown (1949-2022)</div>
+        </div>
+
+        <div class="progress-dots" id="progress-dots"></div>
+        <div class="timer-display" id="timer-display">--:--</div>
+        <div class="pause-indicator" id="pause-indicator">| |</div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading artwork...</div>
+    </div>
+
+    <!-- Long Press Indicator -->
+    <div class="long-press-indicator" id="long-press-indicator"></div>
+
+    <!-- Details Overlay -->
+    <div class="details-overlay" id="details-overlay">
+        <button class="details-close" onclick="hideDetails()">&times;</button>
+        <img class="details-image" id="details-image" src="" alt="">
+        <div class="details-content">
+            <h1 class="details-title" id="details-title">-</h1>
+            <div class="details-artist">Dan Brown (1949-2022)</div>
+
+            <div class="details-section" id="details-description-section">
+                <h3>About This Work</h3>
+                <p id="details-description">-</p>
+            </div>
+
+            <div class="details-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Medium</div>
+                    <div class="meta-value" id="details-medium">Oil on panel</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Category</div>
+                    <div class="meta-value" id="details-category">Trompe l'oeil</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Style</div>
+                    <div class="meta-value" id="details-style">American Realist</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Source</div>
+                    <div class="meta-value" id="details-source">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div class="settings-overlay" id="settings-overlay">
+        <div class="settings-header">
+            <h2 class="settings-title">Display Settings</h2>
+            <button class="settings-close" onclick="hideSettings()">&times;</button>
+        </div>
+
+        <div class="settings-section">
+            <h3>Slideshow</h3>
+            <div class="setting-row">
+                <span class="setting-label">Auto-Rotate</span>
+                <div class="toggle active" id="toggle-autorotate" onclick="toggleSetting('autorotate')"></div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Rotation Interval</span>
+                <select id="setting-interval" onchange="updateInterval()">
+                    <option value="30">30 seconds</option>
+                    <option value="60">1 minute</option>
+                    <option value="300">5 minutes</option>
+                    <option value="600">10 minutes</option>
+                    <option value="1800">30 minutes</option>
+                    <option value="3600" selected>1 hour</option>
+                    <option value="7200">2 hours</option>
+                    <option value="14400">4 hours</option>
+                    <option value="21600">6 hours</option>
+                    <option value="43200">12 hours</option>
+                    <option value="86400">1 day</option>
+                    <option value="172800">2 days</option>
+                    <option value="259200">3 days</option>
+                    <option value="604800">1 week</option>
+                </select>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Shuffle Order</span>
+                <div class="toggle active" id="toggle-shuffle" onclick="toggleSetting('shuffle')"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>Display</h3>
+            <div class="setting-row">
+                <span class="setting-label">Show Title</span>
+                <div class="toggle" id="toggle-title" onclick="toggleSetting('title')"></div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Show Progress</span>
+                <div class="toggle" id="toggle-progress" onclick="toggleSetting('progress')"></div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Verified Only</span>
+                <div class="toggle active" id="toggle-verified" onclick="toggleSetting('verified')"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>Actions</h3>
+            <button class="btn btn-secondary" onclick="refreshArtworks()">Refresh Artworks</button>
+            <button class="btn btn-secondary" onclick="jumpToRandom()">Random Artwork</button>
+        </div>
+
+        <a href="/display" class="btn btn-exit">Exit Frame Mode</a>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // State
+        let artworks = [];
+        let currentIndex = 0;
+        let rotationTimer = null;
+        let countdownTimer = null;
+        let secondsRemaining = 0;
+        let isPlaying = true;
+        let hideUITimer = null;
+
+        // Touch handling
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let isSwiping = false;
+        let longPressTimer = null;
+        let longPressTriggered = false;
+
+        // Settings
+        let settings = {
+            autorotate: true,
+            interval: 3600,  // Default: 1 hour
+            shuffle: true,
+            showTitle: false,
+            showProgress: false,
+            verifiedOnly: true
+        };
+
+        // Load settings - check URL parameters first, then localStorage
+        function loadSettings() {
+            // First check URL parameters (passed from /display settings page)
+            const urlParams = new URLSearchParams(window.location.search);
+
+            if (urlParams.has('interval')) {
+                settings.interval = parseInt(urlParams.get('interval')) || settings.interval;
+            }
+            if (urlParams.has('showTitle')) {
+                settings.showTitle = urlParams.get('showTitle') === 'true';
+            }
+            if (urlParams.has('verifiedOnly')) {
+                settings.verifiedOnly = urlParams.get('verifiedOnly') === 'true';
+            }
+            if (urlParams.has('shuffle')) {
+                settings.shuffle = urlParams.get('shuffle') === 'true';
+            }
+
+            // If no URL params, try displaySettings from localStorage
+            if (!urlParams.has('interval')) {
+                const displaySaved = localStorage.getItem('displaySettings');
+                if (displaySaved) {
+                    const displaySettings = JSON.parse(displaySaved);
+                    settings.interval = displaySettings.interval || settings.interval;
+                    settings.showTitle = displaySettings.showTitle !== undefined ? displaySettings.showTitle : settings.showTitle;
+                    settings.verifiedOnly = displaySettings.verifiedOnly !== undefined ? displaySettings.verifiedOnly : settings.verifiedOnly;
+                    settings.shuffle = displaySettings.shuffle !== undefined ? displaySettings.shuffle : settings.shuffle;
+                }
+            }
+
+            // Then apply any frame-specific overrides from localStorage
+            const frameSaved = localStorage.getItem('frameSettings');
+            if (frameSaved) {
+                const frameSettings = JSON.parse(frameSaved);
+                settings.autorotate = frameSettings.autorotate !== undefined ? frameSettings.autorotate : settings.autorotate;
+                settings.showProgress = frameSettings.showProgress !== undefined ? frameSettings.showProgress : settings.showProgress;
+            }
+
+            console.log('Frame settings loaded:', settings);
+            applySettings();
+        }
+
+        function saveSettings() {
+            // Save frame-specific settings
+            localStorage.setItem('frameSettings', JSON.stringify(settings));
+            // Also update displaySettings to keep them in sync
+            const displaySaved = localStorage.getItem('displaySettings');
+            const displaySettings = displaySaved ? JSON.parse(displaySaved) : {};
+            displaySettings.interval = settings.interval;
+            displaySettings.showTitle = settings.showTitle;
+            displaySettings.verifiedOnly = settings.verifiedOnly;
+            displaySettings.shuffle = settings.shuffle;
+            localStorage.setItem('displaySettings', JSON.stringify(displaySettings));
+        }
+
+        function applySettings() {
+            document.getElementById('toggle-autorotate').classList.toggle('active', settings.autorotate);
+            document.getElementById('toggle-shuffle').classList.toggle('active', settings.shuffle);
+            document.getElementById('toggle-title').classList.toggle('active', settings.showTitle);
+            document.getElementById('toggle-progress').classList.toggle('active', settings.showProgress);
+            document.getElementById('toggle-verified').classList.toggle('active', settings.verifiedOnly);
+            document.getElementById('setting-interval').value = settings.interval;
+
+            updateUIVisibility();
+        }
+
+        function toggleSetting(name) {
+            const toggle = document.getElementById(`toggle-${name}`);
+            const isActive = !toggle.classList.contains('active');
+            toggle.classList.toggle('active', isActive);
+
+            switch(name) {
+                case 'autorotate':
+                    settings.autorotate = isActive;
+                    isActive ? startRotation() : stopRotation();
+                    break;
+                case 'shuffle':
+                    settings.shuffle = isActive;
+                    if (isActive) shuffleArtworks();
+                    break;
+                case 'title':
+                    settings.showTitle = isActive;
+                    break;
+                case 'progress':
+                    settings.showProgress = isActive;
+                    break;
+                case 'verified':
+                    settings.verifiedOnly = isActive;
+                    hideSettings();
+                    loadArtworks();
+                    break;
+            }
+
+            updateUIVisibility();
+            saveSettings();
+        }
+
+        function updateInterval() {
+            settings.interval = parseInt(document.getElementById('setting-interval').value);
+            saveSettings();
+            if (settings.autorotate) {
+                startRotation();
+            }
+        }
+
+        function updateUIVisibility() {
+            document.getElementById('title-bar').classList.toggle('visible', settings.showTitle);
+            document.getElementById('progress-dots').classList.toggle('visible', settings.showProgress);
+        }
+
+        // Artworks
+        async function loadArtworks() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            try {
+                const verifiedParam = settings.verifiedOnly ? '&verified_only=true' : '';
+                const response = await fetch(`${API_BASE}/artworks/?limit=100${verifiedParam}`);
+                const data = await response.json();
+
+                artworks = data.filter(a => a.primary_image_url);
+
+                if (settings.shuffle) {
+                    shuffleArtworks();
+                }
+
+                renderProgressDots();
+                loading.style.display = 'none';
+
+                if (artworks.length > 0) {
+                    showArtwork(0);
+                    if (settings.autorotate) {
+                        startRotation();
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                loading.innerHTML = '<div>Failed to load artworks</div>';
+            }
+        }
+
+        function shuffleArtworks() {
+            for (let i = artworks.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [artworks[i], artworks[j]] = [artworks[j], artworks[i]];
+            }
+        }
+
+        function renderProgressDots() {
+            const container = document.getElementById('progress-dots');
+            // Limit dots to prevent overflow
+            const maxDots = Math.min(artworks.length, 20);
+            const step = Math.ceil(artworks.length / maxDots);
+
+            container.innerHTML = '';
+            for (let i = 0; i < Math.min(artworks.length, maxDots); i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot' + (i === 0 ? ' active' : '');
+                dot.dataset.index = i * step;
+                container.appendChild(dot);
+            }
+        }
+
+        function updateProgressDots() {
+            const dots = document.querySelectorAll('.dot');
+            const maxDots = dots.length;
+            const step = Math.ceil(artworks.length / maxDots);
+            const activeDotIndex = Math.floor(currentIndex / step);
+
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === activeDotIndex);
+            });
+        }
+
+        function showArtwork(index, direction = 0) {
+            if (artworks.length === 0) return;
+
+            currentIndex = (index + artworks.length) % artworks.length;
+            const artwork = artworks[currentIndex];
+
+            const imageUrl = artwork.primary_image_url
+                .replace('w_320,h_320', 'w_1200,h_1200')
+                .replace('w_800,h_800', 'w_1200,h_1200');
+
+            const img = document.getElementById('artwork-image');
+            img.src = imageUrl;
+            img.alt = artwork.title;
+
+            document.getElementById('artwork-title').textContent = artwork.title;
+
+            updateProgressDots();
+        }
+
+        function nextArtwork() {
+            showArtwork(currentIndex + 1, 1);
+            resetRotation();
+        }
+
+        function prevArtwork() {
+            showArtwork(currentIndex - 1, -1);
+            resetRotation();
+        }
+
+        function jumpToRandom() {
+            const randomIndex = Math.floor(Math.random() * artworks.length);
+            showArtwork(randomIndex);
+            resetRotation();
+            hideSettings();
+        }
+
+        function refreshArtworks() {
+            loadArtworks();
+            hideSettings();
+        }
+
+        // Rotation
+        function startRotation() {
+            stopRotation();
+            secondsRemaining = settings.interval;
+            updateTimerDisplay();
+
+            rotationTimer = setInterval(() => {
+                if (isPlaying) {
+                    nextArtwork();
+                    secondsRemaining = settings.interval;
+                }
+            }, settings.interval * 1000);
+
+            countdownTimer = setInterval(() => {
+                if (isPlaying && secondsRemaining > 0) {
+                    secondsRemaining--;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function stopRotation() {
+            if (rotationTimer) {
+                clearInterval(rotationTimer);
+                rotationTimer = null;
+            }
+            if (countdownTimer) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+            }
+        }
+
+        function resetRotation() {
+            if (settings.autorotate) {
+                startRotation();
+            }
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            const indicator = document.getElementById('pause-indicator');
+            indicator.textContent = isPlaying ? '>' : '| |';
+            indicator.classList.add('visible');
+            setTimeout(() => indicator.classList.remove('visible'), 500);
+        }
+
+        function updateTimerDisplay() {
+            const display = document.getElementById('timer-display');
+
+            if (secondsRemaining >= 86400) {
+                // Days
+                const days = Math.floor(secondsRemaining / 86400);
+                const hours = Math.floor((secondsRemaining % 86400) / 3600);
+                display.textContent = `${days}d ${hours}h`;
+            } else if (secondsRemaining >= 3600) {
+                // Hours
+                const hours = Math.floor(secondsRemaining / 3600);
+                const mins = Math.floor((secondsRemaining % 3600) / 60);
+                display.textContent = `${hours}h ${mins}m`;
+            } else if (secondsRemaining >= 60) {
+                // Minutes
+                const mins = Math.floor(secondsRemaining / 60);
+                const secs = secondsRemaining % 60;
+                display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                // Seconds only
+                display.textContent = `0:${secondsRemaining.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Details
+        function showDetails() {
+            if (artworks.length === 0) return;
+
+            const artwork = artworks[currentIndex];
+            const signals = artwork.positive_signals || {};
+
+            const imageUrl = artwork.primary_image_url
+                .replace('w_320,h_320', 'w_800,h_800');
+
+            document.getElementById('details-image').src = imageUrl;
+            document.getElementById('details-title').textContent = artwork.title;
+            document.getElementById('details-description').textContent =
+                artwork.description || 'A masterful work by Dan Brown showcasing his signature trompe l\'oeil technique.';
+            document.getElementById('details-medium').textContent = signals.medium || 'Oil on panel';
+            document.getElementById('details-category').textContent = signals.category || 'Fine Art';
+            document.getElementById('details-style').textContent = signals.style || 'Trompe l\'oeil';
+            document.getElementById('details-source').textContent = artwork.source_platform || 'Gallery';
+
+            // Hide description section if no description
+            document.getElementById('details-description-section').style.display =
+                artwork.description ? 'block' : 'none';
+
+            document.getElementById('details-overlay').classList.add('visible');
+            isPlaying = false;
+        }
+
+        function hideDetails() {
+            document.getElementById('details-overlay').classList.remove('visible');
+            isPlaying = true;
+        }
+
+        // Settings
+        function showSettings() {
+            document.getElementById('settings-overlay').classList.add('visible');
+            isPlaying = false;
+        }
+
+        function hideSettings() {
+            document.getElementById('settings-overlay').classList.remove('visible');
+            isPlaying = true;
+        }
+
+        // Touch Handling
+        function handleTouchStart(e) {
+            if (e.touches.length > 1) return;
+
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchStartTime = Date.now();
+            isSwiping = false;
+            longPressTriggered = false;
+
+            // Start long press timer
+            longPressTimer = setTimeout(() => {
+                longPressTriggered = true;
+                document.getElementById('long-press-indicator').classList.add('visible');
+                setTimeout(() => {
+                    document.getElementById('long-press-indicator').classList.remove('visible');
+                    showSettings();
+                }, 300);
+            }, 800);
+        }
+
+        function handleTouchMove(e) {
+            if (longPressTriggered) return;
+
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+
+            // Cancel long press if moved too much
+            if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+                clearTimeout(longPressTimer);
+                isSwiping = true;
+
+                const container = document.getElementById('artwork-container');
+                container.classList.add('swiping');
+                container.style.transform = `translateX(${deltaX * 0.5}px)`;
+
+                // Show swipe indicators
+                document.getElementById('swipe-left').classList.toggle('visible', deltaX > 50);
+                document.getElementById('swipe-right').classList.toggle('visible', deltaX < -50);
+            }
+        }
+
+        function handleTouchEnd(e) {
+            clearTimeout(longPressTimer);
+
+            const container = document.getElementById('artwork-container');
+            container.classList.remove('swiping');
+            container.style.transform = '';
+
+            document.getElementById('swipe-left').classList.remove('visible');
+            document.getElementById('swipe-right').classList.remove('visible');
+
+            if (longPressTriggered) return;
+
+            const touch = e.changedTouches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+            const deltaTime = Date.now() - touchStartTime;
+
+            // Detect swipe
+            if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 500) {
+                if (deltaX > 0) {
+                    prevArtwork();
+                } else {
+                    nextArtwork();
+                }
+                return;
+            }
+
+            // Detect tap (for details)
+            if (!isSwiping && Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10 && deltaTime < 300) {
+                // Check if overlays are open
+                const detailsVisible = document.getElementById('details-overlay').classList.contains('visible');
+                const settingsVisible = document.getElementById('settings-overlay').classList.contains('visible');
+
+                if (!detailsVisible && !settingsVisible) {
+                    showDetails();
+                }
+            }
+        }
+
+        // Show UI temporarily
+        function flashUI() {
+            const titleBar = document.getElementById('title-bar');
+            const progressDots = document.getElementById('progress-dots');
+            const timerDisplay = document.getElementById('timer-display');
+
+            titleBar.classList.add('visible');
+            progressDots.classList.add('visible');
+            timerDisplay.classList.add('visible');
+
+            clearTimeout(hideUITimer);
+            hideUITimer = setTimeout(() => {
+                if (!settings.showTitle) titleBar.classList.remove('visible');
+                if (!settings.showProgress) progressDots.classList.remove('visible');
+                timerDisplay.classList.remove('visible');
+            }, 3000);
+        }
+
+        // Keyboard support (for testing)
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    prevArtwork();
+                    flashUI();
+                    break;
+                case 'ArrowRight':
+                    nextArtwork();
+                    flashUI();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'Enter':
+                    showDetails();
+                    break;
+                case 'Escape':
+                    hideDetails();
+                    hideSettings();
+                    break;
+                case 's':
+                    showSettings();
+                    break;
+            }
+        });
+
+        // Touch event listeners
+        const display = document.getElementById('frame-display');
+        display.addEventListener('touchstart', handleTouchStart, { passive: true });
+        display.addEventListener('touchmove', handleTouchMove, { passive: true });
+        display.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+        // Also support mouse for testing
+        let mouseDown = false;
+        let mouseStartX = 0;
+
+        display.addEventListener('mousedown', (e) => {
+            mouseDown = true;
+            mouseStartX = e.clientX;
+            touchStartTime = Date.now();
+
+            longPressTimer = setTimeout(() => {
+                longPressTriggered = true;
+                showSettings();
+            }, 800);
+        });
+
+        display.addEventListener('mousemove', (e) => {
+            if (!mouseDown) return;
+            const deltaX = e.clientX - mouseStartX;
+            if (Math.abs(deltaX) > 10) {
+                clearTimeout(longPressTimer);
+            }
+        });
+
+        display.addEventListener('mouseup', (e) => {
+            if (!mouseDown) return;
+            mouseDown = false;
+            clearTimeout(longPressTimer);
+
+            const deltaX = e.clientX - mouseStartX;
+            const deltaTime = Date.now() - touchStartTime;
+
+            if (longPressTriggered) {
+                longPressTriggered = false;
+                return;
+            }
+
+            if (Math.abs(deltaX) > 50 && deltaTime < 500) {
+                deltaX > 0 ? prevArtwork() : nextArtwork();
+            } else if (Math.abs(deltaX) < 10 && deltaTime < 300) {
+                const detailsVisible = document.getElementById('details-overlay').classList.contains('visible');
+                const settingsVisible = document.getElementById('settings-overlay').classList.contains('visible');
+                if (!detailsVisible && !settingsVisible) {
+                    showDetails();
+                }
+            }
+        });
+
+        // Prevent context menu on long press
+        display.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Initialize
+        loadSettings();
+        loadArtworks();
+    </script>
+</body>
+</html>

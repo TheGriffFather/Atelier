@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outreach Tracking - Dan Brown Art Tracker</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --accent: #c9a227;
+            --accent-soft: #8b7355;
+            --text-primary: #ffffff;
+            --text-secondary: #888;
+            --success: #4a9c6d;
+            --warning: #c9a227;
+            --danger: #a85454;
+            --info: #5a8fbd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 400;
+        }
+
+        header h1 span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-left: auto;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent);
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2.5rem;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 300;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls select, .controls button, .controls input {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .controls select:hover, .controls select:focus,
+        .controls input:hover, .controls input:focus {
+            border-color: var(--accent-soft);
+            outline: none;
+        }
+
+        .controls button {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+            font-weight: 500;
+        }
+
+        .controls button:hover {
+            background: #d4ad30;
+        }
+
+        .controls button.secondary {
+            background: transparent;
+            border-color: var(--accent-soft);
+            color: var(--text-primary);
+        }
+
+        .controls button.secondary:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            padding: 0 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        /* Contact/Outreach Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .card-body {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .card-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .badge-type {
+            background: rgba(90, 143, 189, 0.2);
+            color: var(--info);
+        }
+
+        .badge-priority-5 {
+            background: rgba(168, 84, 84, 0.2);
+            color: var(--danger);
+        }
+
+        .badge-priority-4 {
+            background: rgba(201, 162, 39, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-priority-3 {
+            background: rgba(74, 156, 109, 0.2);
+            color: var(--success);
+        }
+
+        .badge-status-awaiting {
+            background: rgba(201, 162, 39, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-status-responded {
+            background: rgba(74, 156, 109, 0.2);
+            color: var(--success);
+        }
+
+        .badge-status-sent {
+            background: rgba(90, 143, 189, 0.2);
+            color: var(--info);
+        }
+
+        .badge-status-draft {
+            background: rgba(136, 136, 136, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .card-actions button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card-actions button:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--accent-soft);
+        }
+
+        .card-actions button.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #000;
+        }
+
+        /* Follow-up Alert */
+        .follow-up-alert {
+            background: rgba(201, 162, 39, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .follow-up-alert h3 {
+            color: var(--warning);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .follow-up-list {
+            list-style: none;
+        }
+
+        .follow-up-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .follow-up-list li:last-child {
+            border-bottom: none;
+        }
+
+        .follow-up-date {
+            color: var(--warning);
+            font-size: 0.75rem;
+        }
+
+        .overdue {
+            color: var(--danger);
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .modal-footer {
+            padding: 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Dan Brown <span>Art Tracker</span></h1>
+        <nav class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/outreach" class="active">Outreach</a>
+            <a href="/display">Display</a>
+        </nav>
+    </header>
+
+    <div class="stats-bar" id="statsBar">
+        <div class="stat">
+            <div class="stat-value" id="totalContacts">-</div>
+            <div class="stat-label">Contacts</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="totalOutreach">-</div>
+            <div class="stat-label">Outreach</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="sentCount">-</div>
+            <div class="stat-label">Sent</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="awaitingCount">-</div>
+            <div class="stat-label">Awaiting</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="respondedCount">-</div>
+            <div class="stat-label">Responded</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="imagesCount">-</div>
+            <div class="stat-label">Images Received</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="totalLeads">-</div>
+            <div class="stat-label">Research Leads</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="highPriorityLeads">-</div>
+            <div class="stat-label">High Priority</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="contacts">Contacts</div>
+        <div class="tab" data-tab="outreach">Outreach History</div>
+        <div class="tab" data-tab="follow-ups">Follow-ups</div>
+        <div class="tab" data-tab="leads">Research Leads</div>
+    </div>
+
+    <div class="controls">
+        <select id="filterType">
+            <option value="">All Types</option>
+            <option value="gallery">Gallery</option>
+            <option value="auction_house">Auction House</option>
+            <option value="museum">Museum</option>
+            <option value="publisher">Publisher</option>
+            <option value="educational">Educational</option>
+            <option value="government">Government</option>
+            <option value="agency">Agency</option>
+        </select>
+        <select id="filterStatus">
+            <option value="">All Statuses</option>
+            <option value="awaiting_response">Awaiting Response</option>
+            <option value="responded">Responded</option>
+            <option value="sent">Sent</option>
+            <option value="draft">Draft</option>
+            <option value="follow_up_needed">Follow-up Needed</option>
+        </select>
+        <select id="filterLeadStatus" class="hidden">
+            <option value="">All Lead Statuses</option>
+            <option value="new">New</option>
+            <option value="investigating">Investigating</option>
+            <option value="contacted">Contacted</option>
+            <option value="resolved">Resolved</option>
+            <option value="dead_end">Dead End</option>
+        </select>
+        <select id="filterLeadPriority" class="hidden">
+            <option value="">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+        </select>
+        <select id="filterLeadCategory" class="hidden">
+            <option value="">All Categories</option>
+            <option value="personal_artifact">Personal Artifact</option>
+            <option value="commercial_work">Commercial Work</option>
+            <option value="fine_art">Fine Art</option>
+            <option value="provenance">Provenance</option>
+            <option value="publication">Publication</option>
+            <option value="exhibition">Exhibition</option>
+        </select>
+        <button onclick="openAddContactModal()" id="btnAddContact">+ Add Contact</button>
+        <button class="secondary" onclick="openAddOutreachModal()" id="btnAddOutreach">+ Log Outreach</button>
+        <button onclick="openAddLeadModal()" id="btnAddLead" class="hidden">+ Add Lead</button>
+    </div>
+
+    <main>
+        <!-- Follow-ups Alert (shown on all tabs when there are pending follow-ups) -->
+        <div id="followUpAlert" class="follow-up-alert hidden">
+            <h3>Pending Follow-ups</h3>
+            <ul class="follow-up-list" id="followUpList"></ul>
+        </div>
+
+        <!-- Contacts Tab -->
+        <div id="contactsTab" class="tab-content">
+            <div class="card-grid" id="contactsGrid"></div>
+        </div>
+
+        <!-- Outreach Tab -->
+        <div id="outreachTab" class="tab-content hidden">
+            <div class="table-container">
+                <table id="outreachTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Contact</th>
+                            <th>Type</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Follow-up</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="outreachTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Follow-ups Tab -->
+        <div id="followUpsTab" class="tab-content hidden">
+            <div class="card-grid" id="followUpsGrid"></div>
+        </div>
+
+        <!-- Research Leads Tab -->
+        <div id="leadsTab" class="tab-content hidden">
+            <div class="card-grid" id="leadsGrid"></div>
+        </div>
+    </main>
+
+    <!-- Add Contact Modal -->
+    <div class="modal-overlay" id="addContactModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Contact</h2>
+                <button class="modal-close" onclick="closeModal('addContactModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addContactForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name *</label>
+                            <input type="text" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Organization</label>
+                            <input type="text" name="organization">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select name="contact_type">
+                                <option value="gallery">Gallery</option>
+                                <option value="auction_house">Auction House</option>
+                                <option value="museum">Museum</option>
+                                <option value="publisher">Publisher</option>
+                                <option value="educational">Educational</option>
+                                <option value="government">Government</option>
+                                <option value="agency">Agency</option>
+                                <option value="individual">Individual</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select name="priority">
+                                <option value="5">5 - Highest</option>
+                                <option value="4">4 - High</option>
+                                <option value="3" selected>3 - Medium</option>
+                                <option value="2">2 - Low</option>
+                                <option value="1">1 - Lowest</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="city">
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="state">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Connection to Dan Brown's Work</label>
+                        <textarea name="connection_notes" placeholder="How is this contact related to Dan Brown's artwork?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Artworks</label>
+                        <input type="text" name="target_artworks" placeholder="Which artworks might they have info on?">
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" onclick="closeModal('addContactModal')">Cancel</button>
+                <button onclick="submitAddContact()">Add Contact</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Outreach Modal -->
+    <div class="modal-overlay" id="addOutreachModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Log Outreach</h2>
+                <button class="modal-close" onclick="closeModal('addOutreachModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addOutreachForm">
+                    <div class="form-group">
+                        <label>Contact *</label>
+                        <select name="contact_id" required id="outreachContactSelect"></select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select name="outreach_type">
+                                <option value="email">Email</option>
+                                <option value="phone">Phone</option>
+                                <option value="letter">Letter</option>
+                                <option value="in_person">In Person</option>
+                                <option value="social_media">Social Media</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status">
+                                <option value="draft">Draft</option>
+                                <option value="sent">Sent</option>
+                                <option value="awaiting_response">Awaiting Response</option>
+                                <option value="responded">Responded</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject</label>
+                        <input type="text" name="subject">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date Sent</label>
+                            <input type="datetime-local" name="date_sent">
+                        </div>
+                        <div class="form-group">
+                            <label>Follow-up Date</label>
+                            <input type="datetime-local" name="follow_up_date">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>What are you requesting?</label>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem;">
+                                <input type="checkbox" name="requesting_images"> Images
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem;">
+                                <input type="checkbox" name="requesting_metadata"> Metadata
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem;">
+                                <input type="checkbox" name="requesting_provenance"> Provenance
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem;">
+                                <input type="checkbox" name="requesting_attribution"> Attribution
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Request Details</label>
+                        <textarea name="request_details" placeholder="Specific items you're requesting..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" onclick="closeModal('addOutreachModal')">Cancel</button>
+                <button onclick="submitAddOutreach()">Log Outreach</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Research Lead Modal -->
+    <div class="modal-overlay" id="addLeadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Research Lead</h2>
+                <button class="modal-close" onclick="closeModal('addLeadModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="addLeadForm">
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" name="title" required placeholder="Short descriptive title">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select name="category">
+                                <option value="personal_artifact">Personal Artifact</option>
+                                <option value="commercial_work">Commercial Work</option>
+                                <option value="fine_art">Fine Art</option>
+                                <option value="provenance">Provenance</option>
+                                <option value="publication">Publication</option>
+                                <option value="exhibition">Exhibition</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select name="priority">
+                                <option value="high">High - Emotional Value</option>
+                                <option value="medium" selected>Medium - Worth Pursuing</option>
+                                <option value="low">Low - Speculative</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" placeholder="Full details about this lead..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Source</label>
+                            <input type="text" name="source" placeholder="e.g., Daughter conversation Dec 1">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select name="status">
+                                <option value="new" selected>New</option>
+                                <option value="investigating">Investigating</option>
+                                <option value="contacted">Contacted</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Search Terms</label>
+                        <input type="text" name="search_terms" placeholder="Keywords to search for this lead">
+                    </div>
+                    <div class="form-group">
+                        <label>Next Action</label>
+                        <textarea name="next_action" placeholder="What needs to be done next?"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="secondary" onclick="closeModal('addLeadModal')">Cancel</button>
+                <button onclick="submitAddLead()">Add Lead</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let contacts = [];
+        let outreachRecords = [];
+        let followUps = [];
+        let researchLeads = [];
+        let stats = {};
+        let leadStats = {};
+        let currentTab = 'contacts';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadLeadStats();
+            loadContacts();
+            loadOutreach();
+            loadFollowUps();
+            loadLeads();
+            setupTabs();
+            setupFilters();
+        });
+
+        // Tab switching
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentTab = tab.dataset.tab;
+
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+
+                    // Show/hide appropriate filters and buttons
+                    const isLeadsTab = currentTab === 'leads';
+                    document.getElementById('filterType').classList.toggle('hidden', isLeadsTab);
+                    document.getElementById('filterStatus').classList.toggle('hidden', isLeadsTab);
+                    document.getElementById('filterLeadStatus').classList.toggle('hidden', !isLeadsTab);
+                    document.getElementById('filterLeadPriority').classList.toggle('hidden', !isLeadsTab);
+                    document.getElementById('filterLeadCategory').classList.toggle('hidden', !isLeadsTab);
+                    document.getElementById('btnAddContact').classList.toggle('hidden', isLeadsTab);
+                    document.getElementById('btnAddOutreach').classList.toggle('hidden', isLeadsTab);
+                    document.getElementById('btnAddLead').classList.toggle('hidden', !isLeadsTab);
+
+                    if (currentTab === 'contacts') {
+                        document.getElementById('contactsTab').classList.remove('hidden');
+                    } else if (currentTab === 'outreach') {
+                        document.getElementById('outreachTab').classList.remove('hidden');
+                    } else if (currentTab === 'follow-ups') {
+                        document.getElementById('followUpsTab').classList.remove('hidden');
+                    } else if (currentTab === 'leads') {
+                        document.getElementById('leadsTab').classList.remove('hidden');
+                    }
+                });
+            });
+        }
+
+        // Filters
+        function setupFilters() {
+            document.getElementById('filterType').addEventListener('change', () => {
+                if (currentTab === 'contacts') loadContacts();
+            });
+            document.getElementById('filterStatus').addEventListener('change', () => {
+                if (currentTab === 'outreach') loadOutreach();
+            });
+            document.getElementById('filterLeadStatus').addEventListener('change', () => {
+                if (currentTab === 'leads') loadLeads();
+            });
+            document.getElementById('filterLeadPriority').addEventListener('change', () => {
+                if (currentTab === 'leads') loadLeads();
+            });
+            document.getElementById('filterLeadCategory').addEventListener('change', () => {
+                if (currentTab === 'leads') loadLeads();
+            });
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/outreach/stats');
+                stats = await response.json();
+
+                document.getElementById('totalContacts').textContent = stats.total_contacts;
+                document.getElementById('totalOutreach').textContent = stats.total_outreach;
+                document.getElementById('sentCount').textContent = stats.sent;
+                document.getElementById('awaitingCount').textContent = stats.awaiting_response;
+                document.getElementById('respondedCount').textContent = stats.responded;
+                document.getElementById('imagesCount').textContent = stats.images_received;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load contacts
+        async function loadContacts() {
+            try {
+                const filterType = document.getElementById('filterType').value;
+                let url = '/api/outreach/contacts';
+                if (filterType) url += `?contact_type=${filterType}`;
+
+                const response = await fetch(url);
+                contacts = await response.json();
+                renderContacts();
+            } catch (error) {
+                console.error('Error loading contacts:', error);
+            }
+        }
+
+        // Render contacts
+        function renderContacts() {
+            const grid = document.getElementById('contactsGrid');
+
+            if (contacts.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No contacts found</div>';
+                return;
+            }
+
+            grid.innerHTML = contacts.map(contact => `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${contact.name}</div>
+                            <div class="card-subtitle">${contact.organization || ''}</div>
+                        </div>
+                        <span class="badge badge-priority-${contact.priority}">P${contact.priority}</span>
+                    </div>
+                    <div class="card-body">
+                        ${contact.connection_notes || 'No connection notes'}
+                    </div>
+                    <div class="card-meta">
+                        <span class="badge badge-type">${formatContactType(contact.contact_type)}</span>
+                        ${contact.city ? `<span>${contact.city}, ${contact.state}</span>` : ''}
+                        ${contact.outreach_count > 0 ? `<span>${contact.outreach_count} outreach</span>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button onclick="viewContact(${contact.id})">View</button>
+                        <button onclick="logOutreachFor(${contact.id})">Log Outreach</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load outreach
+        async function loadOutreach() {
+            try {
+                const filterStatus = document.getElementById('filterStatus').value;
+                let url = '/api/outreach/records';
+                if (filterStatus) url += `?status=${filterStatus}`;
+
+                const response = await fetch(url);
+                outreachRecords = await response.json();
+                renderOutreach();
+            } catch (error) {
+                console.error('Error loading outreach:', error);
+            }
+        }
+
+        // Render outreach table
+        function renderOutreach() {
+            const tbody = document.getElementById('outreachTableBody');
+
+            if (outreachRecords.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No outreach records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = outreachRecords.map(record => `
+                <tr>
+                    <td>${record.date_sent ? formatDate(record.date_sent) : '-'}</td>
+                    <td>${record.contact_name}</td>
+                    <td>${formatOutreachType(record.outreach_type)}</td>
+                    <td>${record.subject || '-'}</td>
+                    <td><span class="badge badge-status-${record.status.split('_')[0]}">${formatStatus(record.status)}</span></td>
+                    <td>${record.follow_up_date ? formatDate(record.follow_up_date) : '-'}</td>
+                    <td>
+                        <button onclick="viewOutreach(${record.id})" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load follow-ups
+        async function loadFollowUps() {
+            try {
+                const response = await fetch('/api/outreach/follow-ups');
+                followUps = await response.json();
+                renderFollowUps();
+                renderFollowUpAlert();
+            } catch (error) {
+                console.error('Error loading follow-ups:', error);
+            }
+        }
+
+        // Render follow-ups
+        function renderFollowUps() {
+            const grid = document.getElementById('followUpsGrid');
+
+            if (followUps.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No pending follow-ups</div>';
+                return;
+            }
+
+            grid.innerHTML = followUps.map(fu => `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${fu.contact_name}</div>
+                            <div class="card-subtitle">${fu.subject || 'No subject'}</div>
+                        </div>
+                        <span class="badge ${fu.is_overdue ? 'badge-priority-5' : 'badge-status-awaiting'}">
+                            ${fu.is_overdue ? 'OVERDUE' : 'Due ' + formatDate(fu.follow_up_date)}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        Sent: ${fu.date_sent ? formatDate(fu.date_sent) : 'Not sent'}
+                    </div>
+                    <div class="card-actions">
+                        <button onclick="viewOutreach(${fu.id})">View</button>
+                        <button class="primary" onclick="markFollowedUp(${fu.id})">Mark Followed Up</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render follow-up alert
+        function renderFollowUpAlert() {
+            const alert = document.getElementById('followUpAlert');
+            const list = document.getElementById('followUpList');
+
+            const overdueItems = followUps.filter(fu => fu.is_overdue);
+
+            if (overdueItems.length === 0) {
+                alert.classList.add('hidden');
+                return;
+            }
+
+            alert.classList.remove('hidden');
+            list.innerHTML = overdueItems.map(fu => `
+                <li>
+                    <span>${fu.contact_name} - ${fu.subject || 'No subject'}</span>
+                    <span class="follow-up-date overdue">Due ${formatDate(fu.follow_up_date)}</span>
+                </li>
+            `).join('');
+        }
+
+        // Format helpers
+        function formatContactType(type) {
+            const types = {
+                'gallery': 'Gallery',
+                'auction_house': 'Auction House',
+                'museum': 'Museum',
+                'publisher': 'Publisher',
+                'educational': 'Educational',
+                'government': 'Government',
+                'agency': 'Agency',
+                'individual': 'Individual',
+                'other': 'Other'
+            };
+            return types[type] || type;
+        }
+
+        function formatOutreachType(type) {
+            const types = {
+                'email': 'Email',
+                'phone': 'Phone',
+                'letter': 'Letter',
+                'in_person': 'In Person',
+                'social_media': 'Social Media',
+                'other': 'Other'
+            };
+            return types[type] || type;
+        }
+
+        function formatStatus(status) {
+            const statuses = {
+                'draft': 'Draft',
+                'sent': 'Sent',
+                'awaiting_response': 'Awaiting',
+                'responded': 'Responded',
+                'follow_up_needed': 'Follow-up',
+                'closed': 'Closed',
+                'no_response': 'No Response'
+            };
+            return statuses[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        // Modal functions
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function openAddContactModal() {
+            document.getElementById('addContactForm').reset();
+            openModal('addContactModal');
+        }
+
+        async function openAddOutreachModal() {
+            document.getElementById('addOutreachForm').reset();
+
+            // Populate contact dropdown
+            const select = document.getElementById('outreachContactSelect');
+            select.innerHTML = contacts.map(c =>
+                `<option value="${c.id}">${c.name}${c.organization ? ' - ' + c.organization : ''}</option>`
+            ).join('');
+
+            openModal('addOutreachModal');
+        }
+
+        function logOutreachFor(contactId) {
+            openAddOutreachModal().then(() => {
+                document.getElementById('outreachContactSelect').value = contactId;
+            });
+            document.getElementById('outreachContactSelect').value = contactId;
+        }
+
+        // Submit functions
+        async function submitAddContact() {
+            const form = document.getElementById('addContactForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.priority = parseInt(data.priority);
+
+            try {
+                const response = await fetch('/api/outreach/contacts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeModal('addContactModal');
+                    loadContacts();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to add contact'));
+                }
+            } catch (error) {
+                console.error('Error adding contact:', error);
+                alert('Error adding contact');
+            }
+        }
+
+        async function submitAddOutreach() {
+            const form = document.getElementById('addOutreachForm');
+            const formData = new FormData(form);
+            const data = {};
+
+            for (const [key, value] of formData.entries()) {
+                if (key.startsWith('requesting_')) {
+                    data[key] = form.querySelector(`[name="${key}"]`).checked;
+                } else if (key === 'contact_id') {
+                    data[key] = parseInt(value);
+                } else if (value) {
+                    data[key] = value;
+                }
+            }
+
+            // Handle checkboxes that might not be in formData when unchecked
+            ['requesting_images', 'requesting_metadata', 'requesting_provenance', 'requesting_attribution'].forEach(field => {
+                if (!(field in data)) {
+                    data[field] = false;
+                }
+            });
+
+            try {
+                const response = await fetch('/api/outreach/records', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeModal('addOutreachModal');
+                    loadOutreach();
+                    loadFollowUps();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to add outreach'));
+                }
+            } catch (error) {
+                console.error('Error adding outreach:', error);
+                alert('Error adding outreach');
+            }
+        }
+
+        // View functions (simplified - could open a modal with full details)
+        function viewContact(id) {
+            window.location.href = `/api/outreach/contacts/${id}`;
+        }
+
+        function viewOutreach(id) {
+            window.location.href = `/api/outreach/records/${id}`;
+        }
+
+        async function markFollowedUp(id) {
+            try {
+                const response = await fetch(`/api/outreach/records/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'follow_up_needed' })
+                });
+
+                if (response.ok) {
+                    loadFollowUps();
+                    loadOutreach();
+                    loadStats();
+                }
+            } catch (error) {
+                console.error('Error updating outreach:', error);
+            }
+        }
+
+        // =============================================================================
+        // Research Leads Functions
+        // =============================================================================
+
+        async function loadLeadStats() {
+            try {
+                const response = await fetch('/api/outreach/leads/stats/summary');
+                leadStats = await response.json();
+
+                document.getElementById('totalLeads').textContent = leadStats.total_leads || 0;
+                document.getElementById('highPriorityLeads').textContent = leadStats.by_priority?.high || 0;
+            } catch (error) {
+                console.error('Error loading lead stats:', error);
+            }
+        }
+
+        async function loadLeads() {
+            try {
+                const status = document.getElementById('filterLeadStatus').value;
+                const priority = document.getElementById('filterLeadPriority').value;
+                const category = document.getElementById('filterLeadCategory').value;
+
+                let url = '/api/outreach/leads';
+                const params = [];
+                if (status) params.push(`status=${status}`);
+                if (priority) params.push(`priority=${priority}`);
+                if (category) params.push(`category=${category}`);
+                if (params.length) url += '?' + params.join('&');
+
+                const response = await fetch(url);
+                researchLeads = await response.json();
+                renderLeads();
+            } catch (error) {
+                console.error('Error loading leads:', error);
+            }
+        }
+
+        function renderLeads() {
+            const grid = document.getElementById('leadsGrid');
+
+            if (researchLeads.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No research leads found. Click "+ Add Lead" to create one.</div>';
+                return;
+            }
+
+            grid.innerHTML = researchLeads.map(lead => `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">${lead.title}</div>
+                            <div class="card-subtitle">${formatLeadCategory(lead.category)}</div>
+                        </div>
+                        <span class="badge badge-priority-${lead.priority === 'high' ? '5' : lead.priority === 'medium' ? '4' : '3'}">
+                            ${lead.priority.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        ${lead.description || 'No description'}
+                    </div>
+                    ${lead.next_action ? `
+                        <div class="card-body" style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <strong style="color: var(--accent);">Next Action:</strong> ${lead.next_action}
+                        </div>
+                    ` : ''}
+                    <div class="card-meta">
+                        <span class="badge badge-status-${lead.status === 'new' ? 'draft' : lead.status === 'investigating' ? 'awaiting' : 'sent'}">
+                            ${formatLeadStatus(lead.status)}
+                        </span>
+                        ${lead.source ? `<span>Source: ${lead.source}</span>` : ''}
+                        ${lead.search_terms ? `<span>Search: ${lead.search_terms.substring(0, 30)}...</span>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button onclick="viewLead(${lead.id})">View</button>
+                        <button onclick="updateLeadStatus(${lead.id}, 'investigating')">Investigate</button>
+                        <button class="primary" onclick="updateLeadStatus(${lead.id}, 'resolved')">Resolve</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatLeadCategory(category) {
+            const categories = {
+                'personal_artifact': 'Personal Artifact',
+                'commercial_work': 'Commercial Work',
+                'fine_art': 'Fine Art',
+                'provenance': 'Provenance',
+                'publication': 'Publication',
+                'exhibition': 'Exhibition',
+                'other': 'Other'
+            };
+            return categories[category] || category;
+        }
+
+        function formatLeadStatus(status) {
+            const statuses = {
+                'new': 'New',
+                'investigating': 'Investigating',
+                'contacted': 'Contacted',
+                'resolved': 'Resolved',
+                'dead_end': 'Dead End'
+            };
+            return statuses[status] || status;
+        }
+
+        function openAddLeadModal() {
+            document.getElementById('addLeadForm').reset();
+            openModal('addLeadModal');
+        }
+
+        async function submitAddLead() {
+            const form = document.getElementById('addLeadForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/outreach/leads', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeModal('addLeadModal');
+                    loadLeads();
+                    loadLeadStats();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.detail || 'Failed to add lead'));
+                }
+            } catch (error) {
+                console.error('Error adding lead:', error);
+                alert('Error adding lead');
+            }
+        }
+
+        function viewLead(id) {
+            window.location.href = `/api/outreach/leads/${id}`;
+        }
+
+        async function updateLeadStatus(id, status) {
+            try {
+                const response = await fetch(`/api/outreach/leads/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: status })
+                });
+
+                if (response.ok) {
+                    loadLeads();
+                    loadLeadStats();
+                }
+            } catch (error) {
+                console.error('Error updating lead:', error);
+            }
+        }
+    </script>
+</body>
+</html>

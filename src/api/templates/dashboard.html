@@ -1,0 +1,1789 @@
+{% extends "base.html" %}
+
+{% block title %}Tracker | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    <!-- Page Header -->
+    <header class="sticky top-0 z-10 bg-gray-850/95 backdrop-blur-sm border-b border-gray-800">
+        <div class="px-6 lg:px-8 py-6">
+            <!-- Title Row -->
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 id="page-title" class="text-3xl font-serif font-semibold text-gray-200">Tracker</h1>
+                    <p id="page-subtitle" class="text-sm text-gray-500 mt-1">Manage and verify artwork discoveries</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="openAddModal()" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Artwork
+                    </button>
+
+                    <div class="relative group">
+                        <button class="btn-secondary">
+                            Export
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-40 bg-gray-800 rounded-lg border border-gray-700 shadow-soft-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                            <a href="/api/artworks/export/json" class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100 rounded-t-lg">Export JSON</a>
+                            <a href="/api/artworks/export/csv" class="block px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-gray-100 rounded-b-lg">Export CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- TAB: Tracker -->
+    <div id="tab-tracker" class="tab-content active">
+        <!-- Stats Cards - Concept Art Style -->
+        <div class="px-6 lg:px-8 py-6">
+            <div class="flex flex-wrap gap-4">
+                <!-- Total Works - with circular progress -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="circular-stat" id="stat-total-ring">
+                        <svg viewBox="0 0 36 36" class="w-16 h-16">
+                            <path class="text-gray-700" stroke="currentColor" stroke-width="3" fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="text-gold-500" stroke="currentColor" stroke-width="3" fill="none"
+                                  stroke-linecap="round" stroke-dasharray="75, 100"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Total Works:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-total">--</p>
+                    </div>
+                </div>
+
+                <!-- Verified - with circular progress -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="circular-stat" id="stat-verified-ring">
+                        <svg viewBox="0 0 36 36" class="w-16 h-16">
+                            <path class="text-gray-700" stroke="currentColor" stroke-width="3" fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="text-success-500" stroke="currentColor" stroke-width="3" fill="none"
+                                  stroke-linecap="round" stroke-dasharray="80, 100"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Verified:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-verified">--</p>
+                    </div>
+                </div>
+
+                <!-- Needs Images - warning style -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="circular-stat" id="stat-needs-images-ring">
+                        <svg viewBox="0 0 36 36" class="w-16 h-16">
+                            <path class="text-gray-700" stroke="currentColor" stroke-width="3" fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="text-amber-500" stroke="currentColor" stroke-width="3" fill="none"
+                                  stroke-linecap="round" stroke-dasharray="20, 100"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Needs Images:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-needs-images">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar - Concept Art Style with Pills -->
+        <div class="px-6 lg:px-8 py-4 border-b border-gray-800/50">
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Category Pills -->
+                <div class="flex items-center gap-2 flex-wrap" id="category-pills">
+                    <button class="filter-pill active" data-filter="" onclick="setTypeFilter('')">
+                        All
+                    </button>
+                    <button class="filter-pill" data-filter="Painting" onclick="setTypeFilter('Painting')">
+                        <span class="filter-pill-dot bg-blue-400"></span>
+                        Paintings
+                    </button>
+                    <button class="filter-pill" data-filter="Illustration" onclick="setTypeFilter('Illustration')">
+                        <span class="filter-pill-dot bg-purple-400"></span>
+                        Illustrations
+                    </button>
+                    <button class="filter-pill" data-filter="Book Cover" onclick="setTypeFilter('Book Cover')">
+                        <span class="filter-pill-dot bg-pink-400"></span>
+                        Book Covers
+                    </button>
+                    <button class="filter-pill" data-filter="Lithograph" onclick="setTypeFilter('Lithograph')">
+                        <span class="filter-pill-dot bg-emerald-400"></span>
+                        Lithographs
+                    </button>
+                    <button class="filter-pill" data-filter="Drawing" onclick="setTypeFilter('Drawing')">
+                        <span class="filter-pill-dot bg-cyan-400"></span>
+                        Drawings
+                    </button>
+                    <button class="filter-pill" data-filter="Print" onclick="setTypeFilter('Print')">
+                        <span class="filter-pill-dot bg-rose-400"></span>
+                        Prints
+                    </button>
+                    <button class="filter-pill" data-filter="Ephemera" onclick="setTypeFilter('Ephemera')">
+                        <span class="filter-pill-dot bg-amber-400"></span>
+                        Ephemera
+                    </button>
+                </div>
+
+                <!-- Search -->
+                <div class="relative ml-auto">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search Archive..."
+                           class="form-input pl-10 py-2 w-64 bg-gray-800/50" onkeyup="handleSearch(event)">
+                </div>
+            </div>
+
+            <!-- Hidden art type select (synced with pills) -->
+            <select id="filter-art-type" class="hidden">
+                <option value="">All Types</option>
+                <option value="Painting">Paintings</option>
+                <option value="Book Cover">Book Covers</option>
+                <option value="Lithograph">Lithographs</option>
+                <option value="Illustration">Illustrations</option>
+                <option value="Drawing">Drawings</option>
+                <option value="Print">Prints</option>
+                <option value="Ephemera">Ephemera</option>
+            </select>
+
+            <!-- Streamlined Action Bar -->
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-800/30">
+                <!-- Advanced Filters Button -->
+                <div class="relative">
+                    <button onclick="toggleAdvancedFilters()" id="advanced-filters-btn"
+                            class="flex items-center gap-2 text-sm text-gray-400 hover:text-gold-500 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-800/50 border border-transparent" data-has-filters="false">
+                        <div class="relative">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                            </svg>
+                            <span id="filter-active-dot" class="hidden absolute -top-1 -right-1 w-2 h-2 bg-gold-500 rounded-full"></span>
+                        </div>
+                        <span>Filters</span>
+                        <span id="active-filters-count" class="hidden px-1.5 py-0.5 text-xs bg-gold-500/20 text-gold-400 rounded-full">0</span>
+                    </button>
+
+                    <!-- Advanced Filters Dropdown -->
+                    <div id="advanced-filters" class="hidden absolute top-full left-0 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-4 z-50 space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-500 uppercase tracking-wider mb-1 block">Status</label>
+                            <select id="filter-status" class="form-select py-2 text-sm w-full">
+                                <option value="">All Status</option>
+                                <option value="new">New</option>
+                                <option value="watching">Watching</option>
+                                <option value="contacted">Contacted</option>
+                                <option value="acquired">Acquired</option>
+                                <option value="passed">Passed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 uppercase tracking-wider mb-1 block">Verification</label>
+                            <select id="filter-verified" class="form-select py-2 text-sm w-full">
+                                <option value="">All</option>
+                                <option value="verified">Verified Only</option>
+                                <option value="unverified">Unverified Only</option>
+                            </select>
+                        </div>
+                        <div class="pt-2 border-t border-gray-700">
+                            <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                                <input type="checkbox" id="filter-false-positives" class="form-checkbox">
+                                <span>Show False Positives</span>
+                            </label>
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button onclick="clearFilters()" class="flex-1 btn-ghost py-2 text-sm">Clear</button>
+                            <button onclick="toggleAdvancedFilters()" class="flex-1 btn-primary py-2 text-sm">Apply</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right side: count, view toggle, and actions -->
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-500" id="result-count">Loading...</span>
+
+                    <!-- View Toggle Buttons -->
+                    <div class="flex items-center bg-gray-800 rounded-lg p-0.5 border border-gray-700">
+                        <button onclick="setTrackerView('cards')" id="view-cards-btn" class="view-toggle-btn active" title="Card View">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </button>
+                        <button onclick="setTrackerView('compact')" id="view-compact-btn" class="view-toggle-btn" title="Compact View">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                            </svg>
+                        </button>
+                        <button onclick="setTrackerView('table')" id="view-table-btn" class="view-toggle-btn" title="Table View">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                        <button onclick="setTrackerView('masonry')" id="view-masonry-btn" class="view-toggle-btn" title="Masonry View (Pinterest style)">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button onclick="loadArtworks()" class="btn-icon text-gray-400 hover:text-gray-200" title="Refresh">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Actions Bar (hidden by default) -->
+        <div id="bulk-controls" class="px-6 lg:px-8 py-3 bg-gold-500/10 border-b border-gold-500/30 hidden">
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gold-400" id="selected-count">0 selected</span>
+                <button onclick="bulkVerify()" class="btn-success py-1.5 px-3 text-sm">Verify Selected</button>
+                <button onclick="bulkReject()" class="btn-danger py-1.5 px-3 text-sm">Reject Selected</button>
+                <button onclick="clearSelection()" class="btn-ghost py-1.5 px-3 text-sm">Clear Selection</button>
+            </div>
+        </div>
+
+        <!-- Tracker Grid -->
+        <div class="px-6 lg:px-8 py-8">
+            <div id="tracker-loading" class="flex flex-col items-center justify-center py-20" style="display: none;">
+                <div class="spinner"></div>
+                <p class="mt-4 text-sm text-gray-500">Loading artworks...</p>
+            </div>
+
+            <div id="tracker-empty" class="text-center py-20" style="display: none;">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-300 mb-2">No artworks found</h3>
+                <p class="text-sm text-gray-500">Try adjusting your filters or run the scraper to find new listings.</p>
+            </div>
+
+            <div id="tracker-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards inserted by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: Gallery -->
+    <div id="tab-gallery" class="tab-content">
+        <!-- Gallery Filter Bar -->
+        <div class="px-6 lg:px-8 py-4 bg-gray-800/50 border-b border-gray-800">
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Art Type Filter -->
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider">Type:</label>
+                    <select id="gallery-type-filter" class="form-select py-2 min-w-[160px]">
+                        <option value="all">All Types</option>
+                        <option value="fine-art" selected>Fine Art Only</option>
+                        <option value="Painting">Paintings</option>
+                        <option value="Book Cover">Book Covers</option>
+                        <option value="Lithograph">Lithographs</option>
+                        <option value="Print">Prints</option>
+                        <option value="Drawing">Drawings</option>
+                        <option value="Illustration">Illustrations</option>
+                    </select>
+                </div>
+
+                <!-- Subject Category Filter -->
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider">Subject:</label>
+                    <select id="gallery-filter" class="form-select py-2 min-w-[180px]">
+                        <option value="all">All Subjects</option>
+                        <option value="Still Life">Still Life</option>
+                        <option value="Currency">Currency</option>
+                        <option value="Postcards">Postcards</option>
+                        <option value="Portrait">Portrait</option>
+                        <option value="Coastal">Coastal</option>
+                        <option value="Winter">Winter</option>
+                        <option value="New York">New York</option>
+                        <option value="Urban Landscape">Urban Landscape</option>
+                        <option value="Conceptual">Conceptual</option>
+                        <option value="Commercial Illustration">Commercial Illustration</option>
+                    </select>
+                </div>
+
+                <!-- Verification Filter -->
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500 uppercase tracking-wider">Status:</label>
+                    <select id="gallery-verification-filter" class="form-select py-2 min-w-[140px]">
+                        <option value="all">All</option>
+                        <option value="verified">Verified Only</option>
+                        <option value="unverified">Unverified Only</option>
+                    </select>
+                </div>
+
+                <!-- Divider -->
+                <div class="h-8 w-px bg-gray-700 hidden sm:block"></div>
+
+                <!-- Count -->
+                <span class="text-sm text-gray-500" id="gallery-count">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="px-6 lg:px-8 py-8">
+            <div id="gallery-loading" class="flex flex-col items-center justify-center py-20" style="display: none;">
+                <div class="spinner"></div>
+                <p class="mt-4 text-sm text-gray-500">Loading gallery...</p>
+            </div>
+
+            <div id="gallery-grid" class="masonry-grid">
+                <!-- Gallery items inserted by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: Shows -->
+    <div id="tab-shows" class="tab-content">
+        <!-- Shows Stats -->
+        <div class="px-6 lg:px-8 py-6">
+            <div class="flex flex-wrap gap-4">
+                <!-- Total Shows -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Total Shows:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-shows-total">--</p>
+                    </div>
+                </div>
+
+                <!-- Solo Shows -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Solo Shows:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-shows-solo">--</p>
+                    </div>
+                </div>
+
+                <!-- Group Shows -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Group Shows:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-shows-group">--</p>
+                    </div>
+                </div>
+
+                <!-- Venues -->
+                <div class="glass-card px-6 py-5 flex items-center gap-4 min-w-[180px]">
+                    <div class="w-12 h-12 rounded-full bg-gold-500/20 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-gold-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase tracking-wider">Unique Venues:</p>
+                        <p class="text-3xl font-serif text-gray-200" id="stat-shows-venues">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shows Filter Bar -->
+        <div class="px-6 lg:px-8 py-4 border-b border-gray-800/50">
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Type Pills -->
+                <div class="flex items-center gap-2 flex-wrap" id="shows-type-pills">
+                    <button class="filter-pill active" data-filter="" onclick="setShowsTypeFilter('')">
+                        All
+                    </button>
+                    <button class="filter-pill" data-filter="solo" onclick="setShowsTypeFilter('solo')">
+                        <span class="filter-pill-dot bg-purple-400"></span>
+                        Solo Shows
+                    </button>
+                    <button class="filter-pill" data-filter="group" onclick="setShowsTypeFilter('group')">
+                        <span class="filter-pill-dot bg-blue-400"></span>
+                        Group Shows
+                    </button>
+                </div>
+
+                <!-- Decade Filter -->
+                <select id="shows-decade-filter" class="form-select py-2 ml-auto" onchange="loadShows()">
+                    <option value="">All Decades</option>
+                    <option value="1990">1990s</option>
+                    <option value="2000">2000s</option>
+                    <option value="2010">2010s</option>
+                    <option value="2020">2020s</option>
+                </select>
+
+                <!-- Search -->
+                <div class="relative">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="shows-search-input" placeholder="Search venues..."
+                           class="form-input pl-10 py-2 w-64 bg-gray-800/50" onkeyup="handleShowsSearch(event)">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-800/30">
+                <span class="text-sm text-gray-500" id="shows-result-count">Loading...</span>
+                <button onclick="loadShows()" class="btn-icon text-gray-400 hover:text-gray-200" title="Refresh">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Shows Grid -->
+        <div class="px-6 lg:px-8 py-8">
+            <div id="shows-loading" class="flex flex-col items-center justify-center py-20" style="display: none;">
+                <div class="spinner"></div>
+                <p class="mt-4 text-sm text-gray-500">Loading exhibitions...</p>
+            </div>
+
+            <div id="shows-empty" class="text-center py-20" style="display: none;">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-300 mb-2">No exhibitions found</h3>
+                <p class="text-sm text-gray-500">Try adjusting your filters.</p>
+            </div>
+
+            <div id="shows-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Shows cards inserted by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Artwork Modal -->
+<div id="add-modal" class="modal-overlay" onclick="closeAddModal(event)">
+    <div class="modal-content p-0 max-w-2xl" onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Add New Artwork</h2>
+            <button onclick="closeAddModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <form id="add-artwork-form" class="p-6 space-y-6 max-h-[70vh] overflow-y-auto" onsubmit="submitArtwork(event)">
+            <!-- Basic Info -->
+            <div class="space-y-4">
+                <h4 class="text-xs font-semibold text-gold-500 uppercase tracking-wider">Basic Information</h4>
+                <div>
+                    <label class="form-label">Title *</label>
+                    <input type="text" name="title" required class="form-input" placeholder="e.g., Seven Ones">
+                </div>
+                <div>
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-textarea" rows="3" placeholder="Description of the artwork..."></textarea>
+                </div>
+            </div>
+
+            <div class="divider-gold"></div>
+
+            <!-- Physical Details -->
+            <div class="space-y-4">
+                <h4 class="text-xs font-semibold text-gold-500 uppercase tracking-wider">Physical Details</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Medium</label>
+                        <select name="medium" class="form-select">
+                            <option value="">Select medium</option>
+                            <option value="Oil on canvas">Oil on canvas</option>
+                            <option value="Oil on board">Oil on board</option>
+                            <option value="Oil on panel">Oil on panel</option>
+                            <option value="Oil on Masonite">Oil on Masonite</option>
+                            <option value="Acrylic">Acrylic</option>
+                            <option value="Watercolor">Watercolor</option>
+                            <option value="Mixed media">Mixed media</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">Select category</option>
+                            <option value="Currency">Currency / Trompe l'oeil</option>
+                            <option value="Vintage Postcards">Vintage Postcards</option>
+                            <option value="Still Life">Still Life / Ephemera</option>
+                            <option value="Coastal">Landscapes / Coastal</option>
+                            <option value="New York">New York Scenes</option>
+                            <option value="Winter">Winter / Atmospheric</option>
+                            <option value="Rack Painting">Rack Painting</option>
+                            <option value="Portrait">Portrait</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Dimensions (in)</label>
+                        <input type="text" name="dimensions" class="form-input" placeholder="e.g., 12 x 16 in">
+                    </div>
+                    <div>
+                        <label class="form-label">Year Created</label>
+                        <input type="number" name="year_created" class="form-input" placeholder="e.g., 1985" min="1949" max="2022">
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider-gold"></div>
+
+            <!-- Source Info -->
+            <div class="space-y-4">
+                <h4 class="text-xs font-semibold text-gold-500 uppercase tracking-wider">Source & Acquisition</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="form-label">Price ($)</label>
+                        <input type="number" name="price" class="form-input" step="0.01" placeholder="e.g., 2500">
+                    </div>
+                    <div>
+                        <label class="form-label">Location</label>
+                        <input type="text" name="location" class="form-input" placeholder="e.g., Madison, CT">
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label">Image URL</label>
+                    <input type="url" name="image_url" class="form-input" placeholder="https://...">
+                </div>
+                <div>
+                    <label class="form-label">Source URL</label>
+                    <input type="url" name="source_url" class="form-input" placeholder="https://...">
+                </div>
+                <div>
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-textarea" rows="2" placeholder="Any additional notes..."></textarea>
+                </div>
+            </div>
+        </form>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="closeAddModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" form="add-artwork-form" class="btn-primary">Add Artwork</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+    <button class="absolute top-4 right-4 btn-icon bg-gray-800/80 hover:bg-gray-700 z-10" onclick="closeLightbox()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+
+    <button class="absolute left-4 top-1/2 -translate-y-1/2 btn-icon bg-gray-800/80 hover:bg-gray-700 w-12 h-12 z-10" onclick="navigateLightbox(-1, event)">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </button>
+
+    <div class="lightbox-content max-w-5xl mx-auto flex flex-col items-center justify-center py-4 px-4" onclick="event.stopPropagation()">
+        <img id="lightbox-img" src="" alt="" class="lightbox-img max-w-full w-auto rounded-lg shadow-2xl">
+
+        <!-- Museum Placard -->
+        <a id="lightbox-placard" href="#" class="museum-placard group mt-4 block flex-shrink-0" onclick="event.stopPropagation()">
+            <div class="placard-inner">
+                <p class="placard-artist">Dan Brown</p>
+                <p class="placard-dates">American, 1949–2022</p>
+                <h3 id="placard-title" class="placard-title"></h3>
+                <p id="placard-year" class="placard-year"></p>
+                <p id="placard-medium" class="placard-medium"></p>
+                <p id="placard-dimensions" class="placard-dimensions"></p>
+                <div class="placard-hint">
+                    <span>View Details</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </a>
+
+        <!-- Navigation hint -->
+        <p class="text-xs text-gray-600 mt-2 flex-shrink-0" id="lightbox-nav-hint"></p>
+    </div>
+
+    <button class="absolute right-4 top-1/2 -translate-y-1/2 btn-icon bg-gray-800/80 hover:bg-gray-700 w-12 h-12 z-10" onclick="navigateLightbox(1, event)">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Tab content visibility */
+    .tab-content {
+        display: none;
+    }
+    .tab-content.active {
+        display: block;
+    }
+
+    /* View Toggle Buttons */
+    .view-toggle-btn {
+        padding: 0.375rem 0.5rem;
+        border-radius: 0.375rem;
+        color: #9ca3af;
+        transition: all 0.15s ease;
+    }
+    .view-toggle-btn:hover {
+        color: #e5e7eb;
+        background-color: rgba(55, 65, 81, 0.5);
+    }
+    .view-toggle-btn.active {
+        color: #d4af37;
+        background-color: rgba(212, 175, 55, 0.15);
+    }
+
+    /* Masonry Grid Layout */
+    .masonry-grid {
+        column-count: 2;
+        column-gap: 1rem;
+    }
+    @media (min-width: 640px) {
+        .masonry-grid { column-count: 3; }
+    }
+    @media (min-width: 1024px) {
+        .masonry-grid { column-count: 4; }
+    }
+    @media (min-width: 1280px) {
+        .masonry-grid { column-count: 5; }
+    }
+    .masonry-item {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+
+    /* Lightbox Layout - ensure image + placard fit in viewport */
+    .lightbox-content {
+        height: 100vh;
+        max-height: 100vh;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+    .lightbox-img {
+        max-height: calc(100vh - 220px); /* Leave room for placard (~180px) + padding */
+        object-fit: contain;
+        flex-shrink: 1;
+        min-height: 0; /* Important for flex shrinking */
+    }
+
+    /* Biography prose styles */
+    .prose-gold h1 { @apply text-3xl font-serif text-gold-500 mb-2; }
+    .prose-gold h2 { @apply text-2xl font-serif text-gray-200 mt-8 mb-4 pb-2 border-b border-gray-700; }
+    .prose-gold h3 { @apply text-xl font-serif text-gold-400 mt-6 mb-3; }
+    .prose-gold p { @apply text-gray-300 leading-relaxed mb-4; }
+    .prose-gold ul, .prose-gold ol { @apply ml-6 mb-4 text-gray-300; }
+    .prose-gold li { @apply mb-2; }
+    .prose-gold a { @apply text-gold-500 hover:text-gold-400 underline; }
+    .prose-gold blockquote { @apply border-l-2 border-gold-500 pl-4 italic text-gray-400 my-4; }
+    .prose-gold .dates { @apply text-xl text-gray-400 mb-6; }
+
+    /* Museum Placard Styles */
+    .museum-placard {
+        max-width: 400px;
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .museum-placard:hover {
+        transform: translateY(-2px);
+    }
+    .placard-inner {
+        background: linear-gradient(145deg, #faf9f7 0%, #f5f3ef 100%);
+        border: 1px solid #d4d0c8;
+        border-radius: 4px;
+        padding: 1.25rem 1.5rem;
+        box-shadow:
+            0 2px 4px rgba(0,0,0,0.08),
+            0 4px 12px rgba(0,0,0,0.06),
+            inset 0 1px 0 rgba(255,255,255,0.8);
+        position: relative;
+        text-align: left;
+    }
+    .museum-placard:hover .placard-inner {
+        box-shadow:
+            0 4px 8px rgba(0,0,0,0.12),
+            0 8px 24px rgba(0,0,0,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.8);
+        border-color: #b8a98f;
+    }
+    .placard-artist {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin: 0 0 0.125rem 0;
+        letter-spacing: 0.02em;
+    }
+    .placard-dates {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 0.8rem;
+        color: #555;
+        margin: 0 0 0.75rem 0;
+    }
+    .placard-title {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 1.1rem;
+        font-style: italic;
+        color: #1a1a1a;
+        margin: 0 0 0.5rem 0;
+        line-height: 1.3;
+    }
+    .placard-year {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 0.9rem;
+        color: #333;
+        margin: 0 0 0.375rem 0;
+    }
+    .placard-medium {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 0.85rem;
+        color: #444;
+        margin: 0 0 0.25rem 0;
+    }
+    .placard-dimensions {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 0.8rem;
+        color: #666;
+        margin: 0;
+    }
+    .placard-hint {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        margin-top: 0.75rem;
+        padding-top: 0.625rem;
+        border-top: 1px solid #e0dcd4;
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 0.75rem;
+        color: #888;
+        opacity: 0;
+        transition: opacity 0.2s ease, color 0.2s ease;
+    }
+    .museum-placard:hover .placard-hint {
+        opacity: 1;
+        color: #8b7355;
+    }
+    .placard-hint svg {
+        transition: transform 0.2s ease;
+    }
+    .museum-placard:hover .placard-hint svg {
+        transform: translateX(2px);
+    }
+</style>
+
+<script>
+    // State
+    let artworks = [];
+    let galleryArtworks = [];
+    let exhibitions = [];
+    let currentLightboxIndex = 0;
+    let searchTimeout = null;
+    let showsSearchTimeout = null;
+    let selectedIds = new Set();
+    let showsLoaded = false;
+    let currentShowsTypeFilter = '';
+    let trackerView = localStorage.getItem('trackerView') || 'cards'; // cards, compact, table, masonry
+
+    // Tab switching
+    function switchTab(tabName) {
+        // Update buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+
+        // Update content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById('tab-' + tabName).classList.add('active');
+
+        // Update page title and subtitle
+        const titles = {
+            tracker: { title: 'Tracker', subtitle: 'Manage and verify artwork discoveries' },
+            gallery: { title: 'Gallery', subtitle: 'Visual collection of catalogued works' },
+            shows: { title: 'Shows', subtitle: 'Exhibition history from 1993-2023' }
+        };
+        const info = titles[tabName] || titles.tracker;
+        document.getElementById('page-title').textContent = info.title;
+        document.getElementById('page-subtitle').textContent = info.subtitle;
+        document.title = `${info.title} | Dan Brown Catalogue Raisonné`;
+
+        // Update URL without reload
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabName);
+        history.replaceState({}, '', url);
+
+        // Update sidebar navigation
+        updateSidebarNav(tabName);
+
+        // Load data for tab
+        if (tabName === 'gallery') loadGallery();
+        if (tabName === 'shows') loadShows();
+    }
+
+    // Set type filter via pill buttons
+    function setTypeFilter(type) {
+        // Update hidden select to match
+        document.getElementById('filter-art-type').value = type;
+
+        // Update pill active states
+        document.querySelectorAll('#category-pills .filter-pill').forEach(pill => {
+            if (pill.dataset.filter === type) {
+                pill.classList.add('active');
+            } else {
+                pill.classList.remove('active');
+            }
+        });
+
+        // Reload artworks with new filter
+        loadArtworks();
+    }
+
+    // Toggle advanced filters dropdown
+    function toggleAdvancedFilters() {
+        const dropdown = document.getElementById('advanced-filters');
+        dropdown.classList.toggle('hidden');
+        updateActiveFiltersCount();
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('advanced-filters');
+        const btn = document.getElementById('advanced-filters-btn');
+        if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Clear all advanced filters
+    function clearFilters() {
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-verified').value = '';
+        document.getElementById('filter-false-positives').checked = false;
+        updateActiveFiltersCount();
+        loadArtworks();
+    }
+
+    // Update the active filters count badge and indicator
+    function updateActiveFiltersCount() {
+        let count = 0;
+        if (document.getElementById('filter-status').value) count++;
+        if (document.getElementById('filter-verified').value) count++;
+        if (document.getElementById('filter-false-positives').checked) count++;
+
+        const badge = document.getElementById('active-filters-count');
+        const dot = document.getElementById('filter-active-dot');
+        const btn = document.getElementById('advanced-filters-btn');
+
+        if (count > 0) {
+            badge.textContent = count;
+            badge.classList.remove('hidden');
+            dot.classList.remove('hidden');
+            btn.classList.add('border-gold-500/50', 'text-gold-500');
+            btn.classList.remove('border-transparent');
+        } else {
+            badge.classList.add('hidden');
+            dot.classList.add('hidden');
+            btn.classList.remove('border-gold-500/50', 'text-gold-500');
+            btn.classList.add('border-transparent');
+        }
+    }
+
+    // Update circular progress ring
+    function updateCircularProgress(ringId, percentage, colorClass) {
+        const ring = document.querySelector(`#${ringId} svg path:last-child`);
+        if (ring) {
+            const clampedPercentage = Math.min(100, Math.max(0, percentage));
+            ring.setAttribute('stroke-dasharray', `${clampedPercentage}, 100`);
+        }
+    }
+
+    // Load stats
+    async function loadStats() {
+        try {
+            const stats = await API.get('/stats');
+            const total = stats.total || 0;
+            const verified = stats.verified || 0;
+            const withImages = stats.with_images || 0;
+            const needsImages = total - withImages;
+
+            // Update stat values
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-verified').textContent = verified;
+            document.getElementById('stat-needs-images').textContent = needsImages;
+
+            // Update circular progress rings
+            const verifiedPercent = total > 0 ? (verified / total) * 100 : 0;
+            const needsImagesPercent = total > 0 ? (needsImages / total) * 100 : 0;
+
+            updateCircularProgress('stat-total-ring', 100, 'gold');
+            updateCircularProgress('stat-verified-ring', verifiedPercent, 'success');
+            updateCircularProgress('stat-needs-images-ring', needsImagesPercent, 'amber');
+        } catch (e) {
+            console.error('Failed to load stats:', e);
+        }
+    }
+
+    // Load artworks for tracker
+    async function loadArtworks() {
+        const grid = document.getElementById('tracker-grid');
+        const loading = document.getElementById('tracker-loading');
+        const emptyState = document.getElementById('tracker-empty');
+        const resultCount = document.getElementById('result-count');
+
+        // Build query params
+        const params = new URLSearchParams();
+        params.set('limit', '100');
+        params.set('sort_by', 'images_first');
+
+        const search = document.getElementById('search-input').value.trim();
+        const artType = document.getElementById('filter-art-type').value;
+        const status = document.getElementById('filter-status').value;
+        const verified = document.getElementById('filter-verified').value;
+        const showFalsePositives = document.getElementById('filter-false-positives').checked;
+
+        if (search) params.set('search', search);
+        if (artType) params.set('art_type', artType);
+        if (status) params.set('status', status);
+        if (verified === 'verified') params.set('verified_only', 'true');
+        if (verified === 'unverified') params.set('unverified_only', 'true');
+        if (showFalsePositives) params.set('include_false_positives', 'true');
+
+        // Show loading
+        grid.innerHTML = '';
+        loading.style.display = 'flex';
+        emptyState.style.display = 'none';
+
+        try {
+            artworks = await API.get(`/artworks?${params.toString()}`);
+
+            loading.style.display = 'none';
+
+            if (artworks.length === 0) {
+                emptyState.style.display = 'block';
+                resultCount.textContent = '0 artworks';
+                return;
+            }
+
+            resultCount.textContent = `${artworks.length} artwork${artworks.length !== 1 ? 's' : ''}`;
+
+            // Render based on current view
+            renderTrackerView(grid, artworks);
+
+        } catch (e) {
+            loading.style.display = 'none';
+            showToast('Failed to load artworks', 'error');
+            console.error(e);
+        }
+    }
+
+    // Check if source_url is a real purchasable link (not a manual:// placeholder)
+    function isPurchasableUrl(url) {
+        if (!url) return false;
+        return url.startsWith('http://') || url.startsWith('https://');
+    }
+
+    // Create tracker card HTML - Concept Art Style
+    function createTrackerCard(artwork, index) {
+        const imageUrl = artwork.primary_image_url || '/api/static/placeholder.png';
+        const year = artwork.year_created || artwork.year_created_circa || '';
+        const yearDisplay = year ? (artwork.year_created_circa ? `c. ${year}` : year) : '';
+        const confidencePercent = Math.min(100, Math.round(artwork.confidence_score * 20)); // 0-5 scale to percentage
+
+        return `
+            <div class="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl border border-gray-800 hover:border-gold-500/30" data-id="${artwork.id}">
+                <!-- Image Container -->
+                <div class="aspect-[4/3] w-full relative overflow-hidden bg-gray-800">
+                    <img src="${imageUrl}" alt="${escapeHtml(artwork.title)}"
+                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                         onerror="this.src='/api/static/placeholder.svg'" loading="lazy">
+
+                    <!-- Status Badges -->
+                    <div class="absolute top-3 right-3 flex gap-1.5">
+                        ${artwork.acquisition_status === 'acquired' ? `
+                            <div class="px-2 py-1 bg-gray-900/80 backdrop-blur-sm border border-emerald-500/50 rounded text-xs font-medium text-emerald-400">
+                                Acquired
+                            </div>
+                        ` : ''}
+                        ${isPurchasableUrl(artwork.source_url) && artwork.acquisition_status !== 'acquired' ? `
+                            <div class="px-2 py-1 bg-gray-900/80 backdrop-blur-sm border border-blue-500/50 rounded text-xs font-medium text-blue-400">
+                                For Sale
+                            </div>
+                        ` : ''}
+                        ${artwork.is_verified ? `
+                            <div class="px-2 py-1 bg-gray-900/80 backdrop-blur-sm border border-gold-500/50 rounded text-xs font-medium text-gold-500">
+                                Verified
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Card Info - Always Visible -->
+                <div class="p-4 bg-gray-900">
+                    <h3 class="text-lg font-serif text-gray-200 truncate group-hover:text-gold-500 transition-colors">
+                        ${escapeHtml(artwork.title)}
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        ${yearDisplay || 'Date unknown'}${artwork.medium ? ` · ${escapeHtml(artwork.medium)}` : ''}
+                    </p>
+
+                    <!-- Action Buttons - expand on hover -->
+                    <div class="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300">
+                        <div class="overflow-hidden">
+                            <div class="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-gray-800">
+                                <div class="flex gap-2">
+                                    <a href="/artwork/${artwork.id}"
+                                       class="px-4 py-2 bg-gold-600 hover:bg-gold-500 text-gray-900 text-sm font-medium rounded-lg transition-colors">
+                                        View
+                                    </a>
+                                    ${!artwork.is_verified ? `
+                                        <button onclick="event.preventDefault(); event.stopPropagation(); verifyArtwork(${artwork.id})"
+                                                class="px-3 py-2 border border-gray-600 hover:border-success-400 hover:text-success-400 text-gray-300 text-sm rounded-lg transition-colors"
+                                                title="Confirm this is Dan Brown's work">
+                                            ✓
+                                        </button>
+                                        <button onclick="event.preventDefault(); event.stopPropagation(); rejectArtwork(${artwork.id})"
+                                                class="px-3 py-2 border border-gray-600 hover:border-danger-400 hover:text-danger-400 text-gray-300 text-sm rounded-lg transition-colors"
+                                                title="Reject - not Dan Brown's work">
+                                            ✕
+                                        </button>
+                                    ` : ''}
+                                </div>
+
+                                <!-- Confidence Circle -->
+                                <div class="w-10 h-10 rounded-full border-2 border-gold-600/40 flex items-center justify-center relative flex-shrink-0">
+                                    <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                        <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-700"/>
+                                        <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" stroke-width="2" class="text-gold-500"
+                                                stroke-dasharray="${confidencePercent}, 100" stroke-linecap="round"/>
+                                    </svg>
+                                    <span class="text-gold-500 text-xs font-bold">${artwork.confidence_score.toFixed(1)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Compact view row
+    function createCompactRow(artwork, index) {
+        const imageUrl = artwork.primary_image_url || '/api/static/placeholder.png';
+        const year = artwork.year_created || artwork.year_created_circa || '';
+        const yearDisplay = year ? (artwork.year_created_circa ? `c. ${year}` : year) : '—';
+
+        return `
+            <a href="/artwork/${artwork.id}" class="flex items-center gap-4 p-3 bg-gray-900 hover:bg-gray-800 border-b border-gray-800 transition-colors" data-id="${artwork.id}">
+                <img src="${imageUrl}" alt="${escapeHtml(artwork.title)}"
+                     class="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                     onerror="this.src='/api/static/placeholder.svg'" loading="lazy">
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-gray-200 font-medium truncate">${escapeHtml(artwork.title)}</h3>
+                    <p class="text-sm text-gray-500">${yearDisplay}${artwork.medium ? ` · ${escapeHtml(artwork.medium)}` : ''}</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    ${artwork.acquisition_status === 'acquired' ? '<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded">Acquired</span>' : ''}
+                    ${isPurchasableUrl(artwork.source_url) && artwork.acquisition_status !== 'acquired' ? '<span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded">For Sale</span>' : ''}
+                    ${artwork.is_verified ? '<span class="px-2 py-1 bg-gold-500/20 text-gold-500 text-xs rounded">Verified</span>' : ''}
+                    <span class="text-gold-500 text-sm font-medium">${artwork.confidence_score.toFixed(1)}</span>
+                </div>
+            </a>
+        `;
+    }
+
+    // Masonry view card (Pinterest-style with natural image heights)
+    function createMasonryCard(artwork, index) {
+        const imageUrl = artwork.primary_image_url || '/api/static/placeholder.png';
+        const year = artwork.year_created || artwork.year_created_circa || '';
+        const yearDisplay = year ? (artwork.year_created_circa ? `c. ${year}` : year) : '';
+
+        return `
+            <div class="masonry-item group relative rounded-lg overflow-hidden cursor-pointer bg-gray-800 shadow-lg" data-id="${artwork.id}">
+                <a href="/artwork/${artwork.id}" class="block">
+                    <img src="${imageUrl}" alt="${escapeHtml(artwork.title)}"
+                         class="w-full h-auto block transition-transform duration-300 group-hover:scale-105"
+                         onerror="this.src='/api/static/placeholder.svg'" loading="lazy">
+
+                    <!-- Status Badges -->
+                    <div class="absolute top-2 right-2 flex gap-1">
+                        ${artwork.acquisition_status === 'acquired' ? `
+                            <div class="px-2 py-0.5 bg-gray-900/80 backdrop-blur-sm border border-emerald-500/50 rounded text-xs font-medium text-emerald-400">
+                                Acquired
+                            </div>
+                        ` : ''}
+                        ${isPurchasableUrl(artwork.source_url) && artwork.acquisition_status !== 'acquired' ? `
+                            <div class="px-2 py-0.5 bg-gray-900/80 backdrop-blur-sm border border-blue-500/50 rounded text-xs font-medium text-blue-400">
+                                For Sale
+                            </div>
+                        ` : ''}
+                        ${artwork.is_verified ? `
+                            <div class="px-2 py-0.5 bg-gray-900/80 backdrop-blur-sm border border-gold-500/50 rounded text-xs font-medium text-gold-500">
+                                Verified
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Confidence Score Badge -->
+                    <div class="absolute top-2 left-2 px-2 py-0.5 bg-gray-900/80 backdrop-blur-sm rounded text-xs font-bold text-gold-500">
+                        ${artwork.confidence_score.toFixed(1)}
+                    </div>
+
+                    <!-- Hover Overlay with Info -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-900/95 via-gray-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute bottom-0 left-0 right-0 p-3">
+                            <p class="text-sm font-medium text-gray-100 line-clamp-2 drop-shadow-lg">${escapeHtml(artwork.title)}</p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                ${yearDisplay || 'Date unknown'}${artwork.medium ? ` · ${escapeHtml(artwork.medium)}` : ''}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        `;
+    }
+
+    // Table view
+    function createTableView(artworksData) {
+        return `
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-800 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Image</th>
+                            <th class="px-4 py-3 text-left">Title</th>
+                            <th class="px-4 py-3 text-left">Year</th>
+                            <th class="px-4 py-3 text-left">Medium</th>
+                            <th class="px-4 py-3 text-left">Type</th>
+                            <th class="px-4 py-3 text-center">Status</th>
+                            <th class="px-4 py-3 text-center">Score</th>
+                            <th class="px-4 py-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800">
+                        ${artworksData.map(artwork => {
+                            const imageUrl = artwork.primary_image_url || '/api/static/placeholder.png';
+                            const year = artwork.year_created || artwork.year_created_circa || '';
+                            const yearDisplay = year ? (artwork.year_created_circa ? `c. ${year}` : year) : '—';
+                            return `
+                                <tr class="bg-gray-900 hover:bg-gray-800 transition-colors" data-id="${artwork.id}">
+                                    <td class="px-4 py-3">
+                                        <img src="${imageUrl}" alt="${escapeHtml(artwork.title)}"
+                                             class="w-12 h-12 object-cover rounded"
+                                             onerror="this.src='/api/static/placeholder.svg'" loading="lazy">
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <a href="/artwork/${artwork.id}" class="text-gray-200 hover:text-gold-500 font-medium">${escapeHtml(artwork.title)}</a>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-400">${yearDisplay}</td>
+                                    <td class="px-4 py-3 text-gray-400 max-w-[150px] truncate">${artwork.medium || '—'}</td>
+                                    <td class="px-4 py-3 text-gray-400">${artwork.art_type || '—'}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        <div class="flex items-center justify-center gap-1 flex-wrap">
+                                            ${artwork.acquisition_status === 'acquired' ? '<span class="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded">Acquired</span>' : ''}
+                                            ${isPurchasableUrl(artwork.source_url) && artwork.acquisition_status !== 'acquired' ? '<span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded">For Sale</span>' : ''}
+                                            ${artwork.is_verified
+                                                ? '<span class="px-2 py-1 bg-gold-500/20 text-gold-500 text-xs rounded">Verified</span>'
+                                                : '<span class="px-2 py-1 bg-gray-700 text-gray-400 text-xs rounded">Pending</span>'}
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <span class="text-gold-500 font-medium">${artwork.confidence_score.toFixed(1)}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <a href="/artwork/${artwork.id}" class="p-1.5 text-gray-400 hover:text-gold-500" title="View">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </a>
+                                            ${!artwork.is_verified ? `
+                                                <button onclick="event.preventDefault(); verifyArtwork(${artwork.id})" class="p-1.5 text-gray-400 hover:text-green-500" title="Verify">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </button>
+                                                <button onclick="event.preventDefault(); rejectArtwork(${artwork.id})" class="p-1.5 text-gray-400 hover:text-red-500" title="Reject">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    // Render tracker based on current view
+    function renderTrackerView(grid, artworksData) {
+        // Update grid classes based on view
+        if (trackerView === 'cards') {
+            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+        } else if (trackerView === 'compact') {
+            grid.className = 'flex flex-col';
+        } else if (trackerView === 'masonry') {
+            grid.className = 'masonry-grid';
+        } else {
+            grid.className = ''; // table has its own structure
+        }
+
+        // Render content
+        if (trackerView === 'cards') {
+            grid.innerHTML = artworksData.map((artwork, index) => createTrackerCard(artwork, index)).join('');
+        } else if (trackerView === 'compact') {
+            grid.innerHTML = artworksData.map((artwork, index) => createCompactRow(artwork, index)).join('');
+        } else if (trackerView === 'masonry') {
+            grid.innerHTML = artworksData.map((artwork, index) => createMasonryCard(artwork, index)).join('');
+        } else if (trackerView === 'table') {
+            grid.innerHTML = createTableView(artworksData);
+        }
+    }
+
+    // Set tracker view
+    function setTrackerView(view) {
+        trackerView = view;
+        localStorage.setItem('trackerView', view);
+
+        // Update button states
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`view-${view}-btn`).classList.add('active');
+
+        // Re-render if we have artworks loaded
+        if (artworks.length > 0) {
+            const grid = document.getElementById('tracker-grid');
+            renderTrackerView(grid, artworks);
+        }
+    }
+
+    // Initialize view toggle buttons on load
+    function initViewToggle() {
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(`view-${trackerView}-btn`);
+        if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    // Gallery
+    async function loadGallery() {
+        const grid = document.getElementById('gallery-grid');
+        const loading = document.getElementById('gallery-loading');
+        const countEl = document.getElementById('gallery-count');
+        const subjectFilter = document.getElementById('gallery-filter').value;
+        const typeFilter = document.getElementById('gallery-type-filter').value;
+        const verificationFilter = document.getElementById('gallery-verification-filter').value;
+
+        loading.style.display = 'flex';
+        grid.innerHTML = '';
+
+        try {
+            let data = await API.get('/artworks?limit=200');
+
+            // Filter to only artworks with images
+            data = data.filter(a => a.primary_image_url);
+
+            // Apply art type filter
+            if (typeFilter !== 'all') {
+                if (typeFilter === 'fine-art') {
+                    // Fine art excludes book covers and commercial illustration
+                    data = data.filter(a => {
+                        const artType = (a.art_type || '').toLowerCase();
+                        return artType !== 'book cover' && artType !== 'illustration' &&
+                               !/commercial/i.test(a.category || '');
+                    });
+                } else {
+                    // Filter by specific art type
+                    data = data.filter(a => a.art_type === typeFilter);
+                }
+            }
+
+            // Apply verification filter
+            if (verificationFilter === 'verified') {
+                data = data.filter(a => a.is_verified);
+            } else if (verificationFilter === 'unverified') {
+                data = data.filter(a => !a.is_verified);
+            }
+
+            // Apply subject category filter (matches database category field directly)
+            if (subjectFilter !== 'all') {
+                data = data.filter(a => {
+                    const category = a.category || '';
+                    // Exact match on category
+                    return category === subjectFilter;
+                });
+            }
+
+            galleryArtworks = data;
+            loading.style.display = 'none';
+            countEl.textContent = `${data.length} artwork${data.length !== 1 ? 's' : ''} with images`;
+
+            if (data.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20">
+                        <p class="text-gray-500">No artworks with images found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = data.map((artwork, index) => {
+                let imageUrl = artwork.primary_image_url || '';
+                return `
+                <div class="masonry-item group relative rounded-lg overflow-hidden cursor-pointer bg-gray-800 shadow-lg" onclick="openLightbox(${index})">
+                    <img src="${imageUrl}" alt="${escapeHtml(artwork.title)}"
+                         class="w-full h-auto block transition-transform duration-300 group-hover:scale-105"
+                         loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <div class="absolute bottom-0 left-0 right-0 p-3">
+                            <p class="text-sm font-medium text-gray-100 line-clamp-2 drop-shadow-lg">${escapeHtml(artwork.title)}</p>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+
+        } catch (e) {
+            loading.style.display = 'none';
+            showToast('Failed to load gallery', 'error');
+            console.error(e);
+        }
+    }
+
+    // Lightbox functions
+    function openLightbox(index) {
+        currentLightboxIndex = index;
+        updateLightbox();
+        document.getElementById('lightbox').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function navigateLightbox(direction, event) {
+        if (event) event.stopPropagation();
+        currentLightboxIndex += direction;
+        if (currentLightboxIndex < 0) currentLightboxIndex = galleryArtworks.length - 1;
+        if (currentLightboxIndex >= galleryArtworks.length) currentLightboxIndex = 0;
+        updateLightbox();
+    }
+
+    function updateLightbox() {
+        const artwork = galleryArtworks[currentLightboxIndex];
+        if (!artwork) return;
+
+        const highResUrl = artwork.primary_image_url
+            .replace('w_320,h_320', 'w_1200,h_1200')
+            .replace('w_800,h_800', 'w_1200,h_1200');
+
+        document.getElementById('lightbox-img').src = highResUrl;
+
+        // Update placard
+        document.getElementById('lightbox-placard').href = `/artwork/${artwork.id}`;
+        document.getElementById('placard-title').textContent = artwork.title;
+
+        // Year display
+        const year = artwork.year_created || artwork.year_created_circa;
+        const yearPrefix = artwork.year_created_circa && !artwork.year_created ? 'c. ' : '';
+        document.getElementById('placard-year').textContent = year ? `${yearPrefix}${year}` : '';
+        document.getElementById('placard-year').style.display = year ? 'block' : 'none';
+
+        // Medium
+        document.getElementById('placard-medium').textContent = artwork.medium || '';
+        document.getElementById('placard-medium').style.display = artwork.medium ? 'block' : 'none';
+
+        // Dimensions
+        document.getElementById('placard-dimensions').textContent = artwork.dimensions || '';
+        document.getElementById('placard-dimensions').style.display = artwork.dimensions ? 'block' : 'none';
+
+        // Navigation hint
+        document.getElementById('lightbox-nav-hint').textContent =
+            `${currentLightboxIndex + 1} of ${galleryArtworks.length} · Use arrow keys to navigate`;
+    }
+
+    // Artwork actions
+    async function verifyArtwork(id) {
+        try {
+            await API.patch(`/artworks/${id}`, { is_verified: true });
+            showToast('Artwork verified', 'success');
+            loadArtworks();
+            loadStats();
+        } catch (e) {
+            showToast('Failed to verify artwork', 'error');
+        }
+    }
+
+    async function rejectArtwork(id) {
+        try {
+            await API.patch(`/artworks/${id}`, { is_false_positive: true });
+            showToast('Marked as false positive', 'success');
+            loadArtworks();
+            loadStats();
+        } catch (e) {
+            showToast('Failed to reject artwork', 'error');
+        }
+    }
+
+    async function unverifyArtwork(id) {
+        // Ask for confirmation before unverifying
+        const confirmed = confirm('Are you sure you want to mark this artwork as unverified?\n\nThis will remove its verified status but keep it in the archive.');
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await API.patch(`/artworks/${id}`, { is_verified: false });
+            showToast('Artwork marked as unverified', 'info');
+            loadArtworks();
+            loadStats();
+        } catch (e) {
+            showToast('Failed to unverify artwork', 'error');
+        }
+    }
+
+
+    // Search handler with debounce
+    function handleSearch(event) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadArtworks();
+        }, 300);
+    }
+
+    // Modal functions
+    function openAddModal() {
+        document.getElementById('add-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAddModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('add-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('add-artwork-form').reset();
+    }
+
+    async function submitArtwork(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            title: formData.get('title'),
+            description: formData.get('description') || null,
+            medium: formData.get('medium') || null,
+            category: formData.get('category') || null,
+            dimensions: formData.get('dimensions') || null,
+            year_created: formData.get('year_created') ? parseInt(formData.get('year_created')) : null,
+            price: formData.get('price') ? parseFloat(formData.get('price')) : null,
+            location: formData.get('location') || null,
+            image_url: formData.get('image_url') || null,
+            source_url: formData.get('source_url') || null,
+            notes: formData.get('notes') || null,
+            is_verified: true
+        };
+
+        try {
+            const result = await API.post('/artworks/', data);
+            showToast(`Added: ${result.title}`, 'success');
+            closeAddModal();
+            loadArtworks();
+            loadStats();
+        } catch (e) {
+            showToast('Failed to add artwork', 'error');
+        }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        const lightbox = document.getElementById('lightbox');
+        if (!lightbox.classList.contains('active')) return;
+
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') navigateLightbox(-1);
+        if (e.key === 'ArrowRight') navigateLightbox(1);
+    });
+
+    // Filter change handlers
+    document.getElementById('filter-art-type').addEventListener('change', loadArtworks);
+    document.getElementById('filter-status').addEventListener('change', () => { updateActiveFiltersCount(); loadArtworks(); });
+    document.getElementById('filter-verified').addEventListener('change', () => { updateActiveFiltersCount(); loadArtworks(); });
+    document.getElementById('filter-false-positives').addEventListener('change', () => { updateActiveFiltersCount(); loadArtworks(); });
+    document.getElementById('gallery-filter').addEventListener('change', loadGallery);
+    document.getElementById('gallery-type-filter').addEventListener('change', loadGallery);
+    document.getElementById('gallery-verification-filter').addEventListener('change', loadGallery);
+
+    // Initial load
+    initViewToggle();
+    loadStats();
+    loadArtworks();
+
+    // ==========================================
+    // Shows Tab Functions
+    // ==========================================
+
+    // Set shows type filter
+    function setShowsTypeFilter(type) {
+        currentShowsTypeFilter = type;
+
+        // Update pill active states
+        document.querySelectorAll('#shows-type-pills .filter-pill').forEach(pill => {
+            if (pill.dataset.filter === type) {
+                pill.classList.add('active');
+            } else {
+                pill.classList.remove('active');
+            }
+        });
+
+        // Reload shows with new filter
+        loadShows();
+    }
+
+    // Handle shows search with debounce
+    function handleShowsSearch(event) {
+        clearTimeout(showsSearchTimeout);
+        showsSearchTimeout = setTimeout(() => {
+            loadShows();
+        }, 300);
+    }
+
+    // Load shows/exhibitions
+    async function loadShows() {
+        const grid = document.getElementById('shows-grid');
+        const loading = document.getElementById('shows-loading');
+        const emptyState = document.getElementById('shows-empty');
+        const resultCount = document.getElementById('shows-result-count');
+
+        // Build query params
+        const params = new URLSearchParams();
+        params.set('limit', '100');
+
+        const search = document.getElementById('shows-search-input').value.trim();
+        const decade = document.getElementById('shows-decade-filter').value;
+
+        if (search) params.set('venue', search);
+        if (currentShowsTypeFilter === 'solo') params.set('is_solo', 'true');
+        if (currentShowsTypeFilter === 'group') params.set('is_solo', 'false');
+        if (decade) {
+            params.set('year', decade); // API will need to handle decade filtering
+        }
+
+        // Show loading
+        grid.innerHTML = '';
+        loading.style.display = 'flex';
+        emptyState.style.display = 'none';
+
+        try {
+            exhibitions = await API.get(`/exhibitions?${params.toString()}`);
+
+            // Apply client-side decade filter if needed
+            if (decade) {
+                const decadeStart = parseInt(decade);
+                const decadeEnd = decadeStart + 9;
+                exhibitions = exhibitions.filter(e => e.year >= decadeStart && e.year <= decadeEnd);
+            }
+
+            loading.style.display = 'none';
+
+            if (exhibitions.length === 0) {
+                emptyState.style.display = 'block';
+                resultCount.textContent = '0 exhibitions';
+                updateShowsStats([]);
+                return;
+            }
+
+            resultCount.textContent = `${exhibitions.length} exhibition${exhibitions.length !== 1 ? 's' : ''}`;
+
+            // Update stats
+            updateShowsStats(exhibitions);
+
+            // Render cards sorted by year descending
+            const sortedExhibitions = [...exhibitions].sort((a, b) => b.year - a.year);
+            grid.innerHTML = sortedExhibitions.map((exhibition, index) => createShowCard(exhibition, index)).join('');
+
+        } catch (e) {
+            loading.style.display = 'none';
+            showToast('Failed to load exhibitions', 'error');
+            console.error(e);
+        }
+    }
+
+    // Update shows statistics
+    function updateShowsStats(data) {
+        const total = data.length;
+        const solo = data.filter(e => e.is_solo).length;
+        const group = data.filter(e => !e.is_solo).length;
+        const venues = new Set(data.map(e => e.venue_name)).size;
+
+        document.getElementById('stat-shows-total').textContent = total;
+        document.getElementById('stat-shows-solo').textContent = solo;
+        document.getElementById('stat-shows-group').textContent = group;
+        document.getElementById('stat-shows-venues').textContent = venues;
+    }
+
+    // Create show card HTML
+    function createShowCard(exhibition, index) {
+        const isSolo = exhibition.is_solo;
+        const location = [exhibition.venue_city, exhibition.venue_state].filter(Boolean).join(', ');
+        const title = exhibition.title || exhibition.venue_name;
+        const badgeClass = isSolo ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400';
+        const badgeText = isSolo ? 'Solo Show' : 'Group Show';
+        const borderClass = isSolo ? 'border-purple-500/30' : 'border-blue-500/30';
+
+        // Build artwork preview thumbnails
+        let previewsHtml = '';
+        const previews = exhibition.artwork_previews || [];
+        const previewsWithImages = previews.filter(p => p.image_url);
+
+        if (previewsWithImages.length > 0) {
+            const thumbnails = previewsWithImages.slice(0, 4).map(preview => `
+                <a href="/artwork/${preview.id}" class="block w-12 h-12 rounded-md overflow-hidden bg-gray-800 hover:ring-2 hover:ring-purple-500/50 transition-all" title="${escapeHtml(preview.title)}">
+                    <img src="${escapeHtml(preview.image_url)}" alt="${escapeHtml(preview.title)}" class="w-full h-full object-cover">
+                </a>
+            `).join('');
+
+            const remaining = exhibition.artwork_count - previewsWithImages.length;
+            const moreIndicator = remaining > 0 ? `
+                <div class="w-12 h-12 rounded-md bg-gray-800 flex items-center justify-center text-xs text-gray-400">
+                    +${remaining}
+                </div>
+            ` : '';
+
+            previewsHtml = `
+                <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-800">
+                    ${thumbnails}
+                    ${moreIndicator}
+                </div>
+            `;
+        }
+
+        return `
+            <div class="group relative bg-gray-900 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl border border-gray-800 hover:${borderClass}">
+                <!-- Card Header with Year Badge -->
+                <div class="p-5 border-b border-gray-800">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-lg font-serif text-gray-200 truncate group-hover:text-${isSolo ? 'purple' : 'blue'}-400 transition-colors">
+                                ${escapeHtml(title)}
+                            </h3>
+                            ${exhibition.venue_name !== title ? `
+                                <p class="text-sm text-gray-500 mt-1">${escapeHtml(exhibition.venue_name)}</p>
+                            ` : ''}
+                        </div>
+                        <span class="flex-shrink-0 px-3 py-1.5 bg-gray-800 rounded-lg text-lg font-serif text-gold-500">
+                            ${exhibition.year}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="p-5">
+                    <!-- Type Badge & Location Row -->
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 ${badgeClass} rounded-full text-xs font-medium uppercase tracking-wider">
+                            <span class="w-1.5 h-1.5 rounded-full ${isSolo ? 'bg-purple-400' : 'bg-blue-400'}"></span>
+                            ${badgeText}
+                        </span>
+
+                        ${location ? `
+                            <div class="flex items-center gap-1.5 text-xs text-gray-500">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                </svg>
+                                ${escapeHtml(location)}
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Description -->
+                    ${exhibition.description ? `
+                        <p class="text-sm text-gray-500 line-clamp-2 mb-3">${escapeHtml(exhibition.description)}</p>
+                    ` : ''}
+
+                    <!-- Artwork Count -->
+                    ${exhibition.artwork_count > 0 ? `
+                        <div class="flex items-center gap-2 text-sm text-gold-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            ${exhibition.artwork_count} artwork${exhibition.artwork_count > 1 ? 's' : ''} shown
+                        </div>
+                    ` : ''}
+
+                    <!-- Artwork Preview Thumbnails -->
+                    ${previewsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    // Check URL for tab param and initialize correct tab
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['tracker', 'gallery', 'shows'].includes(tabParam)) {
+        switchTab(tabParam);
+    } else {
+        // Default to tracker tab
+        switchTab('tracker');
+    }
+
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        loadStats();
+        if (document.getElementById('tab-tracker').classList.contains('active')) {
+            loadArtworks();
+        }
+    }, 5 * 60 * 1000);
+</script>
+{% endblock %}

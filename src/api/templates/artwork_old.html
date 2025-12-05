@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Artwork - Dan Brown Art Tracker</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #888;
+            --accent: #c9a227;
+            --accent-soft: #8b7355;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--accent-soft);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 400;
+        }
+
+        header h1 span {
+            color: var(--accent);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 50vh;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-card);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .artwork-detail {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        @media (max-width: 900px) {
+            .artwork-detail {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .artwork-image-container {
+            position: relative;
+        }
+
+        .artwork-image {
+            width: 100%;
+            border-radius: 8px;
+            background: var(--bg-card);
+            cursor: zoom-in;
+        }
+
+        .artwork-image:hover {
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+
+        .artwork-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .artwork-title {
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .artwork-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .meta-badge {
+            background: var(--bg-card);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-badge.verified {
+            background: rgba(201, 162, 39, 0.2);
+            color: var(--accent);
+        }
+
+        .artwork-description {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 1rem;
+        }
+
+        .detail-section {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .detail-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.75rem 1rem;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .signals-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .signal-tag {
+            background: rgba(201, 162, 39, 0.15);
+            color: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: black;
+        }
+
+        .btn-primary:hover {
+            background: #d4ad30;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--accent-soft);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+        }
+
+        .no-image {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: var(--bg-card);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-secondary);
+        }
+
+        .no-image-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 2rem;
+            cursor: zoom-out;
+        }
+
+        .lightbox.active {
+            display: flex;
+        }
+
+        .lightbox img {
+            max-width: 95vw;
+            max-height: 95vh;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--accent);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .error-state h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-state p {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="back-btn">&larr; Back to Gallery</a>
+        <h1><span>Dan Brown</span> Art Tracker</h1>
+    </header>
+
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="content" style="display: none;"></div>
+
+    <div id="error" class="error-state" style="display: none;">
+        <h2>Artwork Not Found</h2>
+        <p>The artwork you're looking for doesn't exist or has been removed.</p>
+        <br>
+        <a href="/" class="btn btn-secondary">Return to Gallery</a>
+    </div>
+
+    <!-- Lightbox for full-size image -->
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close">&times;</button>
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // Get artwork ID from URL
+        const pathParts = window.location.pathname.split('/');
+        const artworkId = pathParts[pathParts.length - 1];
+
+        async function loadArtwork() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            const error = document.getElementById('error');
+
+            try {
+                const response = await fetch(`${API_BASE}/artworks/${artworkId}`);
+
+                if (!response.ok) {
+                    throw new Error('Artwork not found');
+                }
+
+                const artwork = await response.json();
+
+                // Update page title
+                document.getElementById('page-title').textContent = `${artwork.title} - Dan Brown Art Tracker`;
+
+                // Build the content
+                content.innerHTML = buildArtworkDetail(artwork);
+                loading.style.display = 'none';
+                content.style.display = 'block';
+
+            } catch (e) {
+                console.error(e);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        function buildArtworkDetail(artwork) {
+            const signals = artwork.positive_signals || {};
+
+            const imageSection = artwork.primary_image_url
+                ? `<img src="${artwork.primary_image_url.replace('w_320,h_320', 'w_1200,h_1200').replace('w_800,h_800', 'w_1200,h_1200')}"
+                       alt="${escapeHtml(artwork.title)}"
+                       class="artwork-image"
+                       onclick="openLightbox(this.src)">`
+                : `<div class="no-image">
+                       <div class="no-image-icon">&#128444;</div>
+                       <p>No image available</p>
+                   </div>`;
+
+            const galleryUrl = getExternalUrl(artwork);
+            const externalButton = galleryUrl
+                ? `<a href="${galleryUrl}" target="_blank" class="btn btn-secondary">View on Gallery &rarr;</a>`
+                : '';
+
+            // Format year with circa if needed
+            const yearDisplay = artwork.year_created
+                ? (artwork.year_created_circa ? `c. ${artwork.year_created}` : `${artwork.year_created}`)
+                : null;
+
+            // Build provenance/history section if any data exists
+            const hasProvenance = artwork.provenance || artwork.exhibition_history || artwork.literature;
+
+            return `
+                <div class="artwork-detail">
+                    <div class="artwork-image-container">
+                        ${imageSection}
+                    </div>
+                    <div class="artwork-info">
+                        <h1 class="artwork-title">${escapeHtml(artwork.title)}</h1>
+
+                        <div class="artwork-meta">
+                            ${artwork.is_verified ? '<span class="meta-badge verified">&#10003; Verified Dan Brown</span>' : ''}
+                            <span class="meta-badge">${artwork.medium || signals.medium || 'Oil on panel'}</span>
+                            <span class="meta-badge">${artwork.category || signals.category || 'Artwork'}</span>
+                            ${yearDisplay ? `<span class="meta-badge">${yearDisplay}</span>` : ''}
+                        </div>
+
+                        ${artwork.description ? `
+                            <p class="artwork-description">${escapeHtml(artwork.description)}</p>
+                        ` : ''}
+
+                        <div class="detail-section">
+                            <h3>Artwork Details</h3>
+                            <div class="detail-grid">
+                                <span class="detail-label">Artist</span>
+                                <span class="detail-value">Dan Brown (1949-2022)</span>
+
+                                <span class="detail-label">Medium</span>
+                                <span class="detail-value">${artwork.medium || signals.medium || 'Oil on panel'}</span>
+
+                                ${artwork.dimensions ? `
+                                    <span class="detail-label">Dimensions</span>
+                                    <span class="detail-value">${escapeHtml(artwork.dimensions)}${artwork.dimensions_cm ? ` (${escapeHtml(artwork.dimensions_cm)})` : ''}</span>
+                                ` : ''}
+
+                                ${yearDisplay ? `
+                                    <span class="detail-label">Date</span>
+                                    <span class="detail-value">${yearDisplay}</span>
+                                ` : ''}
+
+                                ${artwork.signed ? `
+                                    <span class="detail-label">Signed</span>
+                                    <span class="detail-value">${escapeHtml(artwork.signed)}</span>
+                                ` : ''}
+
+                                ${artwork.inscription ? `
+                                    <span class="detail-label">Inscription</span>
+                                    <span class="detail-value">${escapeHtml(artwork.inscription)}</span>
+                                ` : ''}
+
+                                <span class="detail-label">Category</span>
+                                <span class="detail-value">${artwork.category || signals.category || 'Fine Art'}</span>
+
+                                ${artwork.subject_matter ? `
+                                    <span class="detail-label">Subject</span>
+                                    <span class="detail-value">${escapeHtml(artwork.subject_matter)}</span>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        ${artwork.condition || artwork.framed !== null ? `
+                            <div class="detail-section">
+                                <h3>Condition & Framing</h3>
+                                <div class="detail-grid">
+                                    ${artwork.condition ? `
+                                        <span class="detail-label">Condition</span>
+                                        <span class="detail-value">${escapeHtml(artwork.condition)}</span>
+                                    ` : ''}
+
+                                    ${artwork.framed !== null ? `
+                                        <span class="detail-label">Framed</span>
+                                        <span class="detail-value">${artwork.framed ? 'Yes' : 'No'}${artwork.frame_description ? ` - ${escapeHtml(artwork.frame_description)}` : ''}</span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${hasProvenance ? `
+                            <div class="detail-section">
+                                <h3>Provenance & History</h3>
+                                <div class="detail-grid">
+                                    ${artwork.provenance ? `
+                                        <span class="detail-label">Provenance</span>
+                                        <span class="detail-value">${escapeHtml(artwork.provenance)}</span>
+                                    ` : ''}
+
+                                    ${artwork.exhibition_history ? `
+                                        <span class="detail-label">Exhibited</span>
+                                        <span class="detail-value">${escapeHtml(artwork.exhibition_history)}</span>
+                                    ` : ''}
+
+                                    ${artwork.literature ? `
+                                        <span class="detail-label">Literature</span>
+                                        <span class="detail-value">${escapeHtml(artwork.literature)}</span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="detail-section">
+                            <h3>Acquisition Info</h3>
+                            <div class="detail-grid">
+                                <span class="detail-label">Status</span>
+                                <span class="detail-value">${artwork.acquisition_status}</span>
+
+                                ${artwork.acquisition_priority ? `
+                                    <span class="detail-label">Priority</span>
+                                    <span class="detail-value">${'★'.repeat(artwork.acquisition_priority)}${'☆'.repeat(5 - artwork.acquisition_priority)} (${artwork.acquisition_priority}/5)</span>
+                                ` : ''}
+
+                                ${artwork.estimated_value ? `
+                                    <span class="detail-label">Estimated Value</span>
+                                    <span class="detail-value">$${artwork.estimated_value.toLocaleString()}</span>
+                                ` : ''}
+
+                                ${artwork.current_location ? `
+                                    <span class="detail-label">Current Location</span>
+                                    <span class="detail-value">${escapeHtml(artwork.current_location)}</span>
+                                ` : ''}
+
+                                ${artwork.last_known_owner ? `
+                                    <span class="detail-label">Last Known Owner</span>
+                                    <span class="detail-value">${escapeHtml(artwork.last_known_owner)}</span>
+                                ` : ''}
+
+                                ${artwork.acquisition_notes ? `
+                                    <span class="detail-label">Acquisition Notes</span>
+                                    <span class="detail-value">${escapeHtml(artwork.acquisition_notes)}</span>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        ${artwork.last_sale_price || artwork.last_sale_date || artwork.last_sale_venue ? `
+                            <div class="detail-section">
+                                <h3>Last Sale Record</h3>
+                                <div class="detail-grid">
+                                    ${artwork.last_sale_price ? `
+                                        <span class="detail-label">Sale Price</span>
+                                        <span class="detail-value">$${artwork.last_sale_price.toLocaleString()}</span>
+                                    ` : ''}
+
+                                    ${artwork.last_sale_date ? `
+                                        <span class="detail-label">Sale Date</span>
+                                        <span class="detail-value">${new Date(artwork.last_sale_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                    ` : ''}
+
+                                    ${artwork.last_sale_venue ? `
+                                        <span class="detail-label">Venue</span>
+                                        <span class="detail-value">${escapeHtml(artwork.last_sale_venue)}</span>
+                                    ` : ''}
+
+                                    ${artwork.last_sale_url ? `
+                                        <span class="detail-label">Sale Record</span>
+                                        <span class="detail-value"><a href="${escapeHtml(artwork.last_sale_url)}" target="_blank" style="color: var(--accent);">View Sale Record &rarr;</a></span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="detail-section">
+                            <h3>Source Information</h3>
+                            <div class="detail-grid">
+                                <span class="detail-label">Source Platform</span>
+                                <span class="detail-value">${artwork.source_platform}</span>
+
+                                ${artwork.location ? `
+                                    <span class="detail-label">Location Found</span>
+                                    <span class="detail-value">${escapeHtml(artwork.location)}</span>
+                                ` : ''}
+
+                                ${artwork.price ? `
+                                    <span class="detail-label">Listed Price</span>
+                                    <span class="detail-value">$${artwork.price.toLocaleString()} ${artwork.currency}</span>
+                                ` : ''}
+
+                                ${artwork.source_listing_url ? `
+                                    <span class="detail-label">Listing URL</span>
+                                    <span class="detail-value"><a href="${escapeHtml(artwork.source_listing_url)}" target="_blank" style="color: var(--accent);">View Listing &rarr;</a></span>
+                                ` : ''}
+
+                                ${artwork.research_source_url ? `
+                                    <span class="detail-label">Research Source</span>
+                                    <span class="detail-value"><a href="${escapeHtml(artwork.research_source_url)}" target="_blank" style="color: var(--accent);">View Source &rarr;</a></span>
+                                ` : ''}
+
+                                ${artwork.research_notes ? `
+                                    <span class="detail-label">Research Notes</span>
+                                    <span class="detail-value">${escapeHtml(artwork.research_notes)}</span>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        ${artwork.notes ? `
+                            <div class="detail-section">
+                                <h3>Notes</h3>
+                                <p class="artwork-description">${escapeHtml(artwork.notes)}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="action-buttons">
+                            ${externalButton}
+                            <a href="/#gallery" class="btn btn-secondary">&larr; Back to Gallery</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getExternalUrl(artwork) {
+            const url = artwork.source_url || '';
+
+            // For manual entries, return Susan Powell gallery
+            if (url.startsWith('manual://')) {
+                return 'https://susanpowellfineart.com/artist/dan-brown';
+            }
+
+            // For real URLs
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return url;
+            }
+
+            return null;
+        }
+
+        function openLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close lightbox on Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load artwork on page load
+        loadArtwork();
+    </script>
+</body>
+</html>
