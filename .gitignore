@@ -1,0 +1,107 @@
+# Claude Code local settings
+.claude/
+
+# Playwright MCP screenshots
+.playwright-mcp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Data directories (keep structure, ignore contents)
+data/images/
+data/cache/
+data/book_covers/
+data/book_research/
+data/book_research2/
+data/harlequin_presents/
+data/artnet-images/
+data/*.db
+data/*.png
+data/*.html
+data/*.json
+!data/.gitkeep
+
+# Research documentation (artist-specific)
+docs/Research Documentatiopn/
+
+# Google API credentials
+credentials.json
+token.json
+*.pickle
+
+# Seed data with artist-specific info
+scripts/seed_known_artworks.py
+scripts/seed_research_leads.py
+scripts/seed_outreach_data.py
+
+# Planning documents (artist-specific)
+PLAN_*.md
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Playwright
+playwright-report/
+test-results/
+
+# Node.js
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db

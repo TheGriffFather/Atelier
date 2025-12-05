@@ -1,0 +1,2197 @@
+{% extends "base.html" %}
+
+{% block title %}Outreach | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block nav_outreach %}nav-item-active{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    <!-- Page Header -->
+    <header class="sticky top-0 z-10 bg-gray-850/95 backdrop-blur-sm border-b border-gray-800">
+        <div class="px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-serif font-semibold text-gray-200">Outreach</h1>
+                    <p class="text-sm text-gray-500 mt-1">Track contacts, communications, and research leads</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Gmail Status -->
+                    <div id="gmail-status" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 text-sm">
+                        <span id="gmail-indicator" class="w-2 h-2 rounded-full bg-gray-500"></span>
+                        <span id="gmail-text" class="text-gray-400">Gmail</span>
+                        <button id="gmail-connect-btn" onclick="handleGmailConnect()" class="hidden text-gold-500 hover:text-gold-400 ml-1">
+                            Connect
+                        </button>
+                    </div>
+                    <button onclick="openAddModal()" class="btn-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add New
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards (Clickable) -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="stat-card cursor-pointer hover:border-gold-500/50 transition-colors" onclick="filterByContacts()">
+                    <p class="stat-label">Contacts</p>
+                    <p class="stat-value" id="stat-contacts">--</p>
+                </div>
+                <div class="stat-card cursor-pointer hover:border-gold-500/50 transition-colors" onclick="switchTab('outreach')">
+                    <p class="stat-label">Emails Sent</p>
+                    <p class="stat-value" id="stat-sent">--</p>
+                </div>
+                <div class="stat-card cursor-pointer hover:border-gold-500/50 transition-colors" onclick="filterByLeads()">
+                    <p class="stat-label">Research Leads</p>
+                    <p class="stat-value" id="stat-leads">--</p>
+                </div>
+                <div class="stat-card cursor-pointer hover:border-gold-500/50 transition-colors" onclick="filterByFollowups()">
+                    <p class="stat-label">Pending Follow-ups</p>
+                    <p class="stat-value" id="stat-followups">--</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="px-6 lg:px-8 border-t border-gray-800">
+            <div class="flex gap-1">
+                <button onclick="switchTab('contacts')" data-tab="contacts" class="tab-btn active">
+                    Contacts
+                </button>
+                <button onclick="switchTab('outreach')" data-tab="outreach" class="tab-btn">
+                    Emails Sent
+                </button>
+                <button onclick="switchTab('leads')" data-tab="leads" class="tab-btn">
+                    Research Leads
+                </button>
+                <button onclick="switchTab('followups')" data-tab="followups" class="tab-btn">
+                    Follow-ups
+                </button>
+                <button onclick="switchTab('email')" data-tab="email" class="tab-btn">
+                    Email
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Area -->
+    <div class="px-6 lg:px-8 py-8">
+        <!-- Loading State -->
+        <div id="loading" class="flex flex-col items-center justify-center py-20">
+            <div class="spinner"></div>
+            <p class="mt-4 text-sm text-gray-500">Loading...</p>
+        </div>
+
+        <!-- Contacts Tab -->
+        <div id="tab-contacts" class="tab-content hidden">
+            <div class="space-y-1">
+                <!-- Contacts populated by JS -->
+            </div>
+        </div>
+
+        <!-- Outreach Tab -->
+        <div id="tab-outreach" class="tab-content hidden">
+            <div class="grid gap-4">
+                <!-- Outreach records populated by JS -->
+            </div>
+        </div>
+
+        <!-- Research Leads Tab -->
+        <div id="tab-leads" class="tab-content hidden">
+            <div class="grid gap-4">
+                <!-- Research leads populated by JS -->
+            </div>
+        </div>
+
+        <!-- Follow-ups Tab -->
+        <div id="tab-followups" class="tab-content hidden">
+            <div class="grid gap-4">
+                <!-- Follow-ups populated by JS -->
+            </div>
+        </div>
+
+        <!-- Email Tab -->
+        <div id="tab-email" class="tab-content hidden">
+            <!-- Gmail Not Connected State -->
+            <div id="gmail-not-connected" class="text-center py-12">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-300 mb-2">Connect Gmail</h3>
+                <p class="text-sm text-gray-500 mb-4 max-w-md mx-auto">
+                    Connect your Gmail account to send outreach emails directly from this app and automatically track responses.
+                </p>
+                <button onclick="handleGmailConnect()" class="btn-primary">
+                    Connect Gmail Account
+                </button>
+            </div>
+
+            <!-- Gmail Connected Content -->
+            <div id="gmail-connected" class="hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-lg font-medium text-gray-200">Email Tracking</h2>
+                        <p class="text-sm text-gray-500">Track outreach emails and replies</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="checkAllTrackedReplies()" class="btn-secondary">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Check for Replies
+                        </button>
+                        <button onclick="openComposeModal()" class="btn-primary">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Compose Email
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tracked Email Threads -->
+                <div class="mb-8">
+                    <h3 class="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Tracked Conversations
+                    </h3>
+                    <div id="tracked-threads" class="grid gap-3">
+                        <p class="text-sm text-gray-500">Loading tracked threads...</p>
+                    </div>
+                </div>
+
+                <!-- New Replies Alert -->
+                <div id="new-replies-section" class="mb-8 hidden">
+                    <h3 class="text-sm font-medium text-gold-500 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        New Replies Found!
+                    </h3>
+                    <div id="new-replies-list" class="grid gap-3"></div>
+                </div>
+
+                <!-- Untracked Emails (fallback search) -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-medium text-gray-400">Other Recent Emails</h3>
+                        <button onclick="checkResponses()" class="text-xs text-gold-500 hover:text-gold-400">
+                            Search inbox
+                        </button>
+                    </div>
+                    <div id="email-responses" class="grid gap-3">
+                        <p class="text-sm text-gray-500">Click "Search inbox" to find untracked emails.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden text-center py-20">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-300 mb-2">No records found</h3>
+            <p class="text-sm text-gray-500">Start by adding your first contact or research lead.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div id="add-modal" class="modal-overlay" onclick="closeAddModal(event)">
+    <div class="modal-content max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 id="modal-title" class="text-xl font-serif font-semibold">Add Contact</h2>
+            <button onclick="closeAddModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Contact Form -->
+        <form id="contact-form" class="p-6 space-y-4" onsubmit="submitContact(event)">
+            <div>
+                <label class="form-label">Name *</label>
+                <input type="text" name="name" required class="form-input" placeholder="Full name">
+            </div>
+            <div>
+                <label class="form-label">Organization</label>
+                <input type="text" name="organization" class="form-input" placeholder="Company or institution">
+            </div>
+            <div>
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-input" placeholder="email@example.com">
+            </div>
+            <div>
+                <label class="form-label">Phone</label>
+                <input type="tel" name="phone" class="form-input" placeholder="+1 (555) 123-4567">
+            </div>
+            <div>
+                <label class="form-label">Contact Type</label>
+                <select name="contact_type" class="form-select">
+                    <option value="gallery">Gallery</option>
+                    <option value="museum">Museum</option>
+                    <option value="auction_house">Auction House</option>
+                    <option value="collector">Collector</option>
+                    <option value="family">Family/Estate</option>
+                    <option value="publisher">Publisher</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Notes</label>
+                <textarea name="notes" class="form-textarea" rows="3" placeholder="Any additional notes..."></textarea>
+            </div>
+        </form>
+
+        <!-- Lead Form (hidden by default) -->
+        <form id="lead-form" class="hidden p-6 space-y-4" onsubmit="submitLead(event)">
+            <div>
+                <label class="form-label">Title *</label>
+                <input type="text" name="title" required class="form-input" placeholder="e.g., Harlequin cover for 'Summer Romance'">
+            </div>
+            <div>
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select">
+                    <option value="fine_art">Fine Art (Paintings, Original Artwork)</option>
+                    <option value="commercial_work">Commercial Work (Magazine, Book Covers)</option>
+                    <option value="personal_artifact">Personal Artifact (Family Pieces)</option>
+                    <option value="publication">Publication (Magazine, Book Mentions)</option>
+                    <option value="exhibition">Exhibition (Show/Gallery Appearances)</option>
+                    <option value="provenance">Provenance (Trade/Barter Stories)</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-textarea" rows="3" placeholder="Details about this lead..."></textarea>
+            </div>
+            <div>
+                <label class="form-label">Source</label>
+                <input type="text" name="source" class="form-input" placeholder="Where did you learn about this?">
+            </div>
+            <div>
+                <label class="form-label">Priority</label>
+                <select name="priority" class="form-select">
+                    <option value="low">Low (Speculative)</option>
+                    <option value="medium" selected>Medium (Worth Pursuing)</option>
+                    <option value="high">High (Confirmed Connection)</option>
+                </select>
+            </div>
+        </form>
+
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="closeAddModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" form="contact-form" id="submit-btn" class="btn-primary">Add Contact</button>
+        </div>
+    </div>
+</div>
+
+<!-- Contact Edit Modal -->
+<div id="contact-edit-modal" class="modal-overlay" onclick="closeContactEditModal(event)">
+    <div class="modal-content max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Edit Contact</h2>
+            <button onclick="closeContactEditModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form id="contact-edit-form" class="p-6 space-y-4" onsubmit="submitContactEdit(event)">
+            <input type="hidden" name="contact_id" id="edit-contact-id">
+
+            <div>
+                <label class="form-label">Name *</label>
+                <input type="text" name="name" id="edit-contact-name" required class="form-input">
+            </div>
+            <div>
+                <label class="form-label">Organization</label>
+                <input type="text" name="organization" id="edit-contact-organization" class="form-input">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" id="edit-contact-email" class="form-input">
+                </div>
+                <div>
+                    <label class="form-label">Phone</label>
+                    <input type="tel" name="phone" id="edit-contact-phone" class="form-input">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Contact Type</label>
+                    <select name="contact_type" id="edit-contact-type" class="form-select">
+                        <option value="gallery">Gallery</option>
+                        <option value="museum">Museum</option>
+                        <option value="auction_house">Auction House</option>
+                        <option value="publisher">Publisher</option>
+                        <option value="educational">Educational</option>
+                        <option value="government">Government</option>
+                        <option value="agency">Agency</option>
+                        <option value="individual">Individual</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Priority</label>
+                    <select name="priority" id="edit-contact-priority" class="form-select">
+                        <option value="1">1 - Low</option>
+                        <option value="2">2</option>
+                        <option value="3">3 - Normal</option>
+                        <option value="4">4</option>
+                        <option value="5">5 - High</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="form-label">Role</label>
+                <input type="text" name="role" id="edit-contact-role" class="form-input" placeholder="e.g., Curator, Archivist">
+            </div>
+            <div>
+                <label class="form-label">Website</label>
+                <input type="url" name="website" id="edit-contact-website" class="form-input" placeholder="https://...">
+            </div>
+            <div>
+                <label class="form-label">Notes</label>
+                <textarea name="notes" id="edit-contact-notes" class="form-textarea" rows="3"></textarea>
+            </div>
+            <div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_active" id="edit-contact-active" class="form-checkbox" checked>
+                    <span class="text-sm text-gray-300">Active Contact</span>
+                </label>
+            </div>
+        </form>
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="confirmDeleteContact()" class="btn-danger">
+                Delete Contact
+            </button>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeContactEditModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" form="contact-edit-form" class="btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lead Edit Modal -->
+<div id="lead-edit-modal" class="modal-overlay" onclick="closeLeadEditModal(event)">
+    <div class="modal-content max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Edit Research Lead</h2>
+            <button onclick="closeLeadEditModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form id="lead-edit-form" class="p-6 space-y-4" onsubmit="submitLeadEdit(event)">
+            <input type="hidden" name="lead_id" id="edit-lead-id">
+
+            <div>
+                <label class="form-label">Title *</label>
+                <input type="text" name="title" id="edit-lead-title" required class="form-input">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Category</label>
+                    <select name="category" id="edit-lead-category" class="form-select">
+                        <option value="fine_art">Fine Art</option>
+                        <option value="commercial_work">Commercial Work</option>
+                        <option value="personal_artifact">Personal Artifact</option>
+                        <option value="publication">Publication</option>
+                        <option value="exhibition">Exhibition</option>
+                        <option value="provenance">Provenance</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Status</label>
+                    <select name="status" id="edit-lead-status" class="form-select">
+                        <option value="new">New</option>
+                        <option value="investigating">Investigating</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="dead_end">Dead End</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Priority</label>
+                <select name="priority" id="edit-lead-priority" class="form-select">
+                    <option value="low">Low (Speculative)</option>
+                    <option value="medium">Medium (Worth Pursuing)</option>
+                    <option value="high">High (Confirmed Connection)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Description</label>
+                <textarea name="description" id="edit-lead-description" class="form-textarea" rows="3"></textarea>
+            </div>
+
+            <div>
+                <label class="form-label">Source</label>
+                <input type="text" name="source" id="edit-lead-source" class="form-input" placeholder="Where did you learn about this?">
+            </div>
+
+            <div>
+                <label class="form-label">Search Terms</label>
+                <input type="text" name="search_terms" id="edit-lead-search-terms" class="form-input" placeholder="Keywords to search for">
+            </div>
+
+            <div>
+                <label class="form-label">Next Action</label>
+                <input type="text" name="next_action" id="edit-lead-next-action" class="form-input" placeholder="What to do next">
+            </div>
+
+            <div>
+                <label class="form-label">Notes</label>
+                <textarea name="notes" id="edit-lead-notes" class="form-textarea" rows="2"></textarea>
+            </div>
+
+            <!-- Resolution section (shown when status is resolved) -->
+            <div id="lead-resolution-section" class="hidden border-t border-gray-700 pt-4 mt-4">
+                <h3 class="text-sm font-medium text-gray-300 mb-3">Resolution Details</h3>
+                <div>
+                    <label class="form-label">Found Artwork ID</label>
+                    <input type="number" name="found_artwork_id" id="edit-lead-artwork-id" class="form-input" placeholder="Link to artwork if found">
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">Resolution Notes</label>
+                    <textarea name="resolution_notes" id="edit-lead-resolution-notes" class="form-textarea" rows="2" placeholder="How was this resolved?"></textarea>
+                </div>
+            </div>
+        </form>
+
+        <div class="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="confirmDeleteLead()" class="btn-danger">
+                Delete Lead
+            </button>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeLeadEditModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" form="lead-edit-form" class="btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gmail Auth Modal -->
+<div id="gmail-auth-modal" class="modal-overlay" onclick="closeGmailAuthModal(event)">
+    <div class="modal-content max-w-md" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Connect Gmail</h2>
+            <button onclick="closeGmailAuthModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-sm text-gray-400 mb-4">
+                Follow these steps to connect your Gmail account:
+            </p>
+            <ol class="text-sm text-gray-300 space-y-3 mb-6">
+                <li class="flex gap-2">
+                    <span class="text-gold-500 font-medium">1.</span>
+                    <span>Click the button below to open Google's authorization page</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-gold-500 font-medium">2.</span>
+                    <span>Sign in and authorize access to your Gmail</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-gold-500 font-medium">3.</span>
+                    <span>After authorizing, you'll be redirected to a localhost page</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-gold-500 font-medium">4.</span>
+                    <span>Copy the <code class="bg-gray-700 px-1 rounded">code=XXXX</code> value from the URL bar</span>
+                </li>
+                <li class="flex gap-2">
+                    <span class="text-gold-500 font-medium">5.</span>
+                    <span>Paste it in the field below</span>
+                </li>
+            </ol>
+            <p class="text-xs text-gray-500 mb-4">
+                Note: The localhost page won't load (that's expected). Just copy the code from the URL.
+            </p>
+            <a id="gmail-auth-link" href="#" target="_blank" class="btn-primary w-full text-center mb-4 block">
+                Open Google Authorization
+            </a>
+            <div>
+                <label class="form-label">Authorization Code</label>
+                <input type="text" id="gmail-auth-code" class="form-input" placeholder="Paste authorization code here">
+            </div>
+        </div>
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="closeGmailAuthModal()" class="btn-secondary">Cancel</button>
+            <button type="button" onclick="submitGmailAuth()" class="btn-primary">Connect</button>
+        </div>
+    </div>
+</div>
+
+<!-- Compose Email Modal -->
+<div id="compose-modal" class="modal-overlay" onclick="closeComposeModal(event)">
+    <div class="modal-content max-w-2xl" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Compose Email</h2>
+            <button onclick="closeComposeModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <form id="compose-form" class="p-6 space-y-4" onsubmit="sendEmail(event)">
+            <div>
+                <label class="form-label">To *</label>
+                <input type="email" name="to" id="compose-to" required class="form-input" placeholder="recipient@example.com">
+            </div>
+            <div>
+                <label class="form-label">Subject *</label>
+                <input type="text" name="subject" id="compose-subject" required class="form-input" placeholder="Email subject">
+            </div>
+            <div>
+                <label class="form-label">Message *</label>
+                <textarea name="body" id="compose-body" required class="form-textarea" rows="10" placeholder="Write your message..."></textarea>
+            </div>
+            <div>
+                <label class="form-label">Link to Contact (optional)</label>
+                <select name="contact_id" id="compose-contact" class="form-select">
+                    <option value="">-- Select contact --</option>
+                </select>
+            </div>
+        </form>
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="closeComposeModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" form="compose-form" class="btn-primary">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+                Send Email
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Outreach Recording Modal -->
+<div id="outreach-modal" class="modal-overlay" onclick="closeOutreachModal(event)">
+    <div class="modal-content max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Record Outreach</h2>
+            <button onclick="closeOutreachModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form id="outreach-form" class="p-6 space-y-4" onsubmit="submitOutreach(event)">
+            <input type="hidden" name="contact_id" id="outreach-contact-id">
+
+            <div class="bg-gray-800/50 rounded-lg p-4 mb-4">
+                <p class="text-sm text-gray-400">Recording outreach to:</p>
+                <p class="font-medium text-gray-200" id="outreach-contact-name"></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Type *</label>
+                    <select name="outreach_type" class="form-select" required>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone Call</option>
+                        <option value="letter">Letter</option>
+                        <option value="in_person">In Person</option>
+                        <option value="social_media">Social Media</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="sent">Sent</option>
+                        <option value="draft">Draft</option>
+                        <option value="awaiting_response">Awaiting Response</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Subject *</label>
+                <input type="text" name="subject" required class="form-input" placeholder="Email subject or call topic">
+            </div>
+
+            <div>
+                <label class="form-label">Content</label>
+                <textarea name="content" class="form-textarea" rows="4" placeholder="Email body or conversation notes..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="form-label">Date Sent</label>
+                    <input type="date" name="date_sent" class="form-input">
+                </div>
+                <div>
+                    <label class="form-label">Follow-up Date</label>
+                    <input type="date" name="follow_up_date" class="form-input">
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label mb-2">What are you requesting?</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="requesting_images" class="form-checkbox">
+                        <span class="text-sm text-gray-300">Images</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="requesting_metadata" class="form-checkbox">
+                        <span class="text-sm text-gray-300">Metadata</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="requesting_provenance" class="form-checkbox">
+                        <span class="text-sm text-gray-300">Provenance</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="requesting_attribution" class="form-checkbox">
+                        <span class="text-sm text-gray-300">Attribution</span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label">Notes</label>
+                <textarea name="notes" class="form-textarea" rows="2" placeholder="Internal notes..."></textarea>
+            </div>
+        </form>
+
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="closeOutreachModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" form="outreach-form" class="btn-primary">Save Outreach</button>
+        </div>
+    </div>
+</div>
+
+<!-- Response Recording Modal -->
+<div id="response-modal" class="modal-overlay" onclick="closeResponseModal(event)">
+    <div class="modal-content max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-serif font-semibold">Record Response</h2>
+            <button onclick="closeResponseModal()" class="btn-icon">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form id="response-form" class="p-6 space-y-4" onsubmit="submitResponse(event)">
+            <input type="hidden" name="outreach_id" id="response-outreach-id">
+
+            <div class="bg-gray-800/50 rounded-lg p-4 mb-4">
+                <p class="text-sm text-gray-400">Recording response for:</p>
+                <p class="font-medium text-gray-200" id="response-context"></p>
+            </div>
+
+            <div>
+                <label class="form-label">Response Date</label>
+                <input type="date" name="response_date" class="form-input" required>
+            </div>
+
+            <div>
+                <label class="form-label">Response Summary *</label>
+                <input type="text" name="response_summary" required class="form-input" placeholder="Brief summary of the response">
+            </div>
+
+            <div>
+                <label class="form-label">Full Response Content</label>
+                <textarea name="response_content" class="form-textarea" rows="4" placeholder="Paste or type the full response here..."></textarea>
+            </div>
+
+            <div>
+                <label class="form-label">Outcome</label>
+                <input type="text" name="outcome" class="form-input" placeholder="e.g., Received 3 images, Will check archives">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="images_received" class="form-checkbox">
+                    <span class="text-sm text-gray-300">Images Received</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="metadata_received" class="form-checkbox">
+                    <span class="text-sm text-gray-300">Metadata Received</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="leads_received" class="form-checkbox">
+                    <span class="text-sm text-gray-300">New Leads Received</span>
+                </label>
+            </div>
+
+            <div>
+                <label class="form-label">New Status</label>
+                <select name="new_status" class="form-select">
+                    <option value="responded">Responded (Complete)</option>
+                    <option value="follow_up_needed">Follow-up Needed</option>
+                    <option value="closed">Closed</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="form-label">Follow-up Date (if needed)</label>
+                <input type="date" name="follow_up_date" class="form-input">
+            </div>
+        </form>
+
+        <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+            <button type="button" onclick="closeResponseModal()" class="btn-secondary">Cancel</button>
+            <button type="submit" form="response-form" class="btn-primary">Save Response</button>
+        </div>
+    </div>
+</div>
+<!-- Email Detail Modal - Chat Style -->
+<div id="email-detail-modal" class="modal-overlay" onclick="closeEmailDetailModal(event)">
+    <div class="modal-content max-w-2xl" style="border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4" style="background: linear-gradient(180deg, rgba(55, 65, 81, 0.95) 0%, rgba(31, 41, 55, 0.95) 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div class="flex items-center gap-3">
+                <div style="width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                    <svg width="22" height="22" style="color: #d4af37;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="font-medium text-gray-100 text-lg" id="email-detail-subject">Email Thread</h2>
+                    <p class="text-xs text-gray-400" id="email-detail-to-header"></p>
+                </div>
+            </div>
+            <button onclick="closeEmailDetailModal()" style="width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                <svg width="18" height="18" style="color: #9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div class="px-6 py-5 max-h-[60vh] overflow-y-auto" id="email-chat-container" style="background: linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 1) 100%);">
+            <!-- Loading state -->
+            <div id="email-detail-loading" class="flex items-center justify-center py-12">
+                <div class="spinner"></div>
+            </div>
+
+            <!-- Email conversation (chat bubbles) -->
+            <div id="email-detail-content" class="hidden space-y-4">
+                <!-- Messages will be inserted here dynamically -->
+            </div>
+        </div>
+
+        <!-- Footer with Reply -->
+        <div class="flex items-center gap-3 px-6 py-4" style="background: linear-gradient(180deg, rgba(31, 41, 55, 0.95) 0%, rgba(55, 65, 81, 0.95) 100%); border-top: 1px solid rgba(255,255,255,0.08);">
+            <button onclick="replyToEmail()" class="btn-primary flex-1" style="border-radius: 12px; padding: 12px 20px;">
+                <svg width="16" height="16" class="mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                Reply
+            </button>
+            <button type="button" onclick="closeEmailDetailModal()" class="btn-secondary" style="border-radius: 12px; padding: 12px 20px;">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden fields for email data -->
+<div id="email-detail-from" class="hidden"></div>
+<div id="email-detail-to" class="hidden"></div>
+<div id="email-detail-date" class="hidden"></div>
+<div id="email-detail-body" class="hidden"></div>
+<div id="email-thread-section" class="hidden"></div>
+<div id="email-thread-messages" class="hidden"></div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .tab-btn {
+        @apply px-4 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent transition-colors;
+    }
+    .tab-btn:hover {
+        @apply text-gray-300;
+    }
+    .tab-btn.active {
+        @apply text-gold-500 border-gold-500;
+    }
+</style>
+
+<script>
+    let currentTab = 'contacts';
+    let contacts = [];
+    let outreachRecords = [];
+    let researchLeads = [];
+
+    async function loadStats() {
+        try {
+            const [contactStats, leadStats] = await Promise.all([
+                API.get('/outreach/stats'),
+                API.get('/outreach/leads/stats/summary')
+            ]);
+
+            document.getElementById('stat-contacts').textContent = contactStats.total_contacts || 0;
+            document.getElementById('stat-sent').textContent = contactStats.total_outreach || 0;
+            document.getElementById('stat-leads').textContent = leadStats.total_leads || 0;
+            document.getElementById('stat-followups').textContent = contactStats.pending_followups || 0;
+
+        } catch (e) {
+            console.error('Failed to load stats:', e);
+        }
+    }
+
+    async function loadContacts() {
+        try {
+            contacts = await API.get('/outreach/contacts');
+            renderContacts();
+        } catch (e) {
+            console.error('Failed to load contacts:', e);
+        }
+    }
+
+    async function loadOutreach() {
+        try {
+            outreachRecords = await API.get('/outreach/records');
+            renderOutreach();
+        } catch (e) {
+            console.error('Failed to load outreach:', e);
+        }
+    }
+
+    async function loadLeads() {
+        try {
+            researchLeads = await API.get('/outreach/leads');
+            renderLeads();
+        } catch (e) {
+            console.error('Failed to load leads:', e);
+        }
+    }
+
+    function renderContacts() {
+        const container = document.querySelector('#tab-contacts .space-y-1');
+        if (contacts.length === 0) {
+            container.innerHTML = '';
+            showEmpty();
+            return;
+        }
+
+        // Contact type styling (simpler for list view)
+        const typeStyles = {
+            'museum': { text: 'text-blue-400', icon: '🏛️' },
+            'gallery': { text: 'text-purple-400', icon: '🖼️' },
+            'auction': { text: 'text-amber-400', icon: '🔨' },
+            'artist_rep': { text: 'text-green-400', icon: '👤' },
+            'collector': { text: 'text-rose-400', icon: '💎' },
+            'institution': { text: 'text-cyan-400', icon: '🏢' },
+            'other': { text: 'text-gray-400', icon: '📋' }
+        };
+
+        container.innerHTML = contacts.map(contact => {
+            const type = contact.contact_type || 'other';
+            const style = typeStyles[type] || typeStyles.other;
+            const outreachCount = outreachRecords.filter(o => o.contact_id === contact.id).length;
+            const hasResponse = outreachRecords.some(o => o.contact_id === contact.id && o.response_received);
+
+            // Build subtitle parts
+            const subtitleParts = [];
+            if (contact.organization && contact.organization !== contact.name) {
+                subtitleParts.push(contact.organization);
+            }
+            if (contact.email) {
+                subtitleParts.push(contact.email);
+            }
+
+            return `
+            <div class="flex items-center gap-3 px-4 py-3 bg-gray-800/30 hover:bg-gray-800/60 rounded-lg transition-colors group cursor-pointer" onclick="viewContactHistory(${contact.id})">
+                <!-- Icon -->
+                <div class="text-xl flex-shrink-0 w-8 text-center">${style.icon}</div>
+
+                <!-- Name & Details -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium text-gray-100">${escapeHtml(contact.name)}</span>
+                        ${hasResponse ? `<span class="px-1.5 py-0.5 rounded text-xs bg-green-500/20 text-green-400">Replied</span>` : ''}
+                        ${outreachCount > 0 && !hasResponse ? `<span class="px-1.5 py-0.5 rounded text-xs bg-gray-700 text-gray-400">${outreachCount} sent</span>` : ''}
+                    </div>
+                    <div class="text-sm text-gray-500 truncate">${subtitleParts.join(' · ') || 'No contact info'}</div>
+                </div>
+
+                <!-- Action buttons (show on hover) -->
+                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    ${contact.email ? `
+                        <button onclick="event.stopPropagation(); composeEmail(${contact.id}, '${escapeHtml(contact.email)}', '${escapeHtml(contact.name)}')" class="p-2 hover:bg-gray-700 rounded-lg transition-colors" title="Send Email">
+                            <svg class="w-4 h-4 text-gray-400 hover:text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                    ` : ''}
+                    <button onclick="event.stopPropagation(); editContact(${contact.id})" class="p-2 hover:bg-gray-700 rounded-lg transition-colors" title="Edit">
+                        <svg class="w-4 h-4 text-gray-400 hover:text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        `}).join('');
+    }
+
+    function renderOutreach() {
+        const container = document.querySelector('#tab-outreach .grid');
+        if (outreachRecords.length === 0) {
+            container.innerHTML = '';
+            showEmpty();
+            return;
+        }
+
+        // Status badge colors
+        const statusColors = {
+            'draft': 'neutral',
+            'sent': 'warning',
+            'awaiting_response': 'warning',
+            'responded': 'success',
+            'follow_up_needed': 'gold',
+            'closed': 'neutral',
+            'no_response': 'neutral'
+        };
+
+        container.innerHTML = outreachRecords.map(record => {
+            const hasGmailLink = record.gmail_message_id;
+            // Always make clickable - use Gmail if available, otherwise show record details
+            const clickHandler = hasGmailLink
+                ? `onclick="openEmailDetail('${record.gmail_message_id}')"`
+                : `onclick="openOutreachDetail(${record.id})"`;
+
+            return `
+            <div class="solid-card p-5 transition-all duration-300 cursor-pointer hover:bg-gray-750" data-contact-id="${record.contact_id || ''}" ${clickHandler}>
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="badge-${statusColors[record.status] || 'neutral'} text-xs">
+                                ${escapeHtml(record.status)}
+                            </span>
+                            <span class="text-xs text-gray-500">${record.outreach_type}</span>
+                            ${record.response_received ? '<span class="text-xs text-green-500">✓ Response</span>' : ''}
+                            ${hasGmailLink ? '<span class="text-xs text-blue-400">Click to view thread</span>' : '<span class="text-xs text-gray-500">Click to view details</span>'}
+                        </div>
+                        <h3 class="font-medium text-gray-200">${escapeHtml(record.contact_name || 'Unknown Contact')}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${escapeHtml(record.subject || 'No subject')}</p>
+                        ${record.response_summary ? `<p class="text-sm text-green-400 mt-2">Response: ${escapeHtml(record.response_summary)}</p>` : ''}
+                        ${record.follow_up_date ? `<p class="text-xs text-gold-500 mt-1">Follow-up: ${new Date(record.follow_up_date).toLocaleDateString()}</p>` : ''}
+                    </div>
+                    <div class="flex flex-col items-end gap-2" onclick="event.stopPropagation()">
+                        <span class="text-sm text-gray-500">
+                            ${new Date(record.date_sent || record.created_at).toLocaleDateString()}
+                        </span>
+                        ${!record.response_received && record.status !== 'closed' ? `
+                            <button onclick="openResponseModal(${record.id}, '${escapeHtml(record.contact_name)}', '${escapeHtml(record.subject || '')}')"
+                                    class="btn-secondary py-1 px-2 text-xs">
+                                Record Response
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `}).join('');
+    }
+
+    function renderLeads() {
+        const container = document.querySelector('#tab-leads .grid');
+        if (researchLeads.length === 0) {
+            container.innerHTML = '';
+            showEmpty();
+            return;
+        }
+
+        // Map priority to star count
+        const priorityStars = { 'high': 3, 'medium': 2, 'low': 1 };
+
+        // Status badge colors
+        const statusColors = {
+            'new': 'neutral',
+            'investigating': 'warning',
+            'contacted': 'warning',
+            'resolved': 'success',
+            'dead_end': 'neutral'
+        };
+
+        container.innerHTML = researchLeads.map(lead => `
+            <div class="solid-card p-5 cursor-pointer hover:bg-gray-750 transition-colors" onclick="editLead(${lead.id})">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="badge-${statusColors[lead.status] || 'neutral'} text-xs">
+                                ${escapeHtml(lead.status || 'new')}
+                            </span>
+                            <span class="text-xs text-gray-500">${escapeHtml(lead.category || 'other')}</span>
+                            <span class="text-gold-500 text-xs">${'★'.repeat(priorityStars[lead.priority] || 2)}</span>
+                        </div>
+                        <h3 class="font-medium text-gray-200">${escapeHtml(lead.title)}</h3>
+                        ${lead.description ? `<p class="text-sm text-gray-400 mt-2 line-clamp-2">${escapeHtml(lead.description)}</p>` : ''}
+                        ${lead.source ? `<p class="text-xs text-gray-500 mt-2">Source: ${escapeHtml(lead.source)}</p>` : ''}
+                        ${lead.next_action ? `<p class="text-xs text-gold-500 mt-1">Next: ${escapeHtml(lead.next_action)}</p>` : ''}
+                    </div>
+                    <div class="flex flex-col gap-2" onclick="event.stopPropagation()">
+                        ${lead.status !== 'resolved' && lead.status !== 'dead_end' ? `
+                            <button onclick="updateLeadStatus(${lead.id}, 'resolved')" class="btn-success py-1.5 px-3 text-xs">Resolve</button>
+                        ` : ''}
+                        <button onclick="editLead(${lead.id})" class="btn-icon py-1 px-2 text-xs text-gray-500 hover:text-gray-300">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showEmpty() {
+        document.getElementById('empty-state').classList.remove('hidden');
+    }
+
+    function hideEmpty() {
+        document.getElementById('empty-state').classList.add('hidden');
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+
+        // Hide all tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        // Show selected tab
+        const tabContent = document.getElementById(`tab-${tab}`);
+        tabContent.classList.remove('hidden');
+        hideEmpty();
+
+        // Load data for tab
+        if (tab === 'contacts') {
+            loadContacts();
+        } else if (tab === 'outreach') {
+            loadOutreach();
+        } else if (tab === 'leads') {
+            loadLeads();
+        } else if (tab === 'followups') {
+            loadFollowups();
+        } else if (tab === 'email') {
+            loadEmailTab();
+        }
+    }
+
+    async function loadFollowups() {
+        try {
+            const followups = await API.get('/outreach/follow-ups');
+            const container = document.querySelector('#tab-followups .grid');
+
+            if (followups.length === 0) {
+                container.innerHTML = '';
+                showEmpty();
+                return;
+            }
+
+            container.innerHTML = followups.map(record => `
+                <div class="solid-card p-5 border-l-4 border-gold-500">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-gray-200">${escapeHtml(record.contact_name || 'Unknown')}</h3>
+                            <p class="text-sm text-gray-500">${escapeHtml(record.subject || 'No subject')}</p>
+                            ${record.follow_up_date ? `
+                                <p class="text-sm text-gold-500 mt-2">Follow-up: ${new Date(record.follow_up_date).toLocaleDateString()}</p>
+                            ` : ''}
+                        </div>
+                        <button onclick="markFollowedUp(${record.id})" class="btn-success py-1.5 px-3 text-xs">
+                            Mark Done
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Failed to load follow-ups:', e);
+        }
+    }
+
+    function openAddModal() {
+        const isLeadTab = currentTab === 'leads';
+
+        document.getElementById('modal-title').textContent = isLeadTab ? 'Add Research Lead' : 'Add Contact';
+        document.getElementById('contact-form').classList.toggle('hidden', isLeadTab);
+        document.getElementById('lead-form').classList.toggle('hidden', !isLeadTab);
+        document.getElementById('submit-btn').textContent = isLeadTab ? 'Add Lead' : 'Add Contact';
+        document.getElementById('submit-btn').setAttribute('form', isLeadTab ? 'lead-form' : 'contact-form');
+
+        document.getElementById('add-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAddModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('add-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('contact-form').reset();
+        document.getElementById('lead-form').reset();
+    }
+
+    async function submitContact(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            name: formData.get('name'),
+            organization: formData.get('organization') || null,
+            email: formData.get('email') || null,
+            phone: formData.get('phone') || null,
+            contact_type: formData.get('contact_type'),
+            notes: formData.get('notes') || null
+        };
+
+        try {
+            await API.post('/outreach/contacts', data);
+            showToast('Contact added', 'success');
+            closeAddModal();
+            loadStats();
+            loadContacts();
+        } catch (e) {
+            showToast('Failed to add contact', 'error');
+        }
+    }
+
+    async function submitLead(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            title: formData.get('title'),
+            category: formData.get('category'),
+            description: formData.get('description') || null,
+            source: formData.get('source') || null,
+            priority: formData.get('priority')
+        };
+
+        try {
+            await API.post('/outreach/leads', data);
+            showToast('Research lead added', 'success');
+            closeAddModal();
+            loadStats();
+            loadLeads();
+        } catch (e) {
+            showToast('Failed to add lead', 'error');
+        }
+    }
+
+    // Outreach Modal Functions
+    function recordOutreach(contactId, contactName) {
+        document.getElementById('outreach-contact-id').value = contactId;
+        document.getElementById('outreach-contact-name').textContent = contactName;
+
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('#outreach-form input[name="date_sent"]').value = today;
+
+        // Set default follow-up to 2 weeks from now
+        const followUp = new Date();
+        followUp.setDate(followUp.getDate() + 14);
+        document.querySelector('#outreach-form input[name="follow_up_date"]').value = followUp.toISOString().split('T')[0];
+
+        document.getElementById('outreach-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeOutreachModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('outreach-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('outreach-form').reset();
+    }
+
+    async function submitOutreach(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            contact_id: parseInt(formData.get('contact_id')),
+            outreach_type: formData.get('outreach_type'),
+            status: formData.get('status'),
+            subject: formData.get('subject'),
+            content: formData.get('content') || null,
+            date_sent: formData.get('date_sent') || null,
+            follow_up_date: formData.get('follow_up_date') || null,
+            requesting_images: formData.get('requesting_images') === 'on',
+            requesting_metadata: formData.get('requesting_metadata') === 'on',
+            requesting_provenance: formData.get('requesting_provenance') === 'on',
+            requesting_attribution: formData.get('requesting_attribution') === 'on',
+            notes: formData.get('notes') || null
+        };
+
+        try {
+            await API.post('/outreach/records', data);
+            showToast('Outreach recorded', 'success');
+            closeOutreachModal();
+            loadStats();
+            loadOutreach();
+        } catch (e) {
+            showToast('Failed to record outreach', 'error');
+        }
+    }
+
+    async function updateLeadStatus(leadId, status) {
+        try {
+            await API.patch(`/outreach/leads/${leadId}`, { status });
+            showToast('Lead updated', 'success');
+            loadStats();
+            loadLeads();
+        } catch (e) {
+            showToast('Failed to update lead', 'error');
+        }
+    }
+
+    async function markFollowedUp(recordId) {
+        try {
+            await API.patch(`/outreach/records/${recordId}`, { status: 'closed' });
+            showToast('Marked as followed up', 'success');
+            loadStats();
+            loadFollowups();
+        } catch (e) {
+            showToast('Failed to update', 'error');
+        }
+    }
+
+    // Contact Edit Modal Functions
+    let currentEditContactId = null;
+
+    async function editContact(contactId) {
+        currentEditContactId = contactId;
+        try {
+            const response = await API.get(`/outreach/contacts/${contactId}`);
+            const contact = response.contact;
+
+            document.getElementById('edit-contact-id').value = contact.id;
+            document.getElementById('edit-contact-name').value = contact.name || '';
+            document.getElementById('edit-contact-organization').value = contact.organization || '';
+            document.getElementById('edit-contact-email').value = contact.email || '';
+            document.getElementById('edit-contact-phone').value = contact.phone || '';
+            document.getElementById('edit-contact-type').value = contact.contact_type || 'other';
+            document.getElementById('edit-contact-priority').value = contact.priority || 3;
+            document.getElementById('edit-contact-role').value = contact.role || '';
+            document.getElementById('edit-contact-website').value = contact.website || '';
+            document.getElementById('edit-contact-notes').value = contact.notes || '';
+            document.getElementById('edit-contact-active').checked = contact.is_active !== false;
+
+            document.getElementById('contact-edit-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } catch (e) {
+            showToast('Failed to load contact', 'error');
+        }
+    }
+
+    function closeContactEditModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('contact-edit-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('contact-edit-form').reset();
+        currentEditContactId = null;
+    }
+
+    async function submitContactEdit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const contactId = formData.get('contact_id');
+
+        const data = {
+            name: formData.get('name'),
+            organization: formData.get('organization') || null,
+            email: formData.get('email') || null,
+            phone: formData.get('phone') || null,
+            contact_type: formData.get('contact_type'),
+            priority: parseInt(formData.get('priority')),
+            role: formData.get('role') || null,
+            website: formData.get('website') || null,
+            notes: formData.get('notes') || null,
+            is_active: formData.get('is_active') === 'on'
+        };
+
+        try {
+            await API.patch(`/outreach/contacts/${contactId}`, data);
+            showToast('Contact updated', 'success');
+            closeContactEditModal();
+            loadStats();
+            loadContacts();
+        } catch (e) {
+            showToast('Failed to update contact', 'error');
+        }
+    }
+
+    async function confirmDeleteContact() {
+        if (!currentEditContactId) return;
+
+        if (confirm('Are you sure you want to delete this contact? This will also delete all associated outreach records.')) {
+            try {
+                await API.delete(`/outreach/contacts/${currentEditContactId}`);
+                showToast('Contact deleted', 'success');
+                closeContactEditModal();
+                loadStats();
+                loadContacts();
+            } catch (e) {
+                showToast('Failed to delete contact', 'error');
+            }
+        }
+    }
+
+    // Lead Edit Modal Functions
+    let currentEditLeadId = null;
+
+    async function editLead(leadId) {
+        currentEditLeadId = leadId;
+        try {
+            const lead = await API.get(`/outreach/leads/${leadId}`);
+
+            document.getElementById('edit-lead-id').value = lead.id;
+            document.getElementById('edit-lead-title').value = lead.title || '';
+            document.getElementById('edit-lead-category').value = lead.category || 'other';
+            document.getElementById('edit-lead-status').value = lead.status || 'new';
+            document.getElementById('edit-lead-priority').value = lead.priority || 'medium';
+            document.getElementById('edit-lead-description').value = lead.description || '';
+            document.getElementById('edit-lead-source').value = lead.source || '';
+            document.getElementById('edit-lead-search-terms').value = lead.search_terms || '';
+            document.getElementById('edit-lead-next-action').value = lead.next_action || '';
+            document.getElementById('edit-lead-notes').value = lead.notes || '';
+            document.getElementById('edit-lead-artwork-id').value = lead.found_artwork_id || '';
+            document.getElementById('edit-lead-resolution-notes').value = lead.resolution_notes || '';
+
+            // Show/hide resolution section based on status
+            toggleResolutionSection(lead.status);
+
+            document.getElementById('lead-edit-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } catch (e) {
+            showToast('Failed to load lead', 'error');
+        }
+    }
+
+    function toggleResolutionSection(status) {
+        const section = document.getElementById('lead-resolution-section');
+        if (status === 'resolved') {
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    }
+
+    function closeLeadEditModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('lead-edit-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('lead-edit-form').reset();
+        currentEditLeadId = null;
+    }
+
+    async function submitLeadEdit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const leadId = formData.get('lead_id');
+
+        const data = {
+            title: formData.get('title'),
+            category: formData.get('category'),
+            status: formData.get('status'),
+            priority: formData.get('priority'),
+            description: formData.get('description') || null,
+            source: formData.get('source') || null,
+            search_terms: formData.get('search_terms') || null,
+            next_action: formData.get('next_action') || null,
+            notes: formData.get('notes') || null
+        };
+
+        // Include resolution fields if status is resolved
+        if (formData.get('status') === 'resolved') {
+            const artworkId = formData.get('found_artwork_id');
+            data.found_artwork_id = artworkId ? parseInt(artworkId) : null;
+            data.resolution_notes = formData.get('resolution_notes') || null;
+            data.resolved_date = new Date().toISOString();
+        }
+
+        try {
+            await API.patch(`/outreach/leads/${leadId}`, data);
+            showToast('Lead updated', 'success');
+            closeLeadEditModal();
+            loadStats();
+            loadLeads();
+        } catch (e) {
+            showToast('Failed to update lead', 'error');
+        }
+    }
+
+    async function confirmDeleteLead() {
+        if (!currentEditLeadId) return;
+
+        if (confirm('Are you sure you want to delete this research lead?')) {
+            try {
+                await API.delete(`/outreach/leads/${currentEditLeadId}`);
+                showToast('Lead deleted', 'success');
+                closeLeadEditModal();
+                loadStats();
+                loadLeads();
+            } catch (e) {
+                showToast('Failed to delete lead', 'error');
+            }
+        }
+    }
+
+    // Add event listener for status change to toggle resolution section
+    document.getElementById('edit-lead-status').addEventListener('change', function() {
+        toggleResolutionSection(this.value);
+    });
+
+    // Response Modal Functions
+    function openResponseModal(outreachId, contactName, subject) {
+        document.getElementById('response-outreach-id').value = outreachId;
+        document.getElementById('response-context').textContent = `${contactName} - ${subject || 'No subject'}`;
+
+        // Set default response date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('#response-form input[name="response_date"]').value = today;
+
+        document.getElementById('response-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeResponseModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('response-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('response-form').reset();
+    }
+
+    async function submitResponse(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const outreachId = formData.get('outreach_id');
+
+        const data = {
+            response_received: true,
+            response_date: formData.get('response_date') || null,
+            response_summary: formData.get('response_summary'),
+            response_content: formData.get('response_content') || null,
+            outcome: formData.get('outcome') || null,
+            images_received: formData.get('images_received') === 'on',
+            metadata_received: formData.get('metadata_received') === 'on',
+            leads_received: formData.get('leads_received') === 'on',
+            status: formData.get('new_status'),
+            follow_up_date: formData.get('follow_up_date') || null
+        };
+
+        try {
+            await API.patch(`/outreach/records/${outreachId}`, data);
+            showToast('Response recorded', 'success');
+            closeResponseModal();
+            loadStats();
+            loadOutreach();
+        } catch (e) {
+            showToast('Failed to record response', 'error');
+        }
+    }
+
+    // ===========================================
+    // Gmail Integration Functions
+    // ===========================================
+
+    let gmailAuthenticated = false;
+
+    async function checkGmailStatus() {
+        try {
+            const status = await API.get('/gmail/status');
+            gmailAuthenticated = status.authenticated;
+            updateGmailUI(status);
+        } catch (e) {
+            console.error('Failed to check Gmail status:', e);
+            gmailAuthenticated = false;
+            updateGmailUI({ configured: false, authenticated: false });
+        }
+    }
+
+    function updateGmailUI(status) {
+        const indicator = document.getElementById('gmail-indicator');
+        const text = document.getElementById('gmail-text');
+        const connectBtn = document.getElementById('gmail-connect-btn');
+        const notConnected = document.getElementById('gmail-not-connected');
+        const connected = document.getElementById('gmail-connected');
+
+        if (status.authenticated) {
+            indicator.className = 'w-2 h-2 rounded-full bg-green-500';
+            text.textContent = 'Gmail Connected';
+            text.className = 'text-green-400';
+            connectBtn.classList.add('hidden');
+            notConnected.classList.add('hidden');
+            connected.classList.remove('hidden');
+        } else if (status.configured) {
+            indicator.className = 'w-2 h-2 rounded-full bg-yellow-500';
+            text.textContent = 'Gmail';
+            text.className = 'text-gray-400';
+            connectBtn.classList.remove('hidden');
+            connectBtn.textContent = 'Connect';
+            notConnected.classList.remove('hidden');
+            connected.classList.add('hidden');
+        } else {
+            indicator.className = 'w-2 h-2 rounded-full bg-gray-500';
+            text.textContent = 'Gmail';
+            text.className = 'text-gray-400';
+            connectBtn.classList.remove('hidden');
+            connectBtn.textContent = 'Setup';
+            notConnected.classList.remove('hidden');
+            connected.classList.add('hidden');
+        }
+    }
+
+    async function handleGmailConnect() {
+        try {
+            const response = await API.get('/gmail/auth-url');
+            document.getElementById('gmail-auth-link').href = response.auth_url;
+            document.getElementById('gmail-auth-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } catch (e) {
+            if (e.message && e.message.includes('not configured')) {
+                showToast('Gmail credentials not configured. Add gmail_credentials.json to the data folder.', 'error');
+            } else {
+                showToast('Failed to start Gmail connection', 'error');
+            }
+        }
+    }
+
+    function closeGmailAuthModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('gmail-auth-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('gmail-auth-code').value = '';
+    }
+
+    async function submitGmailAuth() {
+        const code = document.getElementById('gmail-auth-code').value.trim();
+        if (!code) {
+            showToast('Please enter the authorization code', 'error');
+            return;
+        }
+
+        try {
+            await API.post('/gmail/authenticate', { code });
+            showToast('Gmail connected successfully!', 'success');
+            closeGmailAuthModal();
+            await checkGmailStatus();
+        } catch (e) {
+            showToast('Authentication failed. Please try again.', 'error');
+        }
+    }
+
+    function openComposeModal(toEmail = '', subject = '', contactId = null) {
+        document.getElementById('compose-to').value = toEmail;
+        document.getElementById('compose-subject').value = subject;
+
+        // Populate contacts dropdown
+        const select = document.getElementById('compose-contact');
+        select.innerHTML = '<option value="">-- Select contact --</option>';
+        contacts.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c.id;
+            option.textContent = `${c.name}${c.organization ? ' (' + c.organization + ')' : ''}`;
+            if (contactId && c.id === contactId) option.selected = true;
+            select.appendChild(option);
+        });
+
+        document.getElementById('compose-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeComposeModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('compose-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        document.getElementById('compose-form').reset();
+    }
+
+    async function sendEmail(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {
+            to: formData.get('to'),
+            subject: formData.get('subject'),
+            body: formData.get('body')
+        };
+
+        try {
+            const result = await API.post('/gmail/send', data);
+            showToast('Email sent successfully!', 'success');
+            closeComposeModal();
+
+            // Create outreach record if contact selected
+            const contactId = formData.get('contact_id');
+            if (contactId) {
+                await API.post('/outreach/records', {
+                    contact_id: parseInt(contactId),
+                    outreach_type: 'email',
+                    subject: data.subject,
+                    content: data.body,
+                    status: 'sent',
+                    date_sent: new Date().toISOString()
+                });
+                loadStats();
+                loadOutreach();
+            }
+        } catch (e) {
+            showToast('Failed to send email', 'error');
+        }
+    }
+
+    async function checkResponses() {
+        if (!gmailAuthenticated) {
+            showToast('Please connect Gmail first', 'error');
+            return;
+        }
+
+        try {
+            showToast('Checking for responses...', 'success');
+            const result = await API.get('/gmail/responses');
+
+            const container = document.getElementById('email-responses');
+            if (result.responses.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">No new responses found.</p>';
+            } else {
+                container.innerHTML = result.responses.map(r => `
+                    <div class="solid-card p-4 cursor-pointer hover:bg-gray-750 transition-colors" onclick="openEmailDetail('${r.id}')">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-400">${escapeHtml(r.from_address)}</p>
+                                <p class="font-medium text-gray-200">${escapeHtml(r.subject)}</p>
+                                <p class="text-sm text-gray-500 mt-1 line-clamp-2">${escapeHtml(r.snippet)}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-xs text-gray-500">${escapeHtml(r.date)}</span>
+                                <span class="text-xs text-gold-500">Click to view</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Also load sent emails
+            await loadSentEmails();
+        } catch (e) {
+            showToast('Failed to check responses', 'error');
+        }
+    }
+
+    async function loadSentEmails() {
+        try {
+            const result = await API.get('/gmail/sent');
+
+            const container = document.getElementById('email-sent');
+            if (result.emails.length === 0) {
+                container.innerHTML = '<p class="text-sm text-gray-500">No sent emails found.</p>';
+            } else {
+                container.innerHTML = result.emails.map(e => `
+                    <div class="solid-card p-4 cursor-pointer hover:bg-gray-750 transition-colors" onclick="openEmailDetail('${e.id}')">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-400">To: ${escapeHtml(e.to_address)}</p>
+                                <p class="font-medium text-gray-200">${escapeHtml(e.subject)}</p>
+                                <p class="text-sm text-gray-500 mt-1 line-clamp-2">${escapeHtml(e.snippet)}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-xs text-gray-500">${escapeHtml(e.date)}</span>
+                                <span class="text-xs text-gold-500">Click to view</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            console.error('Failed to load sent emails:', e);
+        }
+    }
+
+    async function loadEmailTab() {
+        if (!gmailAuthenticated) return;
+        await loadTrackedThreads();
+    }
+
+    async function loadTrackedThreads() {
+        try {
+            const result = await API.get('/gmail/tracked-threads');
+            const container = document.getElementById('tracked-threads');
+
+            if (result.tracked_threads.length === 0) {
+                container.innerHTML = `
+                    <div class="solid-card p-6 text-center">
+                        <p class="text-gray-400 mb-2">No tracked email threads yet.</p>
+                        <p class="text-sm text-gray-500">Send emails via this app to automatically track replies, or link existing threads from the Outreach tab.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = result.tracked_threads.map(t => `
+                <div class="solid-card p-4 cursor-pointer hover:bg-gray-750 transition-colors" onclick="viewThreadReplies(${t.outreach_id})">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-medium text-gray-200">${escapeHtml(t.contact_name || 'Unknown')}</span>
+                                ${t.has_new_replies ? '<span class="px-2 py-0.5 text-xs bg-gold-500/20 text-gold-400 rounded-full">New Reply!</span>' : ''}
+                            </div>
+                            <p class="text-sm text-gray-400 line-clamp-1">${escapeHtml(t.subject || '(No subject)')}</p>
+                            <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                <span>${t.date_sent ? new Date(t.date_sent).toLocaleDateString() : 'Not sent'}</span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                    ${t.reply_count} ${t.reply_count === 1 ? 'reply' : 'replies'}
+                                </span>
+                                <span class="status-badge status-${t.status}">${t.status.replace('_', ' ')}</span>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Failed to load tracked threads:', e);
+            document.getElementById('tracked-threads').innerHTML =
+                '<p class="text-sm text-red-400">Failed to load tracked threads.</p>';
+        }
+    }
+
+    async function viewThreadReplies(outreachId) {
+        try {
+            const result = await API.get(`/gmail/check-replies/${outreachId}`);
+
+            if (!result.has_thread) {
+                showToast('No email thread linked to this outreach', 'error');
+                return;
+            }
+
+            // Show the thread in the email detail modal
+            document.getElementById('email-detail-loading').classList.add('hidden');
+            document.getElementById('email-detail-content').classList.remove('hidden');
+            document.getElementById('email-detail-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Set subject/header info
+            document.getElementById('email-detail-subject').textContent = result.subject || '(No subject)';
+            document.getElementById('email-detail-from').textContent = `Contact: ${result.contact_name || 'Unknown'}`;
+            document.getElementById('email-detail-to').textContent = `Thread with ${result.total_messages} messages`;
+            document.getElementById('email-detail-date').textContent = '';
+
+            // Show all messages in the thread
+            const originalMsg = result.messages.find(m => !m.is_reply);
+            const replies = result.messages.filter(m => m.is_reply);
+
+            // Show original message
+            if (originalMsg) {
+                document.getElementById('email-detail-body').innerHTML = `
+                    <div class="mb-4 pb-4 border-b border-gray-700">
+                        <div class="text-xs text-gray-500 mb-2">Original Message - ${originalMsg.date || ''}</div>
+                        <div class="whitespace-pre-wrap">${escapeHtml(originalMsg.body || originalMsg.snippet || '')}</div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('email-detail-body').textContent = '';
+            }
+
+            // Show replies
+            if (replies.length > 0) {
+                const threadSection = document.getElementById('email-thread-section');
+                const threadMessages = document.getElementById('email-thread-messages');
+
+                threadMessages.innerHTML = replies.map(msg => `
+                    <div class="bg-gray-800/30 rounded-lg p-4 border-l-2 ${msg.is_reply ? 'border-gold-500/50' : 'border-gray-600'}">
+                        <div class="flex items-start justify-between gap-4 mb-2">
+                            <p class="text-sm text-gray-400">${escapeHtml(msg.from_address || '')}</p>
+                            <span class="text-xs text-gray-500">${escapeHtml(msg.date || '')}</span>
+                        </div>
+                        <p class="text-sm text-gray-300 whitespace-pre-wrap">${escapeHtml(msg.body || msg.snippet || '')}</p>
+                    </div>
+                `).join('');
+
+                threadSection.classList.remove('hidden');
+            } else {
+                document.getElementById('email-thread-section').classList.add('hidden');
+            }
+
+        } catch (e) {
+            console.error('Failed to load thread:', e);
+            showToast('Failed to load email thread', 'error');
+        }
+    }
+
+    async function checkAllTrackedReplies() {
+        try {
+            showToast('Checking for new replies...', 'success');
+            const result = await API.post('/gmail/check-all-replies');
+
+            if (result.new_replies && result.new_replies.length > 0) {
+                // Show new replies section
+                const section = document.getElementById('new-replies-section');
+                const list = document.getElementById('new-replies-list');
+
+                list.innerHTML = result.new_replies.map(r => `
+                    <div class="solid-card p-4 border-l-4 border-gold-500">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-200">${escapeHtml(r.contact_name || 'Unknown')}</p>
+                                <p class="text-sm text-gray-400">${escapeHtml(r.subject || '')}</p>
+                                <p class="text-sm text-gray-500 mt-1">${escapeHtml(r.reply_snippet || '')}</p>
+                            </div>
+                            <button onclick="viewThreadReplies(${r.outreach_id})" class="btn-secondary text-xs">
+                                View
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+                section.classList.remove('hidden');
+                showToast(`Found ${result.new_replies.length} new replies!`, 'success');
+            } else {
+                showToast(`Checked ${result.checked} threads - no new replies`, 'success');
+            }
+
+            // Reload tracked threads to update counts
+            await loadTrackedThreads();
+        } catch (e) {
+            console.error('Failed to check replies:', e);
+            showToast('Failed to check for replies', 'error');
+        }
+    }
+
+    // ===========================================
+    // Stat Card Filter Functions
+    // ===========================================
+
+    function filterByContacts() {
+        switchTab('contacts');
+    }
+
+    function filterBySent() {
+        // "Emails Sent" shows all outreach records (total_outreach count)
+        switchTab('outreach');
+    }
+
+    function filterByLeads() {
+        switchTab('leads');
+    }
+
+    function filterByFollowups() {
+        switchTab('followups');
+    }
+
+    // ===========================================
+    // Email Detail Modal Functions
+    // ===========================================
+
+    let currentEmailId = null;
+    let currentEmailData = null;
+
+    // Open outreach detail for records without Gmail link (shows data from database)
+    function openOutreachDetail(outreachId) {
+        const record = outreachRecords.find(r => r.id === outreachId);
+        if (!record) {
+            showToast('Record not found', 'error');
+            return;
+        }
+
+        currentEmailId = null;
+        currentEmailData = {
+            subject: record.subject || '(No subject)',
+            to_address: record.contact_email || '',
+            from_address: 'You',
+            date: record.date_sent || record.created_at,
+            body: record.notes || record.response_summary || '(No message content stored)'
+        };
+
+        // Update header
+        document.getElementById('email-detail-subject').textContent = currentEmailData.subject;
+        document.getElementById('email-detail-to-header').textContent = `To: ${record.contact_name || 'Unknown'}`;
+
+        // Build message content
+        let messagesHtml = '';
+
+        // Show the sent message info
+        const sentDate = record.date_sent ? new Date(record.date_sent).toLocaleString() : 'Date unknown';
+        messagesHtml += `
+            <div class="flex justify-end">
+                <div style="max-width: 80%;">
+                    <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 20px 20px 6px 20px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05);">
+                        <p style="font-size: 0.875rem; color: #e5e7eb; white-space: pre-wrap; line-height: 1.6; margin: 0;">${escapeHtml(record.notes || '(Email content not stored - sent via external email client)')}</p>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 6px; padding: 0 4px;">
+                        <span style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(sentDate)}</span>
+                        <svg width="14" height="14" style="color: #d4af37; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // If there's a response, show it
+        if (record.response_received && record.response_summary) {
+            const responseDate = record.response_date ? new Date(record.response_date).toLocaleString() : 'Date unknown';
+            messagesHtml += `
+                <div class="flex justify-start">
+                    <div style="max-width: 80%;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; padding: 0 4px;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, rgba(96, 165, 250, 0.25) 0%, rgba(96, 165, 250, 0.15) 100%); display: flex; align-items: center; justify-content: center;">
+                                <svg width="12" height="12" style="color: #60a5fa;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">${escapeHtml(record.contact_name || 'Recipient')}</span>
+                        </div>
+                        <div style="background: linear-gradient(135deg, rgba(75, 85, 99, 0.5) 0%, rgba(55, 65, 81, 0.4) 100%); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 20px 20px 20px 6px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);">
+                            <p style="font-size: 0.875rem; color: #e5e7eb; white-space: pre-wrap; line-height: 1.6; margin: 0;">${escapeHtml(record.response_summary)}</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 0 4px;">
+                            <span style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(responseDate)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show modal
+        document.getElementById('email-detail-loading').classList.add('hidden');
+        document.getElementById('email-detail-content').classList.remove('hidden');
+        document.getElementById('email-detail-content').innerHTML = messagesHtml;
+        document.getElementById('email-detail-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    async function openEmailDetail(messageId) {
+        currentEmailId = messageId;
+
+        // Show modal with loading state
+        document.getElementById('email-detail-loading').classList.remove('hidden');
+        document.getElementById('email-detail-content').classList.add('hidden');
+        document.getElementById('email-detail-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        try {
+            // Fetch full email details
+            const email = await API.get(`/gmail/message/${messageId}`);
+            currentEmailData = email;
+
+            // Update header
+            document.getElementById('email-detail-subject').textContent = email.subject || '(No subject)';
+            document.getElementById('email-detail-to-header').textContent = `To: ${email.to_address || 'Unknown'}`;
+
+            // Store data for reply function
+            document.getElementById('email-detail-from').textContent = email.from_address || '';
+            document.getElementById('email-detail-to').textContent = email.to_address || '';
+            document.getElementById('email-detail-date').textContent = email.date || '';
+            document.getElementById('email-detail-body').textContent = email.body || email.snippet || '';
+
+            // Render as chat bubbles
+            const container = document.getElementById('email-detail-content');
+            let messagesHtml = '';
+
+            // Check for thread/responses and render all messages
+            if (email.thread_id) {
+                messagesHtml = await loadEmailThreadAsChatBubbles(email.thread_id);
+            } else {
+                // Just show the single message
+                messagesHtml = renderChatBubble(email, true);
+            }
+
+            container.innerHTML = messagesHtml;
+
+            // Show content
+            document.getElementById('email-detail-loading').classList.add('hidden');
+            document.getElementById('email-detail-content').classList.remove('hidden');
+
+            // Scroll to bottom of chat
+            const chatContainer = document.getElementById('email-chat-container');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        } catch (e) {
+            console.error('Failed to load email:', e);
+            showToast('Failed to load email details', 'error');
+            closeEmailDetailModal();
+        }
+    }
+
+    function renderChatBubble(msg, isSent) {
+        const fromAddress = msg.from_address || msg.from || '';
+        const body = msg.body || msg.snippet || '(No content)';
+        const date = msg.date || '';
+
+        // Check if this is a sent email (from us) or received
+        const isFromUs = isSent || fromAddress.includes('hexatlas') || fromAddress.includes('@gmail');
+
+        if (isFromUs) {
+            // Sent message - right aligned, gold accent with glossy feel
+            return `
+                <div class="flex justify-end">
+                    <div style="max-width: 80%;">
+                        <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 20px 20px 6px 20px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05);">
+                            <p style="font-size: 0.875rem; color: #e5e7eb; white-space: pre-wrap; line-height: 1.6; margin: 0;">${escapeHtml(body)}</p>
+                        </div>
+                        <div class="flex items-center justify-end gap-2 mt-1.5 px-1">
+                            <span class="text-xs text-gray-500">${escapeHtml(date)}</span>
+                            <svg width="14" height="14" class="flex-shrink-0" style="color: #d4af37;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Received message - left aligned, subtle gray with glossy feel
+            return `
+                <div class="flex justify-start">
+                    <div style="max-width: 80%;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; padding: 0 4px;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, rgba(96, 165, 250, 0.25) 0%, rgba(96, 165, 250, 0.15) 100%); display: flex; align-items: center; justify-content: center;">
+                                <svg width="12" height="12" style="color: #60a5fa;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #9ca3af;">${escapeHtml(fromAddress)}</span>
+                        </div>
+                        <div style="background: linear-gradient(135deg, rgba(75, 85, 99, 0.5) 0%, rgba(55, 65, 81, 0.4) 100%); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 20px 20px 20px 6px; padding: 12px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03);">
+                            <p style="font-size: 0.875rem; color: #e5e7eb; white-space: pre-wrap; line-height: 1.6; margin: 0;">${escapeHtml(body)}</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 0 4px;">
+                            <span style="font-size: 0.75rem; color: #6b7280;">${escapeHtml(date)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    async function loadEmailThreadAsChatBubbles(threadId) {
+        try {
+            // Fetch thread messages
+            const threadResult = await API.get(`/gmail/thread/${threadId}`);
+
+            if (threadResult.messages && threadResult.messages.length > 0) {
+                // Sort by date (oldest first for chat view)
+                const sortedMessages = [...threadResult.messages].sort((a, b) => {
+                    const dateA = new Date(a.date || 0);
+                    const dateB = new Date(b.date || 0);
+                    return dateA - dateB;
+                });
+
+                // Render all messages as chat bubbles
+                return sortedMessages.map((msg, index) => {
+                    // First message is usually sent by us
+                    const isSent = index === 0;
+                    return renderChatBubble(msg, isSent);
+                }).join('');
+            }
+
+            return '<p class="text-sm text-gray-500 text-center">No messages in thread</p>';
+        } catch (e) {
+            console.log('Thread loading not available:', e);
+            // Fall back to showing just the current email data
+            return renderChatBubble(currentEmailData, true);
+        }
+    }
+
+    function closeEmailDetailModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('email-detail-modal').classList.remove('active');
+        document.body.style.overflow = '';
+        currentEmailId = null;
+        currentEmailData = null;
+    }
+
+    function replyToEmail() {
+        if (!currentEmailData) return;
+
+        // Pre-fill compose modal with reply info
+        const replyTo = currentEmailData.from_address || '';
+        const subject = currentEmailData.subject || '';
+        const replySubject = subject.startsWith('Re:') ? subject : `Re: ${subject}`;
+
+        closeEmailDetailModal();
+
+        // Open compose modal with pre-filled data
+        document.getElementById('compose-to').value = replyTo;
+        document.getElementById('compose-subject').value = replySubject;
+        document.getElementById('compose-body').value = `\n\n---\nOn ${currentEmailData.date}, ${currentEmailData.from_address} wrote:\n${currentEmailData.body || currentEmailData.snippet || ''}`;
+
+        document.getElementById('compose-modal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Compose email for a specific contact (from contacts page)
+    function composeEmail(contactId, email, name) {
+        const subject = `Regarding artwork by Dan Brown`;
+        openComposeModal(email, subject, contactId);
+    }
+
+    // View outreach history for a contact
+    function viewContactHistory(contactId) {
+        const contact = contacts.find(c => c.id === contactId);
+        const history = outreachRecords.filter(o => o.contact_id === contactId);
+
+        if (history.length === 0) {
+            showToast(`No outreach history for ${contact?.name || 'this contact'}`, 'info');
+            return;
+        }
+
+        // Switch to outreach tab and filter by this contact
+        switchTab('outreach');
+        // Highlight the relevant records (simple approach: scroll to first one)
+        setTimeout(() => {
+            const firstRecord = document.querySelector(`[data-contact-id="${contactId}"]`);
+            if (firstRecord) {
+                firstRecord.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstRecord.classList.add('ring-2', 'ring-gold-500');
+                setTimeout(() => firstRecord.classList.remove('ring-2', 'ring-gold-500'), 2000);
+            }
+        }, 100);
+    }
+
+    // Initialize - load outreach first so contacts can show counts
+    async function init() {
+        document.getElementById('loading').style.display = 'none';
+        loadStats();
+        checkGmailStatus();
+        // Load outreach first so contact cards can show outreach counts
+        outreachRecords = await API.get('/outreach/records').catch(() => []);
+        switchTab('contacts');
+    }
+
+    init();
+</script>
+{% endblock %}

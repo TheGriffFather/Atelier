@@ -1,0 +1,1124 @@
+{% extends "base.html" %}
+
+{% block title %}Artwork Detail | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block content %}
+<style>
+    /* Artwork detail page layout */
+    .artwork-layout {
+        display: flex;
+        flex-direction: row;
+        min-height: 100vh;
+    }
+    .artwork-image-panel {
+        width: 60%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        overflow: hidden;
+        background: #0a0a0c;
+    }
+    /* Dramatic spotlight/vignette effect */
+    .artwork-spotlight {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(ellipse 70% 60% at 50% 45%,
+            rgba(40, 45, 55, 0.5) 0%,
+            rgba(20, 22, 28, 0.85) 40%,
+            rgba(10, 10, 12, 1) 70%);
+    }
+    .artwork-detail-panel {
+        width: 40%;
+        background: linear-gradient(180deg, #1a1b1f 0%, #16171a 100%);
+        border-left: 1px solid rgba(255,255,255,0.05);
+        overflow-y: auto;
+    }
+    /* Thumbnail strip styling */
+    .thumbnail-item {
+        width: 60px;
+        height: 60px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid transparent;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: all 0.2s ease;
+    }
+    .thumbnail-item:hover,
+    .thumbnail-item.active {
+        opacity: 1;
+        border-color: rgba(197, 160, 101, 0.6);
+    }
+    .thumbnail-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    @media (max-width: 1024px) {
+        .artwork-layout {
+            flex-direction: column;
+        }
+        .artwork-image-panel {
+            width: 100%;
+            min-height: 400px;
+        }
+        .artwork-detail-panel {
+            width: 100%;
+            border-left: none;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+    }
+</style>
+
+<!-- Side-by-side layout: Image (60%) | Details (40%) -->
+<div class="artwork-layout">
+
+    <!-- Image Panel (60%) - Gallery Wall with Spotlight -->
+    <div id="image-panel" class="artwork-image-panel">
+        <!-- Dramatic spotlight/vignette background -->
+        <div class="artwork-spotlight"></div>
+
+        <!-- Loading State -->
+        <div id="loading" class="relative z-10 flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-sm text-gray-500">Loading artwork...</p>
+        </div>
+
+        <!-- Image container with frame shadow effect -->
+        <div id="image-container" class="hidden relative z-10 w-full h-full items-center justify-center">
+            <div class="relative group">
+                <!-- Frame shadow effect -->
+                <div class="absolute -inset-4 bg-black/40 blur-2xl rounded-lg opacity-60"></div>
+                <img id="artwork-image" src="" alt="" class="relative max-h-[70vh] max-w-full object-contain rounded shadow-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]" onclick="openLightbox()">
+            </div>
+        </div>
+
+        <!-- Thumbnail strip (right side of image) -->
+        <div id="thumbnail-strip" class="hidden absolute right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-2">
+            <!-- Populated by JS if multiple images -->
+        </div>
+
+        <!-- No image placeholder -->
+        <div id="no-image" class="hidden relative z-10 flex-col items-center justify-center gap-4">
+            <div class="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center">
+                <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+            <p class="text-gray-500">No image available</p>
+        </div>
+    </div>
+
+    <!-- Detail Panel (40%) -->
+    <div id="detail-panel" class="artwork-detail-panel no-scrollbar">
+        <!-- Content populated by JS -->
+    </div>
+</div>
+
+<!-- Error State -->
+<div id="error-state" class="hidden min-h-screen flex items-center justify-center">
+    <div class="text-center">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-800 flex items-center justify-center">
+            <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h2 class="text-xl font-serif text-gray-300 mb-2">Artwork Not Found</h2>
+        <p class="text-gray-500 mb-6">The artwork you're looking for doesn't exist.</p>
+        <a href="/" class="btn-secondary">Return to Gallery</a>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox(event)">
+    <button class="absolute top-4 right-4 btn-icon bg-gray-800/80 hover:bg-gray-700" onclick="closeLightbox()">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+    <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] object-contain rounded-lg" onclick="event.stopPropagation()">
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm" onclick="closeEditModal(event)">
+    <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4 shadow-2xl" onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
+            <h2 class="text-xl font-serif text-gray-200">Edit Artwork</h2>
+            <button onclick="closeEditModal()" class="btn-icon text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Form -->
+        <form id="edit-form" class="p-6 space-y-6" onsubmit="saveArtwork(event)">
+            <!-- Basic Info -->
+            <div class="space-y-4">
+                <h3 class="text-sm font-medium text-gold-500 uppercase tracking-wider">Basic Information</h3>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Title</label>
+                    <input type="text" id="edit-title" class="form-input w-full" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Description</label>
+                    <textarea id="edit-description" class="form-input w-full" rows="3"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Art Type</label>
+                        <select id="edit-art-type" class="form-select w-full">
+                            <option value="">Select type...</option>
+                            <option value="Painting">Painting</option>
+                            <option value="Book Cover">Book Cover</option>
+                            <option value="Illustration">Illustration</option>
+                            <option value="Lithograph">Lithograph</option>
+                            <option value="Drawing">Drawing</option>
+                            <option value="Print">Print</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Category</label>
+                        <select id="edit-category" class="form-select w-full">
+                            <option value="">Select category...</option>
+                            <option value="Still Life">Still Life</option>
+                            <option value="Currency">Currency</option>
+                            <option value="Postcards">Postcards</option>
+                            <option value="Portrait">Portrait</option>
+                            <option value="Coastal">Coastal</option>
+                            <option value="Winter">Winter</option>
+                            <option value="New York">New York</option>
+                            <option value="Urban Landscape">Urban Landscape</option>
+                            <option value="Conceptual">Conceptual</option>
+                            <option value="Historical">Historical</option>
+                            <option value="Commercial Illustration">Commercial Illustration</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Physical Characteristics -->
+            <div class="space-y-4">
+                <h3 class="text-sm font-medium text-gold-500 uppercase tracking-wider">Physical Characteristics</h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Medium</label>
+                        <input type="text" id="edit-medium" class="form-input w-full" placeholder="e.g., Oil on canvas">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Dimensions (inches)</label>
+                        <input type="text" id="edit-dimensions" class="form-input w-full" placeholder="e.g., 24 x 36">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Year Created</label>
+                        <input type="number" id="edit-year" class="form-input w-full" min="1949" max="2022">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Subject Matter</label>
+                        <input type="text" id="edit-subject" class="form-input w-full" placeholder="e.g., Trompe l'oeil">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Signed</label>
+                        <input type="text" id="edit-signed" class="form-input w-full" placeholder="e.g., Signed lower right">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Inscription</label>
+                        <input type="text" id="edit-inscription" class="form-input w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provenance -->
+            <div class="space-y-4">
+                <h3 class="text-sm font-medium text-gold-500 uppercase tracking-wider">Provenance & Status</h3>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Provenance</label>
+                    <textarea id="edit-provenance" class="form-input w-full" rows="2"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Acquisition Status</label>
+                        <select id="edit-status" class="form-select w-full">
+                            <option value="new">New</option>
+                            <option value="watching">Watching</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="acquired">Acquired</option>
+                            <option value="passed">Passed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Last Sale Price</label>
+                        <input type="number" id="edit-price" class="form-input w-full" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Source Info -->
+            <div class="space-y-4">
+                <h3 class="text-sm font-medium text-gold-500 uppercase tracking-wider">Source Information</h3>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Source URL</label>
+                    <input type="url" id="edit-source-url" class="form-input w-full" placeholder="https://...">
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Notes</label>
+                    <textarea id="edit-notes" class="form-input w-full" rows="2"></textarea>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                <button type="button" onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    /* Detail panel header styling */
+    .detail-header {
+        padding: 2rem 1.75rem 1.5rem;
+    }
+
+    .detail-title {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.75rem;
+        font-weight: 500;
+        color: #e8e8e8;
+        line-height: 1.2;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-artist {
+        color: #888;
+        font-size: 0.9rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Metadata bar with icons */
+    .metadata-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        padding: 0.875rem 0;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 1rem;
+    }
+
+    .metadata-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #aaa;
+        font-size: 0.85rem;
+    }
+
+    .metadata-item svg {
+        width: 16px;
+        height: 16px;
+        color: #666;
+    }
+
+    .detail-description {
+        color: #999;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-top: 0.75rem;
+    }
+
+    /* Accordion styles - cleaner look */
+    .detail-accordions {
+        padding: 0 1.75rem 1.5rem;
+    }
+
+    .detail-accordion {
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .detail-accordion:last-child {
+        border-bottom: none;
+    }
+
+    .detail-accordion-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 1rem 0;
+        text-align: left;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .detail-accordion-header:hover {
+        color: #C5A065;
+    }
+
+    .accordion-title {
+        color: #C5A065;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .accordion-icon {
+        color: #666;
+        transition: transform 0.2s ease;
+    }
+
+    .detail-accordion-content {
+        padding-bottom: 1rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 0.625rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        color: #777;
+        font-size: 0.85rem;
+    }
+
+    .detail-value {
+        color: #ccc;
+        font-size: 0.85rem;
+        text-align: right;
+        max-width: 60%;
+    }
+
+    /* Action menu */
+    .action-menu-btn {
+        padding: 0.5rem;
+        border-radius: 6px;
+        color: #666;
+        transition: all 0.2s;
+    }
+
+    .action-menu-btn:hover {
+        background: rgba(255,255,255,0.05);
+        color: #aaa;
+    }
+
+    .action-dropdown {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        margin-top: 4px;
+        background: #252529;
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 8px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        overflow: hidden;
+        min-width: 120px;
+        z-index: 50;
+    }
+
+    .action-dropdown a,
+    .action-dropdown button {
+        display: block;
+        width: 100%;
+        padding: 0.625rem 1rem;
+        text-align: left;
+        font-size: 0.875rem;
+        color: #bbb;
+        transition: all 0.15s;
+    }
+
+    .action-dropdown a:hover,
+    .action-dropdown button:hover {
+        background: rgba(255,255,255,0.05);
+        color: #fff;
+    }
+
+    .action-dropdown .danger {
+        color: #e57373;
+    }
+
+    .action-dropdown .danger:hover {
+        color: #ff8a80;
+    }
+</style>
+
+<script>
+    // Get artwork ID from URL
+    const artworkId = window.location.pathname.split('/').pop();
+    let artwork = null;
+
+    async function loadArtwork() {
+        const loading = document.getElementById('loading');
+        const imagePanel = document.getElementById('image-panel');
+        const imageContainer = document.getElementById('image-container');
+        const noImage = document.getElementById('no-image');
+        const detailPanel = document.getElementById('detail-panel');
+        const errorState = document.getElementById('error-state');
+
+        try {
+            artwork = await API.get(`/artworks/${artworkId}`);
+
+            // Update page title
+            document.title = `${artwork.title} | Dan Brown Catalogue Raisonné`;
+
+            // Handle image
+            loading.classList.add('hidden');
+
+            if (artwork.primary_image_url) {
+                const highResUrl = artwork.primary_image_url
+                    .replace('w_320,h_320', 'w_1200,h_1200')
+                    .replace('w_800,h_800', 'w_1200,h_1200');
+
+                document.getElementById('artwork-image').src = highResUrl;
+                document.getElementById('artwork-image').alt = artwork.title;
+                imageContainer.classList.remove('hidden');
+                imageContainer.classList.add('flex');
+            } else {
+                noImage.classList.remove('hidden');
+                noImage.classList.add('flex');
+            }
+
+            // Render detail panel
+            detailPanel.innerHTML = buildDetailPanel(artwork);
+
+        } catch (e) {
+            console.error('Failed to load artwork:', e);
+            imagePanel.classList.add('hidden');
+            detailPanel.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            errorState.classList.add('flex');
+        }
+    }
+
+    function buildDetailPanel(art) {
+        const yearDisplay = art.year_created
+            ? (art.year_created_circa ? `c. ${art.year_created}` : `${art.year_created}`)
+            : null;
+
+        // Build metadata items
+        let metadataItems = [];
+        if (art.medium) {
+            metadataItems.push(`
+                <div class="metadata-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                    </svg>
+                    <span>${escapeHtml(art.medium)}</span>
+                </div>
+            `);
+        }
+        if (art.dimensions) {
+            metadataItems.push(`
+                <div class="metadata-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                    </svg>
+                    <span>${escapeHtml(art.dimensions)}</span>
+                </div>
+            `);
+        }
+        if (yearDisplay) {
+            metadataItems.push(`
+                <div class="metadata-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>${yearDisplay}</span>
+                </div>
+            `);
+        }
+
+        return `
+            <!-- Header Section -->
+            <div class="detail-header">
+                <!-- Title Row with Action Menu -->
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;">
+                    <h1 class="detail-title">${escapeHtml(art.title)}</h1>
+
+                    <!-- Action Menu -->
+                    <div style="position: relative;">
+                        <button onclick="toggleActionMenu()" class="action-menu-btn">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                        </button>
+                        <div id="action-menu" class="action-dropdown hidden">
+                            <button onclick="openEditModal()">Edit</button>
+                            <button onclick="deleteArtwork(${art.id})" class="danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Artist Attribution & Catalog Number -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <p class="detail-artist" style="margin-bottom: 0;">Dan Brown (1949-2022)</p>
+                    <span style="font-size: 0.8rem; color: #666; font-family: monospace;">Cat. No. ${art.id}</span>
+                </div>
+
+                <!-- Metadata Bar -->
+                ${metadataItems.length > 0 ? `
+                    <div class="metadata-bar">
+                        ${metadataItems.join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Description -->
+                ${art.description ? `
+                    <p class="detail-description">${escapeHtml(art.description)}</p>
+                ` : ''}
+            </div>
+
+            <!-- Accordions -->
+            <div class="detail-accordions">
+                <!-- Physical Description - Open by default -->
+                <div class="detail-accordion">
+                    <button class="detail-accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">Physical Description</span>
+                        <svg class="accordion-icon rotate-180" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div class="detail-accordion-content">
+                        <div class="detail-row">
+                            <span class="detail-label">Medium</span>
+                            <span class="detail-value">${escapeHtml(art.medium || 'Unknown')}</span>
+                        </div>
+                        ${art.art_type ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Type</span>
+                                <span class="detail-value">${escapeHtml(art.art_type)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.dimensions ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Dimensions</span>
+                                <span class="detail-value">${escapeHtml(art.dimensions)}${art.dimensions_cm ? ` (${escapeHtml(art.dimensions_cm)})` : ''}</span>
+                            </div>
+                        ` : ''}
+                        ${art.subject_matter ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Subject</span>
+                                <span class="detail-value">${escapeHtml(art.subject_matter)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.category ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Category</span>
+                                <span class="detail-value">${escapeHtml(art.category)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.signed ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Signature</span>
+                                <span class="detail-value">${escapeHtml(art.signed)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.inscription ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Inscription</span>
+                                <span class="detail-value">${escapeHtml(art.inscription)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.framed !== null && art.framed !== undefined ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Framed</span>
+                                <span class="detail-value">${art.framed ? 'Yes' : 'No'}${art.frame_description ? ' - ' + escapeHtml(art.frame_description) : ''}</span>
+                            </div>
+                        ` : ''}
+                        ${art.condition ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Condition</span>
+                                <span class="detail-value">${escapeHtml(art.condition)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Provenance & History -->
+                <div class="detail-accordion">
+                    <button class="detail-accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">Provenance & History</span>
+                        <svg class="accordion-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div class="detail-accordion-content hidden">
+                        ${art.provenance ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Provenance</span>
+                                <span class="detail-value">${escapeHtml(art.provenance)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.last_known_owner ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Last Known Owner</span>
+                                <span class="detail-value">${escapeHtml(art.last_known_owner)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.current_location ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Current Location</span>
+                                <span class="detail-value">${escapeHtml(art.current_location)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.exhibition_history ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Exhibited</span>
+                                <span class="detail-value">${escapeHtml(art.exhibition_history)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.literature ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Literature</span>
+                                <span class="detail-value">${escapeHtml(art.literature)}</span>
+                            </div>
+                        ` : ''}
+                        ${!art.provenance && !art.exhibition_history && !art.literature && !art.last_known_owner && !art.current_location ? `
+                            <p style="color: #666; font-size: 0.85rem; padding: 0.5rem 0;">No provenance information available.</p>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Exhibition Record -->
+                <div class="detail-accordion">
+                    <button class="detail-accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">Exhibition History</span>
+                        <svg class="accordion-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div class="detail-accordion-content hidden" id="exhibition-history-content">
+                        <div id="exhibition-loading" style="padding: 0.5rem 0;">
+                            <span style="color: #666; font-size: 0.85rem;">Loading exhibitions...</span>
+                        </div>
+                        ${art.exhibition_history ? `
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06);">
+                                <span style="color: #777; font-size: 0.75rem; text-transform: uppercase;">Legacy Notes</span>
+                                <p style="color: #999; font-size: 0.85rem; line-height: 1.6; margin-top: 0.25rem;">${escapeHtml(art.exhibition_history)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Acquisition Status -->
+                <div class="detail-accordion">
+                    <button class="detail-accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">Acquisition Status</span>
+                        <svg class="accordion-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div class="detail-accordion-content hidden">
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="detail-value" style="text-transform: capitalize;">${escapeHtml(art.acquisition_status || 'Unknown')}</span>
+                        </div>
+                        ${art.last_sale_price ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Last Sale</span>
+                                <span class="detail-value" style="color: #C5A065;">${formatCurrency(art.last_sale_price)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.last_sale_venue ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Venue</span>
+                                <span class="detail-value">${escapeHtml(art.last_sale_venue)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.current_location ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Location</span>
+                                <span class="detail-value">${escapeHtml(art.current_location)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Source Information -->
+                <div class="detail-accordion">
+                    <button class="detail-accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">Source Information</span>
+                        <svg class="accordion-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div class="detail-accordion-content hidden">
+                        ${art.source_platform ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Platform</span>
+                                <span class="detail-value" style="text-transform: capitalize;">${escapeHtml(art.source_platform)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.source_id ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Source ID</span>
+                                <span class="detail-value" style="font-family: monospace; font-size: 0.8rem;">${escapeHtml(art.source_id)}</span>
+                            </div>
+                        ` : ''}
+                        ${art.source_url ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Source URL</span>
+                                <span class="detail-value">
+                                    ${art.source_url.startsWith('http') ? `
+                                        <a href="${escapeHtml(art.source_url)}" target="_blank" class="text-gold-500 hover:text-gold-400 underline truncate block max-w-[200px]" title="${escapeHtml(art.source_url)}">
+                                            View Source
+                                        </a>
+                                    ` : `<span class="text-gray-500">${escapeHtml(art.source_url)}</span>`}
+                                </span>
+                            </div>
+                        ` : ''}
+                        ${art.research_source_url ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Research Source</span>
+                                <span class="detail-value">
+                                    <a href="${escapeHtml(art.research_source_url)}" target="_blank" class="text-gold-500 hover:text-gold-400 underline truncate block max-w-[200px]" title="${escapeHtml(art.research_source_url)}">
+                                        View Research
+                                    </a>
+                                </span>
+                            </div>
+                        ` : ''}
+                        ${art.last_sale_url ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Sale Record</span>
+                                <span class="detail-value">
+                                    <a href="${escapeHtml(art.last_sale_url)}" target="_blank" class="text-gold-500 hover:text-gold-400 underline truncate block max-w-[200px]" title="${escapeHtml(art.last_sale_url)}">
+                                        View Sale
+                                    </a>
+                                </span>
+                            </div>
+                        ` : ''}
+                        ${art.confidence_score !== undefined ? `
+                            <div class="detail-row">
+                                <span class="detail-label">Confidence Score</span>
+                                <span class="detail-value" style="color: ${art.confidence_score >= 3 ? '#C5A065' : art.confidence_score >= 2 ? '#fbbf24' : '#9ca3af'};">
+                                    ${art.confidence_score.toFixed(1)} / 5.0
+                                </span>
+                            </div>
+                        ` : ''}
+                        ${!art.source_platform && !art.source_id && !art.source_url && !art.research_source_url ? `
+                            <p style="color: #666; font-size: 0.85rem; padding: 0.5rem 0;">No source information available.</p>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                ${art.notes || art.verification_notes ? `
+                <div class="detail-accordion">
+                    <button class="detail-accordion-header" onclick="toggleAccordion(this)">
+                        <span class="accordion-title">Notes</span>
+                        <svg class="accordion-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div class="detail-accordion-content hidden">
+                        ${art.notes ? `
+                            <div style="margin-bottom: 1rem;">
+                                <p style="color: #999; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(art.notes)}</p>
+                            </div>
+                        ` : ''}
+                        ${art.verification_notes ? `
+                            <div>
+                                <span class="detail-label" style="display: block; margin-bottom: 0.5rem;">Verification Notes</span>
+                                <p style="color: #999; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(art.verification_notes)}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    function getExternalButton(art) {
+        const url = art.source_url || '';
+
+        if (url.startsWith('manual://')) {
+            return `<a href="https://susanpowellfineart.com/artist/dan-brown" target="_blank" class="btn-secondary flex-1">
+                View Gallery
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+            </a>`;
+        }
+
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return `<a href="${escapeHtml(url)}" target="_blank" class="btn-secondary flex-1">
+                View Source
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+            </a>`;
+        }
+
+        return '';
+    }
+
+    function toggleAccordion(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('.accordion-icon');
+
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+
+    function toggleActionMenu() {
+        const menu = document.getElementById('action-menu');
+        menu.classList.toggle('hidden');
+
+        // Close menu when clicking outside
+        if (!menu.classList.contains('hidden')) {
+            setTimeout(() => {
+                document.addEventListener('click', closeActionMenuOnClickOutside, { once: true });
+            }, 0);
+        }
+    }
+
+    function closeActionMenuOnClickOutside(e) {
+        const menu = document.getElementById('action-menu');
+        if (menu && !menu.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    }
+
+    async function deleteArtwork(id) {
+        const confirmed = confirm('Are you sure you want to delete this artwork?\\n\\nThis action cannot be undone.');
+        if (!confirmed) return;
+
+        try {
+            await API.delete(`/artworks/${id}`);
+            showToast('Artwork deleted', 'success');
+            window.location.href = '/';
+        } catch (e) {
+            showToast('Failed to delete artwork', 'error');
+        }
+    }
+
+    async function verifyArtwork(id) {
+        const targetId = id || artworkId;
+        try {
+            await API.patch(`/artworks/${targetId}`, { is_verified: true });
+            showToast('Artwork verified', 'success');
+            loadArtwork();
+        } catch (e) {
+            showToast('Failed to verify artwork', 'error');
+        }
+    }
+
+    async function unverifyArtwork(id) {
+        const targetId = id || artworkId;
+
+        // Ask for confirmation before unverifying
+        const confirmed = confirm('Are you sure you want to mark this artwork as unverified?\n\nThis will remove its verified status but keep it in the archive.');
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await API.patch(`/artworks/${targetId}`, { is_verified: false });
+            showToast('Artwork marked as unverified', 'info');
+            loadArtwork();
+        } catch (e) {
+            showToast('Failed to unverify artwork', 'error');
+        }
+    }
+
+    function openLightbox() {
+        if (!artwork?.primary_image_url) return;
+
+        const highResUrl = artwork.primary_image_url
+            .replace('w_320,h_320', 'w_1200,h_1200')
+            .replace('w_800,h_800', 'w_1200,h_1200');
+
+        document.getElementById('lightbox-img').src = highResUrl;
+        document.getElementById('lightbox').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('lightbox').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Load exhibition history for artwork
+    async function loadExhibitionHistory() {
+        const loadingEl = document.getElementById('exhibition-loading');
+        const contentEl = document.getElementById('exhibition-history-content');
+
+        if (!loadingEl || !contentEl) return;
+
+        try {
+            const response = await API.get(`/artworks/${artworkId}/exhibitions`);
+            const exhibitions = response.exhibitions || [];
+
+            // Remove loading state
+            loadingEl.remove();
+
+            if (exhibitions.length === 0) {
+                // No linked exhibitions - insert at beginning of content
+                const noExhibitions = document.createElement('p');
+                noExhibitions.style.cssText = 'color: #666; font-size: 0.85rem; padding: 0.5rem 0;';
+                noExhibitions.textContent = 'No linked exhibitions yet.';
+                contentEl.insertBefore(noExhibitions, contentEl.firstChild);
+                return;
+            }
+
+            // Build exhibition list
+            const exhibitionList = document.createElement('div');
+            exhibitionList.className = 'exhibition-list';
+
+            exhibitions.forEach(exhibition => {
+                const showType = exhibition.is_solo ? 'Solo' : 'Group';
+                const location = [exhibition.venue_city, exhibition.venue_state].filter(Boolean).join(', ');
+
+                const item = document.createElement('div');
+                item.className = 'exhibition-item';
+                item.style.cssText = 'padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);';
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <span style="color: #a78bfa; font-size: 0.85rem; font-weight: 500;">${escapeHtml(exhibition.title || exhibition.venue_name)}</span>
+                                <span style="background: ${exhibition.is_solo ? 'rgba(167, 139, 250, 0.15)' : 'rgba(167, 139, 250, 0.08)'}; color: ${exhibition.is_solo ? '#a78bfa' : '#8b7bda'}; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px;">${showType}</span>
+                            </div>
+                            <div style="color: #888; font-size: 0.8rem;">${escapeHtml(exhibition.venue_name)}${location ? `, ${escapeHtml(location)}` : ''}</div>
+                            ${exhibition.notes ? `<div style="color: #666; font-size: 0.75rem; margin-top: 0.25rem; font-style: italic;">${escapeHtml(exhibition.notes)}</div>` : ''}
+                        </div>
+                        <span style="color: #666; font-size: 0.8rem; white-space: nowrap;">${exhibition.year}</span>
+                    </div>
+                `;
+                exhibitionList.appendChild(item);
+            });
+
+            // Remove last border
+            const lastItem = exhibitionList.lastElementChild;
+            if (lastItem) lastItem.style.borderBottom = 'none';
+
+            contentEl.insertBefore(exhibitionList, contentEl.firstChild);
+
+        } catch (e) {
+            console.error('Failed to load exhibition history:', e);
+            if (loadingEl) {
+                loadingEl.innerHTML = '<span style="color: #666; font-size: 0.85rem;">Unable to load exhibitions.</span>';
+            }
+        }
+    }
+
+    // Edit Modal Functions
+    function openEditModal() {
+        if (!artwork) return;
+
+        // Close action menu
+        document.getElementById('action-menu').classList.add('hidden');
+
+        // Populate form fields
+        document.getElementById('edit-title').value = artwork.title || '';
+        document.getElementById('edit-description').value = artwork.description || '';
+        document.getElementById('edit-art-type').value = artwork.art_type || '';
+        document.getElementById('edit-category').value = artwork.category || '';
+        document.getElementById('edit-medium').value = artwork.medium || '';
+        document.getElementById('edit-dimensions').value = artwork.dimensions || '';
+        document.getElementById('edit-year').value = artwork.year_created || '';
+        document.getElementById('edit-subject').value = artwork.subject_matter || '';
+        document.getElementById('edit-signed').value = artwork.signed || '';
+        document.getElementById('edit-inscription').value = artwork.inscription || '';
+        document.getElementById('edit-provenance').value = artwork.provenance || '';
+        document.getElementById('edit-status').value = artwork.acquisition_status || 'new';
+        document.getElementById('edit-price').value = artwork.last_sale_price || '';
+        document.getElementById('edit-source-url').value = artwork.source_url || '';
+        document.getElementById('edit-notes').value = artwork.notes || '';
+
+        // Show modal
+        const modal = document.getElementById('edit-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeEditModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        const modal = document.getElementById('edit-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    async function saveArtwork(event) {
+        event.preventDefault();
+
+        const updates = {
+            title: document.getElementById('edit-title').value,
+            description: document.getElementById('edit-description').value || null,
+            art_type: document.getElementById('edit-art-type').value || null,
+            category: document.getElementById('edit-category').value || null,
+            medium: document.getElementById('edit-medium').value || null,
+            dimensions: document.getElementById('edit-dimensions').value || null,
+            year_created: document.getElementById('edit-year').value ? parseInt(document.getElementById('edit-year').value) : null,
+            subject_matter: document.getElementById('edit-subject').value || null,
+            signed: document.getElementById('edit-signed').value || null,
+            inscription: document.getElementById('edit-inscription').value || null,
+            provenance: document.getElementById('edit-provenance').value || null,
+            acquisition_status: document.getElementById('edit-status').value,
+            last_sale_price: document.getElementById('edit-price').value ? parseFloat(document.getElementById('edit-price').value) : null,
+            source_url: document.getElementById('edit-source-url').value || null,
+            notes: document.getElementById('edit-notes').value || null,
+        };
+
+        try {
+            await API.patch(`/artworks/${artworkId}`, updates);
+            showToast('Artwork updated successfully', 'success');
+            closeEditModal();
+            loadArtwork(); // Reload the page data
+        } catch (e) {
+            console.error('Failed to save artwork:', e);
+            showToast('Failed to save changes', 'error');
+        }
+    }
+
+    // Close edit modal with Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const editModal = document.getElementById('edit-modal');
+            if (!editModal.classList.contains('hidden')) {
+                closeEditModal();
+            } else {
+                closeLightbox();
+            }
+        }
+    });
+
+    // Initial load
+    loadArtwork().then(() => {
+        // Load exhibition history after artwork loads
+        loadExhibitionHistory();
+    });
+</script>
+{% endblock %}
