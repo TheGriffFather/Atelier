@@ -7,6 +7,9 @@ Atelier is an open-source platform for building and managing a comprehensive cat
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-green.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal.svg)
+![Status](https://img.shields.io/badge/status-work%20in%20progress-orange.svg)
+
+> **Note:** This project is under active development. Core functionality is working, but many planned features are still being implemented. See the [Roadmap](#roadmap) section for details on upcoming enhancements.
 
 ---
 
@@ -23,7 +26,7 @@ Atelier digitizes this traditionally paper-based process, adding automated disco
 
 ---
 
-## Features
+## Current Features
 
 ### Comprehensive Artwork Database
 - Full scholarly metadata (medium, dimensions, provenance, exhibitions, literature)
@@ -53,7 +56,48 @@ Atelier digitizes this traditionally paper-based process, adding automated disco
 ### Export & Integration
 - CSV and JSON export with full metadata
 - RESTful API for integration with other systems
-- Designed for future integration with museum standards (CollectiveAccess, etc.)
+
+---
+
+## Roadmap
+
+Atelier is being developed in four phases. Each phase builds upon the previous to create a complete professional-grade catalogue raisonné platform.
+
+### Phase 1: Foundation (In Progress)
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Enhanced Image Management** | Multiple image types (recto, verso, detail, UV), image annotations, perceptual hashing | Planned |
+| **Import/Migration Tools** | CSV, JSON, Excel import with field mapping wizard | Planned |
+| **Duplicate Detection** | Perceptual hash matching, title/dimension similarity, merge workflow | Planned |
+| **Data Completeness Dashboard** | Track research progress, identify gaps, prioritize work | Planned |
+
+### Phase 2: Professional Catalog Features
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Provenance Chain Builder** | Visual ownership history timeline with gap detection | Planned |
+| **Exhibition History Module** | Comprehensive exhibition tracking with venue database | Planned |
+| **Literature & Bibliography** | Citation management, publication linking, bibliography export | Planned |
+| **Catalog Numbering System** | Customizable scholarly numbering schemes | Planned |
+
+### Phase 3: Collaboration
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Multi-User Support** | User roles (Admin, Editor, Viewer), activity logging | Planned |
+| **Authentication Workflow** | Expert opinions, verification status tracking | Planned |
+| **Print-Ready Export** | PDF catalog generation with professional layouts | Planned |
+| **Public Tip Submission** | Allow collectors to submit potential works | Planned |
+
+### Phase 4: Discovery & Integration
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Auction House Integrations** | Christie's, Sotheby's, Heritage, Bonhams scrapers | Planned |
+| **Price History Tracking** | Market intelligence, price trends, comparable sales | Planned |
+| **Museum Collection Search** | Search Met, Smithsonian, and other institutional APIs | Planned |
+| **Online Catalog Portal** | Public-facing searchable catalog website | Planned |
 
 ---
 
@@ -278,6 +322,7 @@ atelier/
 │   └── cli.py                  # CLI commands
 ├── scripts/                    # Utility scripts
 ├── tests/                      # Test suite
+├── Tasks/                      # Development specifications
 ├── config/                     # Configuration
 └── data/                       # Database and images
 ```
@@ -339,23 +384,24 @@ Docker support is planned for easier deployment.
 
 ---
 
-## Branches
-
-- **`main`** - Generic, plug-and-play version for any artist
-- **`atelier-brown`** - Reference implementation for Dan Brown (1949-2022), a Connecticut trompe l'oeil painter
-
----
-
 ## Contributing
 
-Contributions are welcome! Areas where help is needed:
+Contributions are welcome! This project is under active development and there are many ways to help:
 
-- Additional platform scrapers (LiveAuctioneers, Invaluable, Heritage, Artnet)
-- Image similarity matching for artwork deduplication
-- Mobile-responsive improvements
-- Museum system integrations (CollectiveAccess, TMS)
-- Test coverage expansion
-- Documentation improvements
+### Priority Areas
+- **Phase 1 Features** - Help implement the foundation features listed in the roadmap
+- **Additional Scrapers** - Christie's, Sotheby's, Heritage, LiveAuctioneers
+- **Image Processing** - Perceptual hashing and similarity matching
+- **Testing** - Expand test coverage
+- **Documentation** - Improve guides and examples
+
+### Getting Started
+1. Check the `Tasks/` folder for detailed feature specifications
+2. Review `Tasks/SCHEMA.md` for database conventions
+3. Pick a feature or bug and open an issue to discuss
+4. Submit a pull request
+
+See the [Contributing Guide](CONTRIBUTING.md) for more details.
 
 ---
 
