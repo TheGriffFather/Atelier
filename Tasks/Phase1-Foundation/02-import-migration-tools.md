@@ -2,6 +2,15 @@
 
 > Phase 1, Task 2 | Priority: High | Dependencies: None
 
+## Quick Reference
+
+**Key files to understand before starting:**
+- `src/database/models.py` - Artwork model with all importable fields
+- `src/api/routes/artworks.py` - Pydantic model patterns (ArtworkResponse, ArtworkUpdate)
+- `src/api/main.py` - How routers are registered
+- `src/api/templates/base.html` - Template structure and JS utilities
+- `src/database/session.py` - Database session management
+
 ## Overview
 
 Create a robust import system that allows users to migrate data from external sources (CSV, JSON, Excel) into Atelier. The system tracks all imports for auditing, provides field mapping, handles errors gracefully, and supports rollback of failed imports.
@@ -681,4 +690,195 @@ pip install pandas openpyxl aiofiles
 
 ---
 
-*Last updated: December 5, 2025*
+## Existing Code Reference
+
+### Artwork Model Fields Available for Import
+
+These are the fields on the `Artwork` model that can be imported (from `src/database/models.py`):
+
+```python
+# Basic info
+title: str                    # REQUIRED
+description: Optional[str]
+
+# Physical characteristics
+medium: Optional[str]         # e.g., "Oil on panel"
+dimensions: Optional[str]     # e.g., "12 x 16 in"
+dimensions_cm: Optional[str]  # e.g., "30.5 x 40.6 cm"
+art_type: Optional[str]       # e.g., "Painting", "Book Cover"
+
+# Dating
+year_created: Optional[int]   # e.g., 1985
+year_created_circa: bool      # Default: False
+
+# Signature & inscriptions
+signed: Optional[str]         # e.g., "Signed lower right"
+inscription: Optional[str]
+
+# Provenance & history
+provenance: Optional[str]
+exhibition_history: Optional[str]
+literature: Optional[str]
+
+# Condition & framing
+condition: Optional[str]
+framed: Optional[bool]
+frame_description: Optional[str]
+
+# Subject matter
+subject_matter: Optional[str]
+category: Optional[str]       # e.g., "Currency", "Still Life"
+
+# Acquisition & Sales
+last_sale_price: Optional[float]
+last_sale_date: Optional[datetime]
+last_sale_venue: Optional[str]
+last_known_owner: Optional[str]
+current_location: Optional[str]
+acquisition_priority: Optional[int]  # 1-5
+estimated_value: Optional[float]
+
+# Source (for imported records)
+source_platform: str = "manual"
+source_url: str               # Must be unique - generate if not provided
+```
+
+### Route Registration Pattern (src/api/main.py)
+
+Add the import router like this:
+
+```python
+from src.api.routes.import_routes import router as import_router
+
+# In the lifespan or after app creation:
+app.include_router(import_router)
+```
+
+### Adding Navigation Link (src/api/templates/base.html)
+
+Add to the navigation section (around line 55):
+
+```html
+<a href="/import" class="nav-item {% block nav_import %}{% endblock %}" data-nav="import">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    </svg>
+    <span>Import</span>
+</a>
+```
+
+### Template Pattern
+
+New import page should follow this structure:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Import Data | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block nav_import %}nav-item-active{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page content -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/api/static/js/import.js"></script>
+{% endblock %}
+```
+
+### Database Session Pattern
+
+```python
+from src.database import get_session_context, Artwork
+
+async def create_artwork_from_import(data: dict) -> Artwork:
+    async with get_session_context() as session:
+        artwork = Artwork(
+            title=data['title'],
+            source_platform='manual',
+            source_url=f"import://{uuid.uuid4()}",  # Generate unique URL
+            # ... other fields
+        )
+        session.add(artwork)
+        await session.commit()
+        await session.refresh(artwork)
+        return artwork
+```
+
+### Pydantic Models for Import API
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+from enum import Enum
+
+class ImportSourceType(str, Enum):
+    CSV = "csv"
+    JSON = "json"
+    XLSX = "xlsx"
+
+class ImportStatus(str, Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+class ImportPreview(BaseModel):
+    """Response after file upload."""
+    job_id: int
+    name: str
+    source_type: ImportSourceType
+    total_rows: int
+    preview: List[Dict[str, Any]]  # First 10 rows
+    detected_columns: List[str]
+    suggested_mapping: Dict[str, str]
+
+class ImportOptions(BaseModel):
+    """Import configuration options."""
+    skip_duplicates: bool = True
+    duplicate_check_fields: List[str] = ["title"]
+    download_images: bool = True
+    set_verified: bool = False
+    default_source_platform: str = "manual"
+
+class ExecuteImportRequest(BaseModel):
+    """Request to execute import with mapping."""
+    field_mapping: Dict[str, str]
+    options: ImportOptions
+
+class ImportJobResponse(BaseModel):
+    """Response for import job details."""
+    id: int
+    name: str
+    source_type: str
+    status: str
+    total_rows: int
+    imported_count: int
+    skipped_count: int
+    error_count: int
+    field_mapping: Optional[Dict[str, str]]
+    errors: Optional[List[Dict[str, Any]]]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class ImportFieldInfo(BaseModel):
+    """Information about an importable field."""
+    name: str
+    type: str
+    required: bool
+    description: str
+    special: Optional[str] = None
+```
+
+---
+
+*Last updated: December 2025*
