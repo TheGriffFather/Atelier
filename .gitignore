@@ -1,6 +1,9 @@
 # Claude Code local settings
 .claude/
 
+# Development tasks (local planning docs)
+Tasks/
+
 # Playwright MCP screenshots
 .playwright-mcp/
 
