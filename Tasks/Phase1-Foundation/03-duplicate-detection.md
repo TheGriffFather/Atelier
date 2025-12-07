@@ -1,6 +1,27 @@
 # Duplicate Detection
 
-> Phase 1, Task 3 | Priority: High | Dependencies: Enhanced Image Management (for perceptual hashing)
+> Phase 1, Task 3 | Priority: High | Dependencies: Enhanced Image Management (Task 01)
+
+## Dependency Note
+
+**This task depends on Task 01 (Enhanced Image Management)** for perceptual hashing functionality.
+
+**If Task 01 is complete:** Use the `perceptual_hash` field on `ArtworkImage` and the hash generation utilities from `src/services/image_service.py`.
+
+**If Task 01 is NOT complete:** You can still implement this task with these modifications:
+1. Skip image-based duplicate detection initially
+2. Implement only title and metadata matching first
+3. Add a `perceptual_hash` column directly to `artwork_images` table (the migration in Task 01 will be compatible)
+4. Leave `compare_images()` as a stub that returns 0.0 similarity
+5. Add a TODO comment to enable image comparison once Task 01 is complete
+
+## Quick Reference
+
+**Key files to understand before starting:**
+- `src/database/models.py` - Artwork and ArtworkImage models
+- `src/api/routes/artworks.py` - Existing artwork endpoints and patterns
+- `src/services/image_service.py` - Image handling (will have hash functions after Task 01)
+- `src/api/templates/base.html` - Template structure and JS utilities
 
 ## Overview
 
@@ -707,4 +728,222 @@ def test_scan_progress():
 
 ---
 
-*Last updated: December 5, 2025*
+## Existing Code Reference
+
+### Artwork Model Key Fields for Matching
+
+From `src/database/models.py`, these fields are used for duplicate detection:
+
+```python
+class Artwork(Base):
+    __tablename__ = "artworks"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
+    year_created: Mapped[Optional[int]] = mapped_column(nullable=True)
+    medium: Mapped[Optional[str]] = mapped_column(nullable=True)
+    dimensions: Mapped[Optional[str]] = mapped_column(nullable=True)
+    source_url: Mapped[str] = mapped_column(Text, unique=True)
+
+    # Relationship to images
+    images: Mapped[list["ArtworkImage"]] = relationship(back_populates="artwork")
+```
+
+### ArtworkImage Model (for hash storage)
+
+```python
+class ArtworkImage(Base):
+    __tablename__ = "artwork_images"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    artwork_id: Mapped[int] = mapped_column(ForeignKey("artworks.id"))
+    local_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_primary: Mapped[bool] = mapped_column(default=False)
+
+    # After Task 01 (or add yourself if Task 01 not done):
+    # perceptual_hash: Mapped[Optional[str]] = mapped_column(nullable=True)
+
+    artwork: Mapped["Artwork"] = relationship(back_populates="images")
+```
+
+### Route Pattern from artworks.py
+
+Follow this pattern for the new duplicates router:
+
+```python
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from pydantic import BaseModel
+from typing import Optional, List
+
+router = APIRouter(prefix="/api/duplicates", tags=["duplicates"])
+
+# See Pydantic Models section below for request/response models
+```
+
+### Pydantic Models for Duplicate Detection
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional, List, Dict
+from datetime import datetime
+from enum import Enum
+
+class DuplicateStatus(str, Enum):
+    PENDING = "pending"
+    CONFIRMED_DUPLICATE = "confirmed_duplicate"
+    NOT_DUPLICATE = "not_duplicate"
+    MERGED = "merged"
+    IGNORED = "ignored"
+
+class DetectionMethod(str, Enum):
+    IMAGE_HASH = "image_hash"
+    TITLE = "title"
+    METADATA = "metadata"
+    COMBINED = "combined"
+
+class ScanRequest(BaseModel):
+    """Request to start a duplicate scan."""
+    methods: List[str] = ["image_hash", "title", "metadata"]
+    thresholds: Optional[Dict[str, float]] = None
+    limit: Optional[int] = None
+
+class ScanStatusResponse(BaseModel):
+    """Status of a running scan."""
+    scan_id: str
+    status: str  # "started", "in_progress", "completed", "failed"
+    progress: int
+    total: int
+    candidates_found: int
+
+class ArtworkSummary(BaseModel):
+    """Minimal artwork info for comparison."""
+    id: int
+    title: str
+    year_created: Optional[int]
+    medium: Optional[str]
+    dimensions: Optional[str]
+    image_url: Optional[str]
+    source_platform: str
+
+    class Config:
+        from_attributes = True
+
+class DuplicateCandidateResponse(BaseModel):
+    """A potential duplicate pair."""
+    id: int
+    artwork_1: ArtworkSummary
+    artwork_2: ArtworkSummary
+    detection_method: str
+    confidence_score: float
+    status: str
+    detected_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ResolveRequest(BaseModel):
+    """Request to resolve a duplicate candidate."""
+    resolution: str  # merged, not_duplicate, ignored
+    merge_into_id: Optional[int] = None
+    notes: Optional[str] = None
+
+class MergeRequest(BaseModel):
+    """Request to merge two artworks."""
+    source_id: int
+    target_id: int
+    field_selections: Dict[str, str]  # field_name: "source" | "target" | "combine"
+
+class MergeResponse(BaseModel):
+    """Result of a merge operation."""
+    message: str
+    merged_artwork_id: int
+    deleted_artwork_id: int
+    changes: Dict[str, any]
+```
+
+### Template Pattern for Duplicates Page
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Duplicate Detection | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block nav_duplicates %}nav-item-active{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-gold-500" id="pending-count">0</div>
+            <div class="text-sm text-gray-400">Pending Review</div>
+        </div>
+        <!-- More stat cards -->
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-4 mb-6">
+        <button onclick="startScan()" class="btn-primary">Run Full Scan</button>
+        <select id="status-filter" class="select-dark" onchange="filterCandidates()">
+            <option value="pending">Pending</option>
+            <option value="all">All</option>
+        </select>
+    </div>
+
+    <!-- Candidate List -->
+    <div id="candidates-list" class="space-y-4">
+        <!-- Populated by JavaScript -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/api/static/js/duplicates.js"></script>
+{% endblock %}
+```
+
+### Adding Navigation Link
+
+Add to `src/api/templates/base.html` navigation:
+
+```html
+<a href="/duplicates" class="nav-item {% block nav_duplicates %}{% endblock %}" data-nav="duplicates">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+    <span>Duplicates</span>
+</a>
+```
+
+### Database Session Pattern
+
+```python
+from src.database import get_session_context, Artwork, ArtworkImage
+
+async def find_potential_duplicates(artwork_id: int) -> List[dict]:
+    async with get_session_context() as session:
+        # Get the artwork
+        result = await session.execute(
+            select(Artwork)
+            .options(selectinload(Artwork.images))
+            .where(Artwork.id == artwork_id)
+        )
+        artwork = result.scalar_one_or_none()
+
+        if not artwork:
+            return []
+
+        # Find similar artworks by title
+        result = await session.execute(
+            select(Artwork)
+            .where(Artwork.id != artwork_id)
+            .where(Artwork.title.ilike(f"%{artwork.title[:20]}%"))
+        )
+        candidates = result.scalars().all()
+
+        return [{"artwork_id": c.id, "method": "title"} for c in candidates]
+```
+
+---
+
+*Last updated: December 2025*

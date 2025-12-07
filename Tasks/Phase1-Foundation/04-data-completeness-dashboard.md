@@ -2,6 +2,15 @@
 
 > Phase 1, Task 4 | Priority: Medium | Dependencies: None
 
+## Quick Reference
+
+**Key files to understand before starting:**
+- `src/database/models.py` - Artwork model with all fields to check
+- `src/api/routes/artworks.py` - Existing artwork endpoints pattern
+- `src/api/templates/dashboard.html` - Main dashboard (will add card here)
+- `src/api/templates/artwork.html` - Artwork detail page (add completeness badge)
+- `src/api/templates/base.html` - Template structure and JS utilities
+
 ## Overview
 
 Create a comprehensive data quality dashboard that visualizes the completeness of artwork records, identifies gaps in documentation, and prioritizes which records need attention. Essential for systematic catalogue raisonné work where completeness is critical.
@@ -605,4 +614,322 @@ const fieldChart = new Chart(ctx, {
 
 ---
 
-*Last updated: December 5, 2025*
+## Existing Code Reference
+
+### Artwork Model Fields to Check
+
+From `src/database/models.py`, these are the fields included in completeness scoring:
+
+```python
+class Artwork(Base):
+    __tablename__ = "artworks"
+
+    # Essential Fields (40 points total)
+    title: Mapped[str]                              # 10 points - always filled
+    year_created: Mapped[Optional[int]]             # 10 points
+    medium: Mapped[Optional[str]]                   # 10 points
+    dimensions: Mapped[Optional[str]]               # 10 points
+
+    # Important Fields (35 points total)
+    # has_primary_image: special check              # 15 points - check images relationship
+    description: Mapped[Optional[str]]              # 5 points
+    signed: Mapped[Optional[str]]                   # 5 points
+    subject_matter: Mapped[Optional[str]]           # 5 points
+    category: Mapped[Optional[str]]                 # 5 points
+
+    # Scholarly Fields (25 points total)
+    provenance: Mapped[Optional[str]]               # 8 points
+    exhibition_history: Mapped[Optional[str]]       # 8 points
+    literature: Mapped[Optional[str]]               # 5 points
+    condition: Mapped[Optional[str]]                # 4 points
+
+    # Relationship for image check
+    images: Mapped[list["ArtworkImage"]] = relationship(back_populates="artwork")
+```
+
+### Existing ArtworkResponse Pattern
+
+From `src/api/routes/artworks.py`:
+
+```python
+class ArtworkResponse(BaseModel):
+    """Response model for artwork data."""
+    id: int
+    title: str
+    description: Optional[str]
+    # ... all fields ...
+
+    class Config:
+        from_attributes = True
+```
+
+### Pydantic Models for Completeness API
+
+```python
+from pydantic import BaseModel
+from typing import Optional, List, Dict
+from enum import Enum
+
+class CompletenessLevel(str, Enum):
+    EXCELLENT = "excellent"  # 90-100%
+    GOOD = "good"           # 70-89%
+    FAIR = "fair"           # 50-69%
+    POOR = "poor"           # 25-49%
+    CRITICAL = "critical"   # 0-24%
+
+class FieldScore(BaseModel):
+    """Score for a single field."""
+    field: str
+    filled: bool
+    points: int
+    max_points: int
+    category: str  # "essential", "important", "scholarly"
+
+class MissingFieldInfo(BaseModel):
+    """Info about a commonly missing field."""
+    field: str
+    missing_count: int
+    percentage: float
+
+class TrendInfo(BaseModel):
+    """Completeness trend over time."""
+    last_week: float
+    current: float
+    change: float
+
+class OverviewResponse(BaseModel):
+    """Overall completeness statistics."""
+    total_artworks: int
+    average_completeness: float
+    by_level: Dict[str, int]  # {"excellent": 12, "good": 45, ...}
+    most_missing_fields: List[MissingFieldInfo]
+    trend: Optional[TrendInfo] = None
+
+class FieldCompletenessResponse(BaseModel):
+    """Completeness by field."""
+    fields: List[Dict[str, any]]  # {"field": "provenance", "complete": 67, "incomplete": 89, "percentage": 42.9}
+
+class ArtworkCompletenessItem(BaseModel):
+    """Artwork with completeness info."""
+    id: int
+    title: str
+    year_created: Optional[int]
+    completeness_score: float
+    level: str
+    missing_fields: List[str]
+    has_image: bool
+
+    class Config:
+        from_attributes = True
+
+class ArtworkListResponse(BaseModel):
+    """List of artworks with completeness."""
+    artworks: List[ArtworkCompletenessItem]
+    total: int
+    average_score: float
+
+class ArtworkCompletenessDetail(BaseModel):
+    """Detailed completeness for single artwork."""
+    artwork_id: int
+    title: str
+    completeness_score: float
+    level: str
+    field_scores: Dict[str, Dict[str, any]]  # {"title": {"filled": true, "points": 10, "max": 10}}
+    total_points: int
+    max_points: int
+    missing_fields: List[str]
+    priority_fields: List[str]  # Most important missing fields
+```
+
+### Route Pattern
+
+```python
+from fastapi import APIRouter, Query
+from fastapi.responses import StreamingResponse
+from typing import Optional
+
+router = APIRouter(prefix="/api/completeness", tags=["completeness"])
+
+@router.get("/overview")
+async def get_overview() -> OverviewResponse:
+    """Get completeness overview."""
+    pass
+
+@router.get("/by-field")
+async def get_by_field() -> FieldCompletenessResponse:
+    """Get completeness by field."""
+    pass
+
+@router.get("/artworks")
+async def get_artworks(
+    level: Optional[str] = None,
+    missing_field: Optional[str] = None,
+    sort: str = Query("completeness", regex="^(completeness|title|year)$"),
+    order: str = Query("asc", regex="^(asc|desc)$"),
+    limit: int = Query(50, le=200),
+    offset: int = 0
+) -> ArtworkListResponse:
+    """Get artworks with completeness scores."""
+    pass
+
+@router.get("/export")
+async def export_incomplete(
+    max_level: str = "fair",
+    format: str = "csv"
+) -> StreamingResponse:
+    """Export incomplete records."""
+    pass
+```
+
+### Template Structure
+
+**New page: `src/api/templates/completeness.html`**
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Data Completeness | Dan Brown Catalogue Raisonné{% endblock %}
+
+{% block nav_completeness %}nav-item-active{% endblock %}
+
+{% block head %}
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-4 gap-4 mb-8">
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-white" id="total-artworks">0</div>
+            <div class="text-sm text-gray-400">Total Artworks</div>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <div class="text-2xl font-bold text-gold-500" id="avg-completeness">0%</div>
+            <div class="text-sm text-gray-400">Average Completeness</div>
+        </div>
+        <!-- More cards -->
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-2 gap-6 mb-8">
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-white mb-4">Distribution</h3>
+            <canvas id="distribution-chart"></canvas>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-lg">
+            <h3 class="text-lg font-medium text-white mb-4">By Field</h3>
+            <canvas id="field-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Artworks Table -->
+    <div class="bg-gray-800 rounded-lg p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-white">Artworks Needing Attention</h3>
+            <button onclick="exportIncomplete()" class="btn-secondary">Export CSV</button>
+        </div>
+        <table class="w-full">
+            <thead>
+                <tr class="text-left text-gray-400 text-sm">
+                    <th class="pb-2">Title</th>
+                    <th class="pb-2">Year</th>
+                    <th class="pb-2">Completeness</th>
+                    <th class="pb-2">Missing</th>
+                    <th class="pb-2">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="artworks-table">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/api/static/js/completeness.js"></script>
+{% endblock %}
+```
+
+### Adding Navigation Link
+
+Add to `src/api/templates/base.html`:
+
+```html
+<a href="/completeness" class="nav-item {% block nav_completeness %}{% endblock %}" data-nav="completeness">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+    <span>Completeness</span>
+</a>
+```
+
+### Adding Completeness Badge to Artwork Detail
+
+In `src/api/templates/artwork.html`, add this in the header section:
+
+```html
+<!-- Completeness Badge -->
+<div id="completeness-badge" class="hidden items-center gap-2 px-3 py-1 rounded-full text-sm">
+    <span id="completeness-score"></span>
+    <span id="completeness-level" class="uppercase text-xs"></span>
+</div>
+
+<script>
+// Load completeness on page load
+async function loadCompleteness(artworkId) {
+    const response = await API.get(`/artworks/${artworkId}/completeness`);
+    const badge = document.getElementById('completeness-badge');
+    const score = document.getElementById('completeness-score');
+    const level = document.getElementById('completeness-level');
+
+    score.textContent = `${response.completeness_score}%`;
+    level.textContent = response.level;
+
+    // Color based on level
+    const colors = {
+        excellent: 'bg-green-500/20 text-green-400',
+        good: 'bg-blue-500/20 text-blue-400',
+        fair: 'bg-yellow-500/20 text-yellow-400',
+        poor: 'bg-orange-500/20 text-orange-400',
+        critical: 'bg-red-500/20 text-red-400'
+    };
+    badge.className = `flex items-center gap-2 px-3 py-1 rounded-full text-sm ${colors[response.level]}`;
+}
+</script>
+```
+
+### Database Query Pattern
+
+```python
+from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
+from src.database import get_session_context, Artwork, ArtworkImage
+
+async def calculate_completeness_for_artwork(artwork_id: int) -> dict:
+    async with get_session_context() as session:
+        result = await session.execute(
+            select(Artwork)
+            .options(selectinload(Artwork.images))
+            .where(Artwork.id == artwork_id)
+        )
+        artwork = result.scalar_one_or_none()
+
+        if not artwork:
+            return None
+
+        # Calculate score based on FIELD_CONFIG
+        # See CompletenessService in main spec
+        return {
+            "artwork_id": artwork.id,
+            "score": 75.0,
+            "level": "good",
+            "missing_fields": ["provenance", "literature"]
+        }
+```
+
+---
+
+*Last updated: December 2025*
