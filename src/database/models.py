@@ -641,9 +641,48 @@ class AlertResult(Base):
         return f"<AlertResult(id={self.id}, title='{self.title[:30]}', status={self.status})>"
 
 
+class DisplaySettings(Base):
+    """
+    Global display settings for the frame.
+
+    Stored in database so all clients (PC, Pi, etc.) share the same settings.
+    Only one row should exist (id=1).
+    """
+    __tablename__ = "display_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    # Frame style
+    frame_style: Mapped[str] = mapped_column(default="wood")  # wood, gold, black
+
+    # Rotation
+    interval: Mapped[int] = mapped_column(default=3600)  # seconds between rotations
+    shuffle: Mapped[bool] = mapped_column(default=True)  # random order
+
+    # Display options
+    show_title: Mapped[bool] = mapped_column(default=True)
+    show_progress: Mapped[bool] = mapped_column(default=False)
+    verified_only: Mapped[bool] = mapped_column(default=True)
+
+    # Image display mode: 'auto', 'contain' (fit), 'cover' (fill), 'fill' (stretch)
+    image_fit: Mapped[str] = mapped_column(default="auto")
+
+    # Selected artwork IDs (JSON list)
+    selected_artwork_ids: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+
+    # Art type filtering (JSON list of excluded types, e.g., ["Book Cover"])
+    excluded_art_types: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+
+    # Timestamps
+    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"<DisplaySettings(interval={self.interval}, shuffle={self.shuffle})>"
+
+
 class ResearchLead(Base):
     """
-    Research leads for tracking down Dan Brown's work.
+    Research leads for tracking down artwork.
 
     Represents clues, rumors, and leads about potential artworks before
     they become verified entries in the Artwork table.
