@@ -37,6 +37,12 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: var(--text-primary);
             touch-action: pan-x pan-y;
+            cursor: none !important;
+        }
+
+        /* Hide cursor on all elements */
+        *, *::before, *::after {
+            cursor: none !important;
         }
 
         /* Main Display */
@@ -66,9 +72,9 @@
         }
 
         .artwork-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;  /* Will be overridden by JS based on settings */
         }
 
         /* Swipe Indicators */
@@ -672,48 +678,37 @@
             shuffle: true,
             showTitle: false,
             showProgress: false,
-            verifiedOnly: true
+            verifiedOnly: true,
+            excludedArtTypes: [],
+            imageFit: 'contain'  // contain, cover, fill
         };
 
-        // Load settings - check URL parameters first, then localStorage
-        function loadSettings() {
-            // First check URL parameters (passed from /display settings page)
-            const urlParams = new URLSearchParams(window.location.search);
-
-            if (urlParams.has('interval')) {
-                settings.interval = parseInt(urlParams.get('interval')) || settings.interval;
-            }
-            if (urlParams.has('showTitle')) {
-                settings.showTitle = urlParams.get('showTitle') === 'true';
-            }
-            if (urlParams.has('verifiedOnly')) {
-                settings.verifiedOnly = urlParams.get('verifiedOnly') === 'true';
-            }
-            if (urlParams.has('shuffle')) {
-                settings.shuffle = urlParams.get('shuffle') === 'true';
-            }
-
-            // If no URL params, try displaySettings from localStorage
-            if (!urlParams.has('interval')) {
-                const displaySaved = localStorage.getItem('displaySettings');
-                if (displaySaved) {
-                    const displaySettings = JSON.parse(displaySaved);
-                    settings.interval = displaySettings.interval || settings.interval;
-                    settings.showTitle = displaySettings.showTitle !== undefined ? displaySettings.showTitle : settings.showTitle;
-                    settings.verifiedOnly = displaySettings.verifiedOnly !== undefined ? displaySettings.verifiedOnly : settings.verifiedOnly;
-                    settings.shuffle = displaySettings.shuffle !== undefined ? displaySettings.shuffle : settings.shuffle;
+        // Load settings from API (shared database) for sync across all devices
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/display/settings`);
+                if (response.ok) {
+                    const apiSettings = await response.json();
+                    settings.interval = apiSettings.interval || settings.interval;
+                    settings.showTitle = apiSettings.show_title !== undefined ? apiSettings.show_title : settings.showTitle;
+                    settings.verifiedOnly = apiSettings.verified_only !== undefined ? apiSettings.verified_only : settings.verifiedOnly;
+                    settings.shuffle = apiSettings.shuffle !== undefined ? apiSettings.shuffle : settings.shuffle;
+                    settings.showProgress = apiSettings.show_progress !== undefined ? apiSettings.show_progress : settings.showProgress;
+                    settings.imageFit = apiSettings.image_fit || settings.imageFit;
+                    settings.excludedArtTypes = apiSettings.excluded_art_types || [];
+                    console.log('Settings loaded from API:', settings);
                 }
+            } catch (e) {
+                console.warn('Failed to load settings from API, using defaults:', e);
             }
 
-            // Then apply any frame-specific overrides from localStorage
+            // Apply any frame-specific overrides from localStorage (autorotate only)
             const frameSaved = localStorage.getItem('frameSettings');
             if (frameSaved) {
                 const frameSettings = JSON.parse(frameSaved);
                 settings.autorotate = frameSettings.autorotate !== undefined ? frameSettings.autorotate : settings.autorotate;
-                settings.showProgress = frameSettings.showProgress !== undefined ? frameSettings.showProgress : settings.showProgress;
             }
 
-            console.log('Frame settings loaded:', settings);
             applySettings();
         }
 
@@ -795,7 +790,14 @@
                 const response = await fetch(`${API_BASE}/artworks/?limit=100${verifiedParam}`);
                 const data = await response.json();
 
+                // Filter to artworks with images
                 artworks = data.filter(a => a.primary_image_url);
+
+                // Filter out excluded art types
+                if (settings.excludedArtTypes && settings.excludedArtTypes.length > 0) {
+                    artworks = artworks.filter(a => !settings.excludedArtTypes.includes(a.art_type));
+                    console.log(`Filtered out ${settings.excludedArtTypes.join(', ')} - ${artworks.length} artworks remaining`);
+                }
 
                 if (settings.shuffle) {
                     shuffleArtworks();
@@ -849,6 +851,19 @@
             });
         }
 
+        // Calculate optimal fit based on image and container aspect ratios
+        function calculateOptimalFit(imgWidth, imgHeight, containerWidth, containerHeight) {
+            if (!imgWidth || !imgHeight || !containerWidth || !containerHeight) return 'contain';
+
+            const imgAspect = imgWidth / imgHeight;
+            const containerAspect = containerWidth / containerHeight;
+            const aspectDiff = Math.abs(imgAspect - containerAspect) / containerAspect;
+
+            // If aspect ratios are within 15%, use cover (fill) for cleaner look
+            // Otherwise use contain to avoid excessive cropping
+            return aspectDiff < 0.15 ? 'cover' : 'contain';
+        }
+
         function showArtwork(index, direction = 0) {
             if (artworks.length === 0) return;
 
@@ -860,6 +875,25 @@
                 .replace('w_800,h_800', 'w_1200,h_1200');
 
             const img = document.getElementById('artwork-image');
+            const container = document.getElementById('artwork-container');
+
+            // Handle auto mode - calculate optimal fit once image loads
+            if (settings.imageFit === 'auto') {
+                img.onload = function() {
+                    const optimalFit = calculateOptimalFit(
+                        img.naturalWidth,
+                        img.naturalHeight,
+                        container.clientWidth || window.innerWidth,
+                        container.clientHeight || window.innerHeight
+                    );
+                    img.style.objectFit = optimalFit;
+                };
+                img.style.objectFit = 'contain'; // Default until loaded
+            } else {
+                img.onload = null;
+                img.style.objectFit = settings.imageFit;
+            }
+
             img.src = imageUrl;
             img.alt = artwork.title;
 
@@ -1014,13 +1048,14 @@
             isSwiping = false;
             longPressTriggered = false;
 
-            // Start long press timer
+            // Start long press timer - navigate to settings page
             longPressTimer = setTimeout(() => {
                 longPressTriggered = true;
                 document.getElementById('long-press-indicator').classList.add('visible');
                 setTimeout(() => {
                     document.getElementById('long-press-indicator').classList.remove('visible');
-                    showSettings();
+                    // Navigate to the full settings page
+                    window.location.href = '/display';
                 }, 300);
             }, 800);
         }
@@ -1127,7 +1162,7 @@
                     hideSettings();
                     break;
                 case 's':
-                    showSettings();
+                    window.location.href = '/display';
                     break;
             }
         });
@@ -1149,7 +1184,8 @@
 
             longPressTimer = setTimeout(() => {
                 longPressTriggered = true;
-                showSettings();
+                // Navigate to the full settings page
+                window.location.href = '/display';
             }, 800);
         });
 
@@ -1189,8 +1225,10 @@
         display.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // Initialize
-        loadSettings();
-        loadArtworks();
+        (async () => {
+            await loadSettings();
+            loadArtworks();
+        })();
     </script>
 </body>
 </html>
