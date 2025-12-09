@@ -7,16 +7,33 @@
 {% block content %}
 <div class="h-full flex overflow-hidden">
     <!-- Left Panel - Frame Preview -->
-    <div class="flex-1 bg-gray-900 flex flex-col items-center justify-center p-6 lg:p-8 relative min-w-0 overflow-hidden">
+    <div class="flex-1 bg-gray-900 flex flex-col items-center justify-center p-6 lg:p-8 relative min-w-0">
         <!-- Spotlight effect -->
         <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 80% 70% at 50% 45%, rgba(40, 45, 55, 0.4) 0%, rgba(20, 22, 28, 0.7) 40%, rgba(10, 10, 12, 1) 70%);"></div>
 
-        <!-- Frame Container - fills available space -->
-        <div class="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-full">
-            <div id="frame-container" class="frame-preview-wood">
-                <div class="frame-inner">
-                    <img id="preview-image" src="" alt="" class="preview-image">
+        <!-- Frame Container with side navigation -->
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-center w-full">
+            <!-- Frame and arrows wrapper - constrained width -->
+            <div class="relative flex items-center justify-center gap-3" style="max-width: calc(100% - 2rem);">
+                <!-- Left Arrow -->
+                <button onclick="prevArtwork()" class="nav-arrow flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <div id="frame-container" class="frame-preview-wood flex-shrink-0">
+                    <div class="frame-inner">
+                        <img id="preview-image" src="" alt="" class="preview-image">
+                    </div>
                 </div>
+
+                <!-- Right Arrow -->
+                <button onclick="nextArtwork()" class="nav-arrow flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
             </div>
 
             <!-- Title Overlay -->
@@ -145,6 +162,56 @@
                 </div>
             </div>
 
+            <!-- Image Display Mode -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Image Display</h3>
+                <div id="image-fit-options" class="flex flex-wrap gap-2">
+                    <button class="filter-pill active" data-fit="auto" onclick="setImageFit(this)">
+                        <span class="filter-pill-dot bg-gold-400"></span>
+                        Auto
+                    </button>
+                    <button class="filter-pill" data-fit="contain" onclick="setImageFit(this)">
+                        <span class="filter-pill-dot bg-blue-400"></span>
+                        Fit
+                    </button>
+                    <button class="filter-pill" data-fit="cover" onclick="setImageFit(this)">
+                        <span class="filter-pill-dot bg-purple-400"></span>
+                        Fill
+                    </button>
+                    <button class="filter-pill" data-fit="fill" onclick="setImageFit(this)">
+                        <span class="filter-pill-dot bg-emerald-400"></span>
+                        Stretch
+                    </button>
+                </div>
+            </div>
+
+            <!-- Art Type Filter -->
+            <div>
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Show Art Types</h3>
+                <div id="art-type-filters" class="flex flex-wrap gap-2">
+                    <button class="filter-pill active" data-type="Painting" onclick="toggleArtType(this)">
+                        <span class="filter-pill-dot bg-blue-400"></span>
+                        Paintings
+                        <span class="chip-count text-xs opacity-60" data-count="Painting">0</span>
+                    </button>
+                    <button class="filter-pill active" data-type="Book Cover" onclick="toggleArtType(this)">
+                        <span class="filter-pill-dot bg-pink-400"></span>
+                        Book Covers
+                        <span class="chip-count text-xs opacity-60" data-count="Book Cover">0</span>
+                    </button>
+                    <button class="filter-pill active" data-type="Illustration" onclick="toggleArtType(this)">
+                        <span class="filter-pill-dot bg-purple-400"></span>
+                        Illustrations
+                        <span class="chip-count text-xs opacity-60" data-count="Illustration">0</span>
+                    </button>
+                    <button class="filter-pill active" data-type="Lithograph" onclick="toggleArtType(this)">
+                        <span class="filter-pill-dot bg-emerald-400"></span>
+                        Lithographs
+                        <span class="chip-count text-xs opacity-60" data-count="Lithograph">0</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Artwork Selection -->
             <div>
                 <h3 class="text-sm font-medium text-gray-400 mb-3">Artwork Selection</h3>
@@ -197,6 +264,14 @@
 
 {% block scripts %}
 <style>
+    /* Navigation arrows */
+    .nav-arrow {
+        @apply w-10 h-10 flex items-center justify-center;
+        @apply text-white/60 hover:text-white bg-black/30 hover:bg-black/50;
+        @apply rounded-full transition-all cursor-pointer;
+        border: none;
+    }
+
     /* Toggle switch - concept art style */
     .toggle {
         @apply relative w-12 h-6 bg-gray-700 rounded-full cursor-pointer transition-colors;
@@ -216,10 +291,31 @@
     .frame-style-option {
         @apply relative w-16 h-16 rounded-lg border-2 border-gray-700 cursor-pointer transition-all overflow-hidden;
         @apply hover:border-gray-500;
+        background: #000;
     }
     .frame-style-option.active {
         @apply border-gold-500;
         box-shadow: 0 0 12px rgba(197, 160, 101, 0.3);
+    }
+
+    /* Image fit thumbnails (using frame-style-option base) */
+    .fit-thumb {
+        @apply w-full h-full flex items-center justify-center;
+        background: #000;
+    }
+    .fit-thumb-auto {
+        @apply w-full h-full flex items-center justify-center;
+        background: linear-gradient(135deg, rgba(197, 160, 101, 0.2) 0%, rgba(139, 115, 85, 0.2) 100%);
+    }
+    .fit-img {
+        background: linear-gradient(135deg, #c5a065 0%, #8b7355 100%);
+        border-radius: 1px;
+    }
+    .fit-label {
+        @apply absolute -bottom-5 left-0 right-0 text-center text-xs text-gray-500;
+    }
+    .frame-style-option.active .fit-label {
+        @apply text-gold-400;
     }
 
     /* Realistic frame thumbnails */
@@ -228,7 +324,8 @@
         padding: 6px;
     }
     .frame-thumb-inner {
-        @apply w-full h-full bg-gray-900;
+        @apply w-full h-full;
+        background: #000;
     }
 
     /* Wood frame thumbnail */
@@ -382,11 +479,9 @@
     /* Preview image - responsive sizing that fills container */
     .preview-image {
         display: block;
-        max-width: 100%;
-        max-height: calc(100vh - 200px);
-        width: auto;
-        height: auto;
-        object-fit: contain;
+        width: 100%;
+        height: 100%;
+        /* object-fit controlled by JavaScript based on setting */
     }
 
     /* Frame container - limit max size but allow scaling */
@@ -399,9 +494,9 @@
     }
 
     .frame-inner {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 380px;
+        height: 300px;
+        overflow: hidden;
     }
 </style>
 
@@ -418,14 +513,26 @@
         showTitle: true,
         verifiedOnly: true,
         shuffle: true,
-        selectedIds: []
+        selectedIds: [],
+        excludedArtTypes: [],
+        imageFit: 'auto'
     };
 
-    // Load settings from localStorage
-    function loadSettings() {
-        const saved = localStorage.getItem('displaySettings');
-        if (saved) {
-            settings = { ...settings, ...JSON.parse(saved) };
+    // Load settings from API (shared database)
+    async function loadSettings() {
+        try {
+            const apiSettings = await API.get('/display/settings');
+            settings.frameStyle = apiSettings.frame_style || settings.frameStyle;
+            settings.interval = apiSettings.interval || settings.interval;
+            settings.shuffle = apiSettings.shuffle !== undefined ? apiSettings.shuffle : settings.shuffle;
+            settings.showTitle = apiSettings.show_title !== undefined ? apiSettings.show_title : settings.showTitle;
+            settings.verifiedOnly = apiSettings.verified_only !== undefined ? apiSettings.verified_only : settings.verifiedOnly;
+            settings.imageFit = apiSettings.image_fit || settings.imageFit;
+            settings.selectedIds = apiSettings.selected_artwork_ids || [];
+            settings.excludedArtTypes = apiSettings.excluded_art_types || [];
+            console.log('Settings loaded from API:', settings);
+        } catch (e) {
+            console.warn('Failed to load settings from API, using defaults:', e);
         }
         applySettings();
     }
@@ -441,16 +548,20 @@
         updateFrameStyle();
         updateInterval();
         updateTitleVisibility();
+        updateArtTypeChips();
+        updateImageFitUI();
     }
 
     function updateFrameStyleUI(style) {
-        document.querySelectorAll('.frame-style-option').forEach(opt => {
+        // Only target frame style options (those with data-style attribute)
+        document.querySelectorAll('.frame-style-option[data-style]').forEach(opt => {
             opt.classList.toggle('active', opt.dataset.style === style);
-            opt.querySelector('input').checked = opt.dataset.style === style;
+            const input = opt.querySelector('input');
+            if (input) input.checked = opt.dataset.style === style;
         });
     }
 
-    function saveSettings() {
+    async function saveSettings() {
         const selectedStyle = document.querySelector('input[name="frame_style"]:checked');
         settings.frameStyle = selectedStyle ? selectedStyle.value : 'wood';
         settings.interval = parseInt(document.getElementById('rotation-interval').value);
@@ -461,23 +572,123 @@
         const selected = document.querySelectorAll('.artwork-select-item.selected');
         settings.selectedIds = Array.from(selected).map(el => parseInt(el.dataset.id));
 
-        localStorage.setItem('displaySettings', JSON.stringify(settings));
-        showToast('Settings saved!', 'success');
+        // Get excluded art types (pills that are NOT active)
+        const excludedTypes = [];
+        document.querySelectorAll('#art-type-filters .filter-pill').forEach(pill => {
+            if (!pill.classList.contains('active')) {
+                excludedTypes.push(pill.dataset.type);
+            }
+        });
+        settings.excludedArtTypes = excludedTypes;
+
+        // Save to API (database) so all devices share settings
+        try {
+            await API.put('/display/settings', {
+                frame_style: settings.frameStyle,
+                interval: settings.interval,
+                shuffle: settings.shuffle,
+                show_title: settings.showTitle,
+                show_progress: false,
+                verified_only: settings.verifiedOnly,
+                image_fit: settings.imageFit,
+                selected_artwork_ids: settings.selectedIds.length > 0 ? settings.selectedIds : null,
+                excluded_art_types: excludedTypes.length > 0 ? excludedTypes : null
+            });
+            showToast('Settings saved! Frame will sync automatically.', 'success');
+        } catch (e) {
+            console.error('Failed to save settings to API:', e);
+            showToast('Failed to save settings', 'error');
+        }
 
         loadArtworks();
     }
 
     function launchFrame() {
-        // Build URL with current settings as query parameters
-        const params = new URLSearchParams();
-        params.set('interval', settings.interval);
-        params.set('showTitle', settings.showTitle);
-        params.set('verifiedOnly', settings.verifiedOnly);
-        params.set('shuffle', settings.shuffle !== undefined ? settings.shuffle : true);
-        params.set('frameStyle', settings.frameStyle || 'wood');
+        // Settings are now stored in database, frame will fetch them automatically
+        window.open('/frame', '_blank');
+    }
 
-        const frameUrl = '/frame?' + params.toString();
-        window.open(frameUrl, '_blank');
+    // Toggle art type filter chip
+    function toggleArtType(chip) {
+        chip.classList.toggle('active');
+    }
+
+    // Update art type pills based on settings
+    function updateArtTypeChips() {
+        document.querySelectorAll('#art-type-filters .filter-pill').forEach(pill => {
+            const artType = pill.dataset.type;
+            const isExcluded = settings.excludedArtTypes.includes(artType);
+            pill.classList.toggle('active', !isExcluded);
+        });
+    }
+
+    // Set image fit mode
+    function setImageFit(option) {
+        const fit = option.dataset.fit;
+        settings.imageFit = fit;
+        updateImageFitUI();
+        // Update preview image - for auto, calculate best fit
+        applyImageFitToPreview();
+    }
+
+    // Calculate optimal fit based on image and container aspect ratios
+    function calculateOptimalFit(imgWidth, imgHeight, containerWidth, containerHeight) {
+        if (!imgWidth || !imgHeight || !containerWidth || !containerHeight) return 'contain';
+
+        const imgAspect = imgWidth / imgHeight;
+        const containerAspect = containerWidth / containerHeight;
+        const aspectDiff = Math.abs(imgAspect - containerAspect) / containerAspect;
+
+        // If aspect ratios are within 15%, use cover (fill) for cleaner look
+        // Otherwise use contain to avoid excessive cropping
+        return aspectDiff < 0.15 ? 'cover' : 'contain';
+    }
+
+    // Apply image fit to preview, handling auto mode
+    function applyImageFitToPreview() {
+        const previewImg = document.getElementById('preview-image');
+        if (!previewImg) return;
+
+        if (settings.imageFit === 'auto') {
+            // Calculate optimal fit when image is loaded
+            if (previewImg.naturalWidth && previewImg.naturalHeight) {
+                const container = previewImg.parentElement; // .frame-inner
+                const optimalFit = calculateOptimalFit(
+                    previewImg.naturalWidth,
+                    previewImg.naturalHeight,
+                    container.clientWidth,
+                    container.clientHeight
+                );
+                previewImg.style.objectFit = optimalFit;
+            } else {
+                // Default to contain until image loads
+                previewImg.style.objectFit = 'contain';
+            }
+        } else {
+            previewImg.style.objectFit = settings.imageFit;
+        }
+    }
+
+    // Update image fit options based on settings
+    function updateImageFitUI() {
+        document.querySelectorAll('#image-fit-options .filter-pill').forEach(option => {
+            option.classList.toggle('active', option.dataset.fit === settings.imageFit);
+        });
+        // Update preview image (handles auto mode)
+        applyImageFitToPreview();
+    }
+
+    // Update art type counts after loading artworks
+    function updateArtTypeCounts() {
+        const counts = {};
+        allArtworks.forEach(a => {
+            const type = a.art_type || 'Unknown';
+            counts[type] = (counts[type] || 0) + 1;
+        });
+        document.querySelectorAll('.chip-count').forEach(span => {
+            const type = span.dataset.count;
+            span.textContent = counts[type] || 0;
+        });
     }
 
     async function loadArtworks() {
@@ -486,7 +697,7 @@
 
         try {
             const verifiedParam = settings.verifiedOnly ? '&verified_only=true' : '';
-            allArtworks = await API.get(`/artworks?limit=100${verifiedParam}`);
+            allArtworks = await API.get(`/artworks/?limit=100${verifiedParam}`);
 
             // Filter to only artworks with images
             allArtworks = allArtworks.filter(a => a.primary_image_url);
@@ -511,6 +722,9 @@
 
             loading.classList.add('hidden');
             grid.classList.remove('hidden');
+
+            // Update art type counts
+            updateArtTypeCounts();
 
             // Set display artworks
             artworks = settings.selectedIds.length > 0
@@ -552,7 +766,12 @@
             .replace('w_320,h_320', 'w_800,h_800')
             .replace('w_800,h_800', 'w_1200,h_1200');
 
-        document.getElementById('preview-image').src = imageUrl;
+        const previewImg = document.getElementById('preview-image');
+        previewImg.onload = function() {
+            // Recalculate fit once image is loaded (for auto mode)
+            applyImageFitToPreview();
+        };
+        previewImg.src = imageUrl;
         document.getElementById('frame-title').textContent = artwork.title;
         document.getElementById('fullscreen-image').src = imageUrl;
         document.getElementById('fullscreen-title').textContent = artwork.title;
@@ -678,7 +897,9 @@
     });
 
     // Initialize
-    loadSettings();
-    loadArtworks();
+    (async () => {
+        await loadSettings();
+        loadArtworks();
+    })();
 </script>
 {% endblock %}
