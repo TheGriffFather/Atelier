@@ -188,6 +188,16 @@
                 });
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
+            },
+
+            async put(endpoint, data) {
+                const response = await fetch(`/api${endpoint}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
             }
         };
 

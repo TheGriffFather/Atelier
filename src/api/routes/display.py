@@ -1,6 +1,6 @@
 """Endpoints for the physical display frame."""
 
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Query
 from fastapi.responses import RedirectResponse
@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, func
 
 from src.database import Artwork, ArtworkImage, get_session_context
+from src.database.models import DisplaySettings
 
 router = APIRouter()
 
@@ -109,4 +110,121 @@ async def get_display_status() -> DisplayStatus:
             total_artworks=total,
             new_since_last_sync=new_count,
             current_artwork_id=None,
+        )
+
+
+# =============================================================================
+# Display Settings (shared across all clients)
+# =============================================================================
+
+class DisplaySettingsResponse(BaseModel):
+    """Display settings response model."""
+    frame_style: str = "wood"
+    interval: int = 3600
+    shuffle: bool = True
+    show_title: bool = True
+    show_progress: bool = False
+    verified_only: bool = True
+    image_fit: str = "auto"  # auto, contain, cover, fill
+    selected_artwork_ids: Optional[List[int]] = None
+    excluded_art_types: Optional[List[str]] = None
+
+
+class DisplaySettingsUpdate(BaseModel):
+    """Display settings update model."""
+    frame_style: Optional[str] = None
+    interval: Optional[int] = None
+    shuffle: Optional[bool] = None
+    show_title: Optional[bool] = None
+    show_progress: Optional[bool] = None
+    verified_only: Optional[bool] = None
+    image_fit: Optional[str] = None
+    selected_artwork_ids: Optional[List[int]] = None
+    excluded_art_types: Optional[List[str]] = None
+
+
+@router.get("/settings", response_model=DisplaySettingsResponse)
+async def get_display_settings() -> DisplaySettingsResponse:
+    """
+    Get display settings.
+
+    Returns the global settings used by all frame clients.
+    Creates default settings if none exist.
+    """
+    async with get_session_context() as session:
+        result = await session.execute(
+            select(DisplaySettings).where(DisplaySettings.id == 1)
+        )
+        settings = result.scalar_one_or_none()
+
+        if not settings:
+            # Create default settings
+            settings = DisplaySettings(id=1)
+            session.add(settings)
+            await session.commit()
+            await session.refresh(settings)
+
+        return DisplaySettingsResponse(
+            frame_style=settings.frame_style,
+            interval=settings.interval,
+            shuffle=settings.shuffle,
+            show_title=settings.show_title,
+            show_progress=settings.show_progress,
+            verified_only=settings.verified_only,
+            image_fit=getattr(settings, 'image_fit', 'auto'),
+            selected_artwork_ids=settings.selected_artwork_ids,
+            excluded_art_types=settings.excluded_art_types,
+        )
+
+
+@router.put("/settings", response_model=DisplaySettingsResponse)
+async def update_display_settings(update: DisplaySettingsUpdate) -> DisplaySettingsResponse:
+    """
+    Update display settings.
+
+    Updates the global settings used by all frame clients.
+    """
+    async with get_session_context() as session:
+        result = await session.execute(
+            select(DisplaySettings).where(DisplaySettings.id == 1)
+        )
+        settings = result.scalar_one_or_none()
+
+        if not settings:
+            settings = DisplaySettings(id=1)
+            session.add(settings)
+
+        # Update only provided fields
+        if update.frame_style is not None:
+            settings.frame_style = update.frame_style
+        if update.interval is not None:
+            settings.interval = update.interval
+        if update.shuffle is not None:
+            settings.shuffle = update.shuffle
+        if update.show_title is not None:
+            settings.show_title = update.show_title
+        if update.show_progress is not None:
+            settings.show_progress = update.show_progress
+        if update.verified_only is not None:
+            settings.verified_only = update.verified_only
+        if update.image_fit is not None:
+            settings.image_fit = update.image_fit
+        if update.selected_artwork_ids is not None:
+            settings.selected_artwork_ids = update.selected_artwork_ids
+        if update.excluded_art_types is not None:
+            settings.excluded_art_types = update.excluded_art_types
+
+        await session.commit()
+        await session.refresh(settings)
+
+        return DisplaySettingsResponse(
+            frame_style=settings.frame_style,
+            interval=settings.interval,
+            shuffle=settings.shuffle,
+            show_title=settings.show_title,
+            show_progress=settings.show_progress,
+            verified_only=settings.verified_only,
+            image_fit=getattr(settings, 'image_fit', 'auto'),
+            selected_artwork_ids=settings.selected_artwork_ids,
+            excluded_art_types=settings.excluded_art_types,
         )
