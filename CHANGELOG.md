@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Application Walkthrough** - Visual documentation with screenshots
+  - New `docs/WALKTHROUGH.md` with annotated screenshots of all major sections
+  - Covers Gallery, Timeline, Shows, Tracker, Outreach, Discovery, and Display Frame
+  - Screenshots stored in `docs/Research Documentatiopn/Screen Caps/`
+
 - **Display Settings Sync** - Cross-device settings synchronization via database
   - New `DisplaySettings` SQLAlchemy model for persistent storage
   - GET/PUT `/api/display/settings` REST endpoints
