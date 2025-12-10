@@ -11,6 +11,8 @@ Atelier is an open-source platform for building and managing a comprehensive cat
 
 > **Note:** This project is under active development. Core functionality is working, but many planned features are still being implemented. See the [Roadmap](#roadmap) section for details on upcoming enhancements.
 
+**[View Application Walkthrough](docs/WALKTHROUGH.md)** | **[Changelog](CHANGELOG.md)**
+
 ---
 
 ## What is a Catalogue Raisonné?
