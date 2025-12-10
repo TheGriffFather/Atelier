@@ -40,7 +40,7 @@ Exhibition history documenting where Dan Brown's work has been displayed, includ
 
 The artwork tracker monitors auction sites and galleries for new discoveries, with confidence scoring to distinguish the artist from the author.
 
-![Tracker](Research%20Documentatiopn/Screen%20Caps/Screenshot%202025-12-08%20190019.png)
+![Tracker](Research%20Documentatiopn/Screen%20Caps/Tracker%20Details.png)
 
 ---
 
@@ -48,7 +48,7 @@ The artwork tracker monitors auction sites and galleries for new discoveries, wi
 
 Detailed view of individual artwork records including provenance, physical description, and acquisition information.
 
-![Tracker Details](Research%20Documentatiopn/Screen%20Caps/Tracker%20Details.png)
+![Tracker Details](Research%20Documentatiopn/Screen%20Caps/Screenshot%202025-12-08%20190019.png)
 
 ---
 
