@@ -105,3 +105,15 @@ package-lock.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Large deployment archives
+*-docker.zip
+*-docker-deploy.zip
+
+# Temporary Word lock files
+~$*.docx
+~$*.doc
+
+# Windows artifacts
+nul
+temp_*.html

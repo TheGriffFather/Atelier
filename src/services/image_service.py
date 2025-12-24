@@ -132,7 +132,7 @@ async def download_artwork_image(image: ArtworkImage) -> bool:
         # Generate thumbnails
         generate_all_thumbnails(dest_path)
 
-        # Update database
+        # Update database with RELATIVE path for cross-platform compatibility
         async with get_session_context() as session:
             result = await session.execute(
                 select(ArtworkImage).where(ArtworkImage.id == image.id)
@@ -140,7 +140,9 @@ async def download_artwork_image(image: ArtworkImage) -> bool:
             db_image = result.scalar_one_or_none()
 
             if db_image:
-                db_image.local_path = str(dest_path)
+                # Store relative path (e.g., 'images/artworks/1/original.jpg')
+                # This ensures portability between Windows dev and Docker
+                db_image.local_path = settings.get_relative_image_path(dest_path)
                 db_image.date_downloaded = datetime.utcnow()
                 if dimensions:
                     db_image.width, db_image.height = dimensions
@@ -214,18 +216,21 @@ def get_local_image_url(image: ArtworkImage, size: Optional[str] = None) -> str:
     if not image.local_path:
         return image.url
 
-    local_path = Path(image.local_path)
+    # Resolve relative path to absolute for file existence checks
+    local_path = settings.resolve_image_path(image.local_path)
+    if not local_path:
+        return image.url
 
     if size and size in THUMBNAIL_SIZES:
         thumb_path = get_thumbnail_path(local_path, size)
         if thumb_path.exists():
-            # Return relative URL for static serving
-            rel_path = thumb_path.relative_to(settings.image_dir)
-            return f"/api/images/{rel_path}"
+            # Use helper to generate API URL
+            thumb_relative = settings.get_relative_image_path(thumb_path)
+            return settings.get_image_api_url(thumb_relative) or image.url
 
     if local_path.exists():
-        rel_path = local_path.relative_to(settings.image_dir)
-        return f"/api/images/{rel_path}"
+        # Use stored relative path directly for URL generation
+        return settings.get_image_api_url(image.local_path) or image.url
 
     # Fallback to original URL
     return image.url
