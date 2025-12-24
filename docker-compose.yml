@@ -1,0 +1,30 @@
+services:
+  atelier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atelier
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # Persistent data: database, images, credentials
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      # Enable scheduler for automated scraping
+      - ENABLE_SCHEDULER=${ENABLE_SCHEDULER:-false}
+      # Ensure correct database path inside container (4 slashes for absolute path)
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/artworks.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+# Optional: Named volume for better portability
+# Uncomment below and change volumes above to use named volume
+# volumes:
+#   atelier-data:

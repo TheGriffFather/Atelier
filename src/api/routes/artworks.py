@@ -118,20 +118,15 @@ class ArtworkUpdate(BaseModel):
 
 def _get_image_url(img) -> str | None:
     """Get the best URL for an image, preferring local files."""
-    from pathlib import Path
+    from config.settings import settings
 
-    # Check if local_path is set and file exists
+    # Check if local_path is set
     if img.local_path:
-        local_path = Path(img.local_path)
-        # Handle both absolute and relative paths
-        if local_path.is_absolute():
-            if local_path.exists():
-                # Return serving URL for local file
-                return f"/api/images/serve/{local_path.name}"
-        else:
-            # Relative path - check if exists from project root
-            if local_path.exists():
-                return f"/api/images/serve/{local_path.name}"
+        # Use the settings helper to convert to API URL
+        # This handles both absolute and relative paths, and both Windows and Linux formats
+        api_url = settings.get_image_api_url(img.local_path)
+        if api_url:
+            return api_url
 
     # Fallback to external URL
     return img.url if img.url else None
@@ -647,7 +642,7 @@ async def export_artworks_csv(
         return StreamingResponse(
             iter([output.getvalue()]),
             media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=dan_brown_artworks.csv"}
+            headers={"Content-Disposition": "attachment; filename=artworks_export.csv"}
         )
 
 
