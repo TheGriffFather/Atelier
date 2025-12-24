@@ -7,10 +7,20 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy import select, func
 
+from config.settings import settings
 from src.database import Artwork, ArtworkImage, get_session_context
 from src.database.models import DisplaySettings
 
 router = APIRouter()
+
+
+def _get_display_image_url(image: ArtworkImage) -> str:
+    """Get the display URL for an image, preferring local files."""
+    if image.local_path:
+        api_url = settings.get_image_api_url(image.local_path)
+        if api_url:
+            return api_url
+    return image.url or ""
 
 
 class DisplayArtwork(BaseModel):
@@ -18,7 +28,7 @@ class DisplayArtwork(BaseModel):
     id: int
     title: str
     image_url: str
-    artist: str = "Dan Brown"
+    artist: str = ""
 
 
 class DisplayStatus(BaseModel):
@@ -58,7 +68,7 @@ async def get_display_artworks(
             DisplayArtwork(
                 id=artwork.id,
                 title=artwork.title,
-                image_url=image.local_path or image.url,
+                image_url=_get_display_image_url(image),
             )
             for artwork, image in rows
         ]
@@ -83,7 +93,7 @@ async def get_artwork_image(artwork_id: int) -> RedirectResponse:
             # Return a placeholder or default image
             return RedirectResponse(url="/static/placeholder.png")
 
-        return RedirectResponse(url=image.local_path or image.url)
+        return RedirectResponse(url=_get_display_image_url(image))
 
 
 @router.get("/status", response_model=DisplayStatus)

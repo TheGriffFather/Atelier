@@ -82,7 +82,7 @@ def main() -> None:
     setup_logging()
 
     parser = argparse.ArgumentParser(
-        description="Dan Brown Art Tracker",
+        description="Atelier - Digital Catalogue Raisonne",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -117,7 +117,7 @@ def main() -> None:
         asyncio.run(run_scheduler())
     elif args.command == "init":
         from src.database import init_db
-        asyncio.run(init_db())
+        asyncio.run(init_db(dispose_engine=True))
         print("Database initialized successfully")
     else:
         parser.print_help()
