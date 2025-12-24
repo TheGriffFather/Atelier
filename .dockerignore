@@ -1,0 +1,64 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node.js (rebuild in container)
+node_modules/
+
+# Data directory (mount as volume)
+data/
+
+# Environment files (use env_file in compose)
+.env
+.env.local
+.env.*.local
+
+# Tests (not needed in production)
+tests/
+pytest.ini
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation (not needed in production)
+docs/
+CLAUDE.md
+CHANGELOG.md
+PLAN_*.md
+
+# Temporary files
+*.log
+*.tmp
+temp_*.html
+nul
+
+# Plan files
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db

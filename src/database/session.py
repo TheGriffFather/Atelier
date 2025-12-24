@@ -20,10 +20,18 @@ async_session = async_sessionmaker(
 )
 
 
-async def init_db() -> None:
-    """Initialize the database, creating all tables."""
+async def init_db(dispose_engine: bool = False) -> None:
+    """Initialize the database, creating all tables.
+
+    Args:
+        dispose_engine: If True, dispose the engine after init (for standalone CLI use).
+                       Set to False when called from the server (default).
+    """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    if dispose_engine:
+        await engine.dispose()
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
