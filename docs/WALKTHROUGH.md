@@ -1,89 +1,35 @@
-# Dan Brown Catalogue Raisonné - Application Walkthrough
+# Interface walkthrough
 
-A visual tour of the Digital Catalogue Raisonné application for Dan Brown (1949-2022), American Trompe l'Oeil Painter & Illustrator.
+Atelier connects collection records with the research around them. These are reviewed historical captures from the original Dan Brown catalogue, not a seeded demo dataset. A fresh installation starts empty. See [image provenance](images/README.md).
 
----
+## Catalogue and gallery
 
-## About Page
+Open `/` to browse works, filter the collection, or add a record. Open an artwork to inspect its description, images, condition, provenance notes, and acquisition fields.
 
-The landing page introduces the artist and explains the purpose of a catalogue raisonné as a comprehensive, scholarly catalog of all known works.
+![Gallery](images/gallery.jpg)
 
-![About Page](Research%20Documentatiopn/Screen%20Caps/Digital%20Catalogure%20Raisonne.png)
+## Timeline and exhibitions
 
----
+`/timeline` places works and shows in chronological context. The Shows tab at `/?tab=shows` lists exhibition records and their linked artworks.
 
-## Gallery
+![Timeline](images/timeline.jpg)
 
-Browse the complete collection of catalogued artworks with filtering by art type, acquisition status, and verification state.
+![Exhibitions](images/exhibitions.jpg)
 
-![Gallery](Research%20Documentatiopn/Screen%20Caps/Gallery.png)
+## Discovery and tracker
 
----
+`/discovery` holds saved searches and result review. The Tracker tab at `/?tab=tracker` tracks candidate works and acquisition status. Review artist-specific search rules before contacting external services; scores are research aids, not authenticity judgments.
 
-## Timeline
-
-An interactive chronological view of Dan Brown's life and works, spanning his career from the 1970s through 2022.
-
-![Timeline](Research%20Documentatiopn/Screen%20Caps/Timeline.png)
-
----
-
-## Shows
-
-Exhibition history documenting where Dan Brown's work has been displayed, including solo and group shows.
-
-![Shows](Research%20Documentatiopn/Screen%20Caps/Shows.png)
-
----
-
-## Tracker
-
-The artwork tracker monitors auction sites and galleries for new discoveries, with confidence scoring to distinguish the artist from the author.
-
-![Tracker](Research%20Documentatiopn/Screen%20Caps/Tracker%20Details.png)
-
----
-
-## Tracker Details
-
-Detailed view of individual artwork records including provenance, physical description, and acquisition information.
-
-![Tracker Details](Research%20Documentatiopn/Screen%20Caps/Screenshot%202025-12-08%20190019.png)
-
----
+![Discovery](images/discovery.jpg)
 
 ## Outreach
 
-Contact management and research lead tracking for the ongoing effort to locate and document artwork.
+`/outreach` organizes contacts, research leads, correspondence records, and follow-ups. Gmail is optional and needs separate authorization. Keep correspondence and contact-page captures private. The application currently has no per-user access control; see [Security](../SECURITY.md).
 
-![Outreach](Research%20Documentatiopn/Screen%20Caps/Outreach.png)
+## Display
 
----
+`/display` configures the slideshow and `/frame` presents it in a browser or kiosk. The [hardware guide](../display/hardware/README.md) describes a private local setup.
 
-## Discovery
+![Display settings](images/display-frame.jpg)
 
-Automated discovery tools that search auction platforms and galleries for potential Dan Brown works.
-
-![Discovery](Research%20Documentatiopn/Screen%20Caps/Discovery.png)
-
----
-
-## Display Frame
-
-A touch-optimized display mode designed for Raspberry Pi kiosk deployment, featuring slideshow capabilities and swipe navigation.
-
-![Display Frame](Research%20Documentatiopn/Screen%20Caps/Display%20Frame.png)
-
----
-
-## Technical Stack
-
-- **Backend:** Python 3.11+, FastAPI, SQLAlchemy (async)
-- **Database:** SQLite with comprehensive artwork metadata
-- **Scrapers:** eBay Browse API, Playwright web scrapers
-- **Frontend:** Vanilla JS, HTML5, Jinja2 templates
-- **Display:** Raspberry Pi 4B kiosk mode
-
----
-
-*For more information, see the [main documentation](../README.md) or [progress log](PROGRESS.md).*
+Return to the [README](../README.md) for installation and the current roadmap.

@@ -42,24 +42,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependency file and README (required by pyproject.toml)
+# Copy package metadata and source before building the Python wheel.
 COPY pyproject.toml README.md ./
+COPY src/ ./src/
+COPY config/ ./config/
 
 # Install Python dependencies
 # Note: We install playwright package but skip browser installation (API-only mode)
 RUN pip install --no-cache-dir . \
     && rm -rf ~/.cache/pip
 
-# Copy application source code
-COPY src/ ./src/
-COPY config/ ./config/
+# Copy operational helpers; application source was installed above.
 COPY scripts/ ./scripts/
 
-# Copy built CSS from Stage 1
+# Preserve the newly built CSS after copying committed static assets.
 COPY --from=css-builder /build/src/api/static/css/output.css ./src/api/static/css/output.css
-
-# Copy static assets
-COPY src/api/static/ ./src/api/static/
 
 # Copy entrypoint script and fix Windows line endings
 COPY docker-entrypoint.sh ./

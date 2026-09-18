@@ -328,7 +328,7 @@ See `Tasks/README.md` for full details. Summary:
 ```env
 # Required
 DATABASE_URL=sqlite+aiosqlite:///data/artworks.db
-API_HOST=0.0.0.0
+API_HOST=127.0.0.1
 API_PORT=8000
 
 # Optional - eBay API

@@ -100,7 +100,6 @@ test-results/
 
 # Node.js
 node_modules/
-package-lock.json
 
 # OS
 .DS_Store
@@ -117,3 +116,17 @@ Thumbs.db
 # Windows artifacts
 nul
 temp_*.html
+
+# Private instance and publication scratch data
+data/
+local/
+.env.*
+!.env.example
+credentials*.json
+token*.json
+*-token.json
+*-credentials.json
+*.pem
+*.key
+*.pfx
+*.p12

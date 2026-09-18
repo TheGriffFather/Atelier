@@ -72,46 +72,46 @@ if settings.image_dir.exists():
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
     """Serve the main dashboard."""
-    return templates.TemplateResponse("dashboard.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="dashboard.html", context={"request": request})
 
 
 @app.get("/artwork/{artwork_id}", response_class=HTMLResponse)
 async def artwork_detail(request: Request, artwork_id: int):
     """Serve the artwork detail page."""
-    return templates.TemplateResponse("artwork.html", {"request": request, "artwork_id": artwork_id})
+    return templates.TemplateResponse(request=request, name="artwork.html", context={"request": request, "artwork_id": artwork_id})
 
 
 @app.get("/display", response_class=HTMLResponse)
 async def display_settings(request: Request):
     """Serve the display frame settings and preview page."""
-    return templates.TemplateResponse("display-settings.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="display-settings.html", context={"request": request})
 
 
 @app.get("/frame", response_class=HTMLResponse)
 async def frame_display(request: Request):
     """Serve the touch-optimized frame display for physical art frames."""
-    return templates.TemplateResponse("frame.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="frame.html", context={"request": request})
 
 
 @app.get("/outreach", response_class=HTMLResponse)
 async def outreach_page(request: Request):
     """Serve the outreach tracking page."""
-    return templates.TemplateResponse("outreach.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="outreach.html", context={"request": request})
 
 
 @app.get("/timeline", response_class=HTMLResponse)
 async def timeline_page(request: Request):
     """Serve the timeline page showing Dan Brown's life and works."""
-    return templates.TemplateResponse("timeline.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="timeline.html", context={"request": request})
 
 
 @app.get("/about", response_class=HTMLResponse)
 async def about_page(request: Request):
     """Serve the About page explaining what a catalogue raisonné is."""
-    return templates.TemplateResponse("about.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="about.html", context={"request": request})
 
 
 @app.get("/discovery", response_class=HTMLResponse)
 async def discovery_page(request: Request):
     """Serve the Discovery Hub for searching and finding Dan Brown artwork."""
-    return templates.TemplateResponse("discovery.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="discovery.html", context={"request": request})

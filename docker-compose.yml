@@ -5,13 +5,16 @@ services:
       dockerfile: Dockerfile
     container_name: atelier
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
       # Persistent data: database, images, credentials
       - ./data:/app/data
     env_file:
       - .env
     environment:
+      # Listen inside the container; the host mapping above stays loopback-only.
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
       # Enable scheduler for automated scraping
       - ENABLE_SCHEDULER=${ENABLE_SCHEDULER:-false}
       # Ensure correct database path inside container (4 slashes for absolute path)

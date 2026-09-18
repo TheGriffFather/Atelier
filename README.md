@@ -1,422 +1,143 @@
 # Atelier
 
-**A Digital Catalogue Raisonné Platform**
+### Give an artist's work a place to live.
 
-Atelier is an open-source platform for building and managing a comprehensive catalogue raisonné - a scholarly catalog of all known works by an artist. Built for art historians, estate managers, galleries, collectors, and families preserving an artist's legacy.
+Atelier is an open-source workspace for building a **catalogue raisonné**: a documented record of an artist's known works. Bring images, provenance, exhibitions, research leads, and acquisition notes together, then browse the collection in a gallery or on a dedicated display.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.11+-green.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal.svg)
-![Status](https://img.shields.io/badge/status-work%20in%20progress-orange.svg)
+![Status](https://img.shields.io/badge/status-early_development-c5a065) ![Python](https://img.shields.io/badge/Python-3.11%2B-3776ab) ![Stack](https://img.shields.io/badge/FastAPI-SQLAlchemy-009688) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-> **Note:** This project is under active development. Core functionality is working, but many planned features are still being implemented. See the [Roadmap](#roadmap) section for details on upcoming enhancements.
+**[Tour the interface](#a-workspace-for-the-whole-collection)** · **[Get started](#run-atelier-locally)** · **[Display frame](#from-catalogue-to-display)** · **[Make it your own](#adapt-it-for-another-artist)** · **[Roadmap](#where-the-project-is-heading)**
 
-**[View Application Walkthrough](docs/WALKTHROUGH.md)** | **[Changelog](CHANGELOG.md)**
+![Atelier gallery with artwork thumbnails in a masonry layout](docs/images/gallery.jpg)
 
----
+*The existing web interface, captured from the original Dan Brown catalogue. These historical screenshots illustrate the UI; a fresh installation starts with an empty database. Artwork images retain their respective rights.*
 
-## What is a Catalogue Raisonné?
+## A workspace for the whole collection
 
-A **catalogue raisonné** (French for "reasoned catalog") is the definitive scholarly record of all known works by an artist. It serves as the authoritative reference for:
+Atelier is built for researchers, estate managers, galleries, and collectors who need more than a folder of images. A record can connect a work's physical description with where it was shown, how it changed hands, and what still needs to be verified.
 
-- **Authentication** - Establishing which works are genuine
-- **Provenance** - Tracking ownership history
-- **Documentation** - Recording physical characteristics, exhibitions, literature
-- **Discovery** - Finding previously unknown works
+| Workflow | Available in the source |
+| --- | --- |
+| **Catalogue** | Artwork records, multiple images, dimensions, medium, dating, condition, provenance notes, and verification status. |
+| **Browse and compare** | Gallery layouts, filtering, artwork details, acquisition tracking, and a chronological timeline. |
+| **Document exhibitions** | Show records, dates and venues, with links to the works exhibited. |
+| **Follow research leads** | Contacts, outreach records, follow-ups, and optional Gmail integration. |
+| **Discover works** | Saved searches, result review, and artist-specific confidence scoring. eBay API and web-scraper integrations require separate setup. |
+| **Share a view** | CSV/JSON exports of selected record fields, a REST API, and a browser-based display mode. |
 
-Atelier digitizes this traditionally paper-based process, adding automated discovery tools and modern web interfaces.
+### The collection in context
 
----
+<table>
+<tr>
+<td width="50%" valign="top"><a href="docs/images/timeline.jpg"><img src="docs/images/timeline.jpg" alt="Atelier timeline of artwork and exhibition records" width="460"></a><br><strong>Follow the timeline</strong><br>See works and exhibitions in chronological context.</td>
+<td width="50%" valign="top"><a href="docs/images/exhibitions.jpg"><img src="docs/images/exhibitions.jpg" alt="Atelier exhibition cards with dates and linked artworks" width="460"></a><br><strong>Connect works to shows</strong><br>Keep exhibition history beside the collection.</td>
+</tr>
+</table>
 
-## Current Features
+### Research without losing the thread
 
-### Comprehensive Artwork Database
-- Full scholarly metadata (medium, dimensions, provenance, exhibitions, literature)
-- Multiple images per artwork with primary image designation
-- Condition reports and conservation notes
-- Signature and inscription documentation
+The tracker keeps a candidate work's source and acquisition status together. Discovery adds saved searches and results to review. Confidence scores help prioritize candidates; they are research aids, **not authentication of artwork**. Outreach records keep contacts and follow-ups alongside the research.
 
-### Automated Discovery
-- **eBay API Integration** - Monitor listings with 5,000 free daily API calls
-- **Confidence Scoring** - Filter results to distinguish your artist from others with similar names
-- **Extensible Scrapers** - Add custom scrapers for auction houses and galleries
-- **Email Alerts** - Get notified when potential works are found
+![Atelier Discovery page with saved search cards and review controls](docs/images/discovery.jpg)
 
-### Modern Web Dashboard
-- **Gallery View** - Browse artworks with cards, masonry, compact, or table layouts
-- **Timeline** - Interactive chronological view of the artist's life and works
-- **Tracker** - Monitor acquisition status and verification progress
-- **Outreach** - Contact management for galleries, collectors, researchers
-- **Discovery Hub** - Search and monitor external platforms
+External services need your own credentials where applicable. API quotas, availability, and site terms vary; scraper code in the repository does not mean every provider has been recently tested.
 
-### Physical Display Frame
-- Touch-optimized interface for Raspberry Pi kiosk displays
-- Swipe navigation through artwork collection
-- Configurable rotation intervals (30 seconds to 1 week)
-- Perfect for galleries, memorial displays, or home collections
+## From catalogue to display
 
-### Export & Integration
-- CSV and JSON export with full metadata
-- RESTful API for integration with other systems
+The `/frame` page presents the collection as a slideshow, with touch navigation and display settings. Run it in a normal browser or open it in Chromium kiosk mode on a Raspberry Pi connected to a suitable screen.
 
----
+![Atelier display preview with artwork, slideshow controls and frame settings](docs/images/display-frame.jpg)
 
-## Roadmap
+The application can run on the same computer as the display. A separate display client needs a deliberately configured, protected connection to the host. See the [display hardware guide](display/hardware/README.md) for parts, layout, and kiosk setup. A Pi and touchscreen are optional; start on a computer first.
 
-Atelier is being developed in four phases. Each phase builds upon the previous to create a complete professional-grade catalogue raisonné platform.
+## Run Atelier locally
 
-### Phase 1: Foundation (In Progress)
+Use **Python 3.11 or newer** and Git. A compiled stylesheet is included, so Node.js is only needed when editing the Tailwind theme. No API keys are needed to open an empty catalogue.
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Enhanced Image Management** | Multiple image types (recto, verso, detail, UV), image annotations, perceptual hashing | Planned |
-| **Import/Migration Tools** | CSV, JSON, Excel import with field mapping wizard | Planned |
-| **Duplicate Detection** | Perceptual hash matching, title/dimension similarity, merge workflow | Planned |
-| **Data Completeness Dashboard** | Track research progress, identify gaps, prioritize work | Planned |
+### Windows PowerShell
 
-### Phase 2: Professional Catalog Features
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Provenance Chain Builder** | Visual ownership history timeline with gap detection | Planned |
-| **Exhibition History Module** | Comprehensive exhibition tracking with venue database | Planned |
-| **Literature & Bibliography** | Citation management, publication linking, bibliography export | Planned |
-| **Catalog Numbering System** | Customizable scholarly numbering schemes | Planned |
-
-### Phase 3: Collaboration
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Multi-User Support** | User roles (Admin, Editor, Viewer), activity logging | Planned |
-| **Authentication Workflow** | Expert opinions, verification status tracking | Planned |
-| **Print-Ready Export** | PDF catalog generation with professional layouts | Planned |
-| **Public Tip Submission** | Allow collectors to submit potential works | Planned |
-
-### Phase 4: Discovery & Integration
-
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Auction House Integrations** | Christie's, Sotheby's, Heritage, Bonhams scrapers | Planned |
-| **Price History Tracking** | Market intelligence, price trends, comparable sales | Planned |
-| **Museum Collection Search** | Search Met, Smithsonian, and other institutional APIs | Planned |
-| **Online Catalog Portal** | Public-facing searchable catalog website | Planned |
-
----
-
-## Quick Start
-
-### Prerequisites
-- Python 3.11+
-- Node.js 18+ (for Tailwind CSS)
-
-### Installation
-
-```bash
-# Clone the repository
+```powershell
 git clone https://github.com/TheGriffFather/Atelier.git
 cd Atelier
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -e ".[dev]"
-
-# Install Playwright browsers (for web scraping)
-playwright install chromium
-
-# Build Tailwind CSS
-npm install
-npm run css:build
-
-# Copy environment config
-cp .env.example .env
-# Edit .env with your settings
-
-# Initialize database
-python -m src.cli init
-
-# Start the server
-python -m src.cli server
+py -3 -m venv .venv
+./.venv/Scripts/python.exe -m pip install -e ".[dev]"
+Copy-Item .env.example .env
+New-Item -ItemType Directory -Force data/images | Out-Null
+./.venv/Scripts/python.exe -m src.cli init
+./.venv/Scripts/python.exe -m src.cli server
 ```
 
-Access the dashboard at **http://localhost:8000**
-
----
-
-## Configuration
-
-Create a `.env` file:
-
-```env
-# Application
-APP_NAME="Your Artist Catalogue"
-DEBUG=false
-
-# Database
-DATABASE_URL=sqlite+aiosqlite:///data/artworks.db
-
-# eBay API (optional - for automated discovery)
-EBAY_CLIENT_ID=your-client-id
-EBAY_CLIENT_SECRET=your-client-secret
-EBAY_ENVIRONMENT=production
-
-# Email Notifications (optional)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-NOTIFICATION_EMAIL=alerts@example.com
-
-# Scraping Settings
-SCRAPE_INTERVAL_MINUTES=60
-REQUEST_DELAY_SECONDS=2.0
-```
-
----
-
-## Customizing for Your Artist
-
-Atelier is designed to be customized for any artist. Key areas to modify:
-
-### 1. Confidence Scoring (`src/filters/confidence.py`)
-
-Update the positive and negative signals to match your artist:
-
-```python
-# Positive signals - terms that indicate this IS your artist
-POSITIVE_SIGNALS = [
-    "your artist name",
-    "their art school",
-    "their primary gallery",
-    "their signature style",
-    "their birth city",
-]
-
-# Negative signals - terms that indicate this is NOT your artist
-NEGATIVE_SIGNALS = [
-    "different artist with same name",
-    "unrelated medium",
-    "wrong time period",
-]
-```
-
-### 2. Templates
-
-Update the About page (`src/api/templates/about.html`) with your artist's:
-- Biography
-- Gallery affiliations
-- Permanent collections
-- Notable exhibitions
-
-### 3. Seed Data
-
-Create a seed script to populate initial known artworks:
-
-```python
-# scripts/seed_artworks.py
-artworks = [
-    {
-        "title": "Artwork Title",
-        "medium": "Oil on canvas",
-        "dimensions": "24 x 36 inches",
-        "year_created": 1985,
-        # ... additional fields
-    },
-]
-```
-
----
-
-## Web Interface
-
-| URL | Description |
-|-----|-------------|
-| `/` | Main dashboard (Gallery, Tracker, Shows, Biography) |
-| `/about` | About the catalogue raisonné |
-| `/timeline` | Interactive timeline |
-| `/artwork/{id}` | Artwork detail page |
-| `/outreach` | Contact management |
-| `/discovery` | External platform monitoring |
-| `/display` | Display frame settings |
-| `/frame` | Touch-optimized display |
-
----
-
-## API Reference
-
-### Artworks
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/artworks` | GET | List artworks (supports filtering) |
-| `/api/artworks/{id}` | GET | Get artwork details |
-| `/api/artworks` | POST | Create artwork |
-| `/api/artworks/{id}` | PATCH | Update artwork |
-| `/api/artworks/bulk` | POST | Bulk actions |
-| `/api/artworks/export/csv` | GET | Export as CSV |
-| `/api/artworks/export/json` | GET | Export as JSON |
-
-### Query Parameters
-
-```
-GET /api/artworks?verified_only=true&art_type=Painting&search=landscape
-```
-
-- `verified_only` - Only verified artworks
-- `art_type` - Filter by type (Painting, Drawing, Print, etc.)
-- `status` - Acquisition status (new, watching, acquired, passed)
-- `search` - Full-text search
-- `limit` / `offset` - Pagination
-
----
-
-## Database Schema
-
-### Artwork Fields
-
-**Identification:**
-- `title`, `description`, `catalog_number`
-- `source_platform`, `source_url`
-- `confidence_score` (0.0-1.0)
-
-**Physical:**
-- `medium`, `dimensions`, `dimensions_cm`
-- `art_type` (Painting, Drawing, Print, Sculpture, etc.)
-
-**Dating:**
-- `year_created`, `year_created_circa`
-
-**Signature:**
-- `signed` (location), `inscription`
-
-**Provenance:**
-- `provenance`, `exhibition_history`, `literature`
-- `last_known_owner`, `current_location`
-
-**Condition:**
-- `condition`, `framed`, `frame_description`
-
-**Acquisition:**
-- `acquisition_status`, `acquisition_priority`, `acquisition_notes`
-- `last_sale_price`, `last_sale_date`, `last_sale_venue`
-- `estimated_value`
-
----
-
-## Project Structure
-
-```
-atelier/
-├── src/
-│   ├── api/                    # FastAPI application
-│   │   ├── main.py
-│   │   ├── routes/             # API endpoints
-│   │   ├── templates/          # Jinja2 templates
-│   │   └── static/             # CSS, JS
-│   ├── scrapers/               # Platform scrapers
-│   │   ├── base.py             # Base scraper class
-│   │   ├── ebay_api.py         # eBay Browse API
-│   │   └── orchestrator.py     # Scraper coordination
-│   ├── filters/                # Confidence scoring
-│   ├── database/               # SQLAlchemy models
-│   └── cli.py                  # CLI commands
-├── scripts/                    # Utility scripts
-├── tests/                      # Test suite
-├── Tasks/                      # Development specifications
-├── config/                     # Configuration
-└── data/                       # Database and images
-```
-
----
-
-## Development
+### macOS / Linux
 
 ```bash
-# Run development server with hot reload
-python -m src.cli server
-
-# Run scrapers once
-python -m src.cli scrape
-
-# Run scheduled scraping (every hour)
-python -m src.cli scheduler
-
-# Build CSS
-npm run css:build
-npm run css:watch  # Watch mode
-
-# Run tests
-pytest
-pytest --cov=src
+git clone https://github.com/TheGriffFather/Atelier.git
+cd Atelier
+python3 -m venv .venv
+.venv/bin/python -m pip install -e ".[dev]"
+cp .env.example .env
+mkdir -p data/images
+.venv/bin/python -m src.cli init
+.venv/bin/python -m src.cli server
 ```
 
-### Adding a New Scraper
+Open **[http://127.0.0.1:8000](http://127.0.0.1:8000)** and use **Add Artwork** to create your first record. API documentation is at `/docs`. Stop the server with **Ctrl+C**.
 
-```python
-from src.scrapers.base import BaseScraper, ScrapedListing
+**Keep this installation private.** Atelier does not yet have application login or role-based access. Its catalogue, outreach, and connected Gmail operations share the host's authority. The default setup binds to localhost; do not expose the port to the internet. See [security and private data](SECURITY.md) before configuring remote access or connecting mail.
 
-class NewSiteScraper(BaseScraper):
-    platform = SourcePlatform.OTHER
+### Docker
 
-    def build_search_queries(self) -> list[str]:
-        return ["artist name", "artist name painting"]
+Docker Compose is included. Copy `.env.example` to `.env`, then run:
 
-    async def search(self, query: str) -> list[ScrapedListing]:
-        # Your scraping logic
-        pass
+```bash
+docker compose up --build -d
 ```
 
----
+Open the same local URL. Data persists in `./data`; `docker compose down` stops the service. Host access is bound to localhost by default. Automated scraping is off unless you explicitly set `ENABLE_SCHEDULER=true`.
 
-## Deployment
+The image includes the Playwright Python package, but no browser binaries. Browser-driven scrapers need additional setup. Review [configuration and development](docs/DEVELOPMENT.md) before enabling discovery integrations.
 
-### Raspberry Pi Display Frame
+## Adapt it for another artist
 
-Atelier includes a touch-optimized display mode perfect for Raspberry Pi kiosks:
+Atelier began as a catalogue of the painter **Dan Brown (1949–2022)**. The current UI labels, biography, search terms, notification text, and confidence rules still reflect that artist. Changing `APP_NAME` alone does not retarget the whole app.
 
-1. Install Raspberry Pi OS
-2. Clone and configure Atelier on your main server
-3. Configure the Pi to open Chromium in kiosk mode pointing to `http://your-server:8000/frame`
+For another collection, update these together:
 
-### Docker (Coming Soon)
+| Area | Starting point |
+| --- | --- |
+| Name and runtime settings | [Configuration](config/settings.py) and your ignored `.env` |
+| Branding, biography and timeline | [Templates](src/api/templates) and [biography data](src/api/routes/biography.py) |
+| Search terms and provider behavior | [Scrapers](src/scrapers) and [saved-search routes](src/api/routes/alerts.py) |
+| Artist disambiguation | [Confidence rules](src/filters/confidence.py) and [their tests](tests/filters/test_confidence.py) |
+| Email wording | [Notification templates](src/notifications/email.py) |
 
-Docker support is planned for easier deployment.
+Keep collection records, private research, images, credentials, and backups in local storage. Use a fresh database for a new collection. A reusable artist profile is a natural next step for the project.
 
----
+## Where the project is heading
 
-## Contributing
+**Early development.** The repository contains the workflows shown above, but it is not a finished multi-user or public collection-hosting service. The test suite covers confidence scoring and page rendering, not every workflow or external integration.
 
-Contributions are welcome! This project is under active development and there are many ways to help:
+| Planned work | Direction |
+| --- | --- |
+| Collection foundations | Guided imports, duplicate detection, image annotations, and completeness checks. |
+| Scholarly records | Structured provenance chains, bibliographies, and catalogue numbering. |
+| Collaboration | Login, roles, activity history, and review workflows. |
+| Publishing | Print-ready catalogues and a separate public collection portal. |
+| Discovery | More provider integrations and better review tools. |
 
-### Priority Areas
-- **Phase 1 Features** - Help implement the foundation features listed in the roadmap
-- **Additional Scrapers** - Christie's, Sotheby's, Heritage, LiveAuctioneers
-- **Image Processing** - Perceptual hashing and similarity matching
-- **Testing** - Expand test coverage
-- **Documentation** - Improve guides and examples
+The [task specifications](Tasks/README.md) describe the longer-term plan. They are design proposals, not proof that a feature is implemented.
 
-### Getting Started
-1. Check the `Tasks/` folder for detailed feature specifications
-2. Review `Tasks/SCHEMA.md` for database conventions
-3. Pick a feature or bug and open an issue to discuss
-4. Submit a pull request
+## Built with
 
-See the [Contributing Guide](CONTRIBUTING.md) for more details.
+FastAPI and Jinja2 serve the web workspace; SQLAlchemy and SQLite store records. The frontend uses Tailwind CSS and vanilla JavaScript. Discovery uses HTTP/API clients and optional browser automation. Gmail and SMTP are optional integrations.
 
----
+| Guide | Contents |
+| --- | --- |
+| [Interface walkthrough](docs/WALKTHROUGH.md) | Pages, screenshots, and how the workflows connect |
+| [Configuration and development](docs/DEVELOPMENT.md) | Environment settings, CSS, tests, CLI commands, and source layout |
+| [Display hardware](display/hardware/README.md) | Computer/Pi setup and browser kiosk mode |
+| [Security](SECURITY.md) | Deployment boundaries and private-data handling |
+| [Contributing](CONTRIBUTING.md) | Development and publication checks |
 
-## License
+## License and image credits
 
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgments
-
-The included example catalogue follows Dan Brown (1949-2022), a Connecticut trompe l'oeil painter. Customize it for the artist you are documenting.
-
----
-
-*Built with love for preserving artistic legacies.*
+The software is released under the **[MIT License](LICENSE)**. Artwork and third-party imagery shown in UI screenshots are not relicensed by the software license. See [image notes](docs/images/README.md). Atelier is an independent project, unaffiliated with the artists' estates or external services it can use.
