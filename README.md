@@ -8,9 +8,11 @@ Atelier is an open-source workspace for building a **catalogue raisonné**: a do
 
 **[Tour the interface](#a-workspace-for-the-whole-collection)** · **[Get started](#run-atelier-locally)** · **[Display frame](#from-catalogue-to-display)** · **[Make it your own](#adapt-it-for-another-artist)** · **[Roadmap](#where-the-project-is-heading)**
 
-![Atelier gallery with artwork thumbnails in a masonry layout](docs/images/gallery.jpg)
+![Atelier: an artwork catalogue, research workspace, and display experience](docs/images/atelier-promo.jpg)
 
-*The existing web interface, captured from the original Dan Brown catalogue. These historical screenshots illustrate the UI; a fresh installation starts with an empty database. Artwork images retain their respective rights.*
+*Actual application screens from the included demo. The artwork is original procedural sample art; catalogue entries, exhibitions, contacts, and correspondence are synthetic. A regular installation still starts empty.*
+
+**[Try the populated demo](#try-the-populated-demo)** · **[Download the promotional image](docs/images/atelier-promo.png)** · **[GitHub social preview](docs/images/atelier-social-preview.png)**
 
 ## A workspace for the whole collection
 
@@ -25,6 +27,14 @@ Atelier is built for researchers, estate managers, galleries, and collectors who
 | **Discover works** | Saved searches, result review, and artist-specific confidence scoring. eBay API and web-scraper integrations require separate setup. |
 | **Share a view** | CSV/JSON exports of selected record fields, a REST API, and a browser-based display mode. |
 
+### Start with the work
+
+![Atelier gallery populated with original digital colour studies](docs/images/gallery.jpg)
+
+Open a work to move from its image to its medium, dimensions, condition, provenance, and exhibition history. The same records power the catalogue and its display view.
+
+![Artwork detail with its image, physical description, and research sections](docs/images/artwork-detail.jpg)
+
 ### The collection in context
 
 <table>
@@ -38,7 +48,16 @@ Atelier is built for researchers, estate managers, galleries, and collectors who
 
 The tracker keeps a candidate work's source and acquisition status together. Discovery adds saved searches and results to review. Confidence scores help prioritize candidates; they are research aids, **not authentication of artwork**. Outreach records keep contacts and follow-ups alongside the research.
 
-![Atelier Discovery page with saved search cards and review controls](docs/images/discovery.jpg)
+<table>
+<tr>
+<td width="50%" valign="top"><a href="docs/images/tracker.jpg"><img src="docs/images/tracker.jpg" alt="Artwork tracker with acquisition and verification states" width="460"></a><br><strong>Keep the research moving</strong><br>Review candidates and track acquisition status.</td>
+<td width="50%" valign="top"><a href="docs/images/discovery.jpg"><img src="docs/images/discovery.jpg" alt="Synthetic discovery results with images, prices, and review actions" width="460"></a><br><strong>Review new finds</strong><br>Connect saved searches to a review queue.</td>
+</tr>
+</table>
+
+![Outreach workspace showing synthetic contacts, correspondence, and follow-ups](docs/images/outreach.jpg)
+
+*The outreach records above are fictional demonstration entries. No real mailbox is connected and no messages were sent.*
 
 External services need your own credentials where applicable. API quotas, availability, and site terms vary; scraper code in the repository does not mean every provider has been recently tested.
 
@@ -96,9 +115,29 @@ Open the same local URL. Data persists in `./data`; `docker compose down` stops 
 
 The image includes the Playwright Python package, but no browser binaries. Browser-driven scrapers need additional setup. Review [configuration and development](docs/DEVELOPMENT.md) before enabling discovery integrations.
 
+## Try the populated demo
+
+After installing the Python dependencies, launch the included sample catalogue:
+
+```powershell
+# Windows PowerShell
+./.venv/Scripts/python.exe scripts/run_demo.py
+```
+
+```bash
+# macOS / Linux
+.venv/bin/python scripts/run_demo.py
+```
+
+Open **[http://127.0.0.1:8779/?tab=gallery](http://127.0.0.1:8779/?tab=gallery)**. The demo generates **16 original colour studies, four exhibitions, four sample contacts**, and discovery and research records. It runs the real gallery, detail, tracker, timeline, outreach, discovery, and display pages.
+
+The demo stores its own database and images under ignored `local/demo/`, reuses that sample collection on subsequent launches, and refuses to overwrite an unmarked directory. It does not load your regular `.env`; mail, live discovery, and image-download actions are disabled. The visible **Demo collection** label distinguishes it from a real catalogue. Use `--port 8780` if the default demo port is occupied, or `--seed-only` to prepare the samples without starting the server. Stop it with **Ctrl+C**.
+
+See the [interface walkthrough](docs/WALKTHROUGH.md) for the complete screenshot tour and [image notes](docs/images/README.md) for provenance and promotional downloads.
+
 ## Adapt it for another artist
 
-Atelier began as a catalogue of the painter **Dan Brown (1949–2022)**. The current UI labels, biography, search terms, notification text, and confidence rules still reflect that artist. Changing `APP_NAME` alone does not retarget the whole app.
+Atelier began as a catalogue of the painter **Dan Brown (1949–2022)**. Outside the explicitly labelled demo, the UI, biography, search terms, notification text, and confidence rules still reflect that artist. Changing `APP_NAME` alone does not retarget the whole app.
 
 For another collection, update these together:
 
@@ -114,7 +153,7 @@ Keep collection records, private research, images, credentials, and backups in l
 
 ## Where the project is heading
 
-**Early development.** The repository contains the workflows shown above, but it is not a finished multi-user or public collection-hosting service. The test suite covers confidence scoring and page rendering, not every workflow or external integration.
+**Early development.** The repository contains the workflows shown above, but it is not a finished multi-user or public collection-hosting service. The test suite covers confidence scoring, page rendering, and demo isolation, not every workflow or external integration.
 
 | Planned work | Direction |
 | --- | --- |
@@ -140,4 +179,4 @@ FastAPI and Jinja2 serve the web workspace; SQLAlchemy and SQLite store records.
 
 ## License and image credits
 
-The software is released under the **[MIT License](LICENSE)**. Artwork and third-party imagery shown in UI screenshots are not relicensed by the software license. See [image notes](docs/images/README.md). Atelier is an independent project, unaffiliated with the artists' estates or external services it can use.
+The software and the original sample graphics created by the demo generator are released under the **[MIT License](LICENSE)**. The new screenshots use those graphics and synthetic records. Artwork you import from other sources retains its own rights. See [image notes](docs/images/README.md). Atelier is an independent project, unaffiliated with the artists' estates or external services it can use.

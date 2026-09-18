@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Timeline | Dan Brown Catalogue Raisonné{% endblock %}
+{% block title %}Timeline | {{ collection_name }} Catalogue Raisonné{% endblock %}
 
 {% block nav_timeline %}nav-item-active{% endblock %}
 
@@ -12,7 +12,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-3xl font-serif font-semibold text-gray-200">Timeline</h1>
-                    <p class="text-sm text-gray-500 mt-1">The life and works of Dan Brown (1949-2022)</p>
+                    <p class="text-sm text-gray-500 mt-1">{% if demo_mode %}A collection of studies, connected through time{% else %}The life and works of {{ collection_name }} ({{ collection_dates }}){% endif %}</p>
                     <!-- Legend -->
                     <div class="flex items-center gap-4 mt-2">
                         <div class="flex items-center gap-1.5">
@@ -531,16 +531,20 @@
     let currentDecadeFilter = '';
     let currentTypeFilter = '';
 
-    // Life events data for Dan Brown
+    // Life events data for {{ collection_name }}
+    {% if demo_mode %}
+    const lifeEvents = [];
+    {% else %}
     const lifeEvents = [
-        { year: 1949, type: 'life', title: 'Birth', description: 'Dan Brown was born in Connecticut.' },
+        { year: 1949, type: 'life', title: 'Birth', description: '{{ collection_name }} was born in Connecticut.' },
         { year: 1967, type: 'life', title: 'High School Graduation', description: 'Graduated from high school and began pursuing art.' },
         { year: 1971, type: 'life', title: 'Art School', description: 'Studied at art school, developing his trompe l\'oeil technique.' },
         { year: 1975, type: 'life', title: 'Professional Career Begins', description: 'Started working as a professional artist and illustrator.' },
         { year: 1978, type: 'life', title: 'Commercial Illustration', description: 'Began commercial illustration work, including book covers for major publishers.' },
         { year: 1985, type: 'life', title: 'Gallery Representation', description: 'Gained representation at Susan Powell Fine Art gallery in Madison, CT.' },
-        { year: 2022, type: 'life', title: 'Passing', description: 'Dan Brown passed away, leaving behind a remarkable body of work.' }
+        { year: 2022, type: 'life', title: 'Passing', description: '{{ collection_name }} passed away, leaving behind a remarkable body of work.' }
     ];
+    {% endif %}
 
     // Load timeline data
     async function loadTimeline() {

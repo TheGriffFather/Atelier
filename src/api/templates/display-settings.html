@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Display Frame | Dan Brown Catalogue Raisonné{% endblock %}
+{% block title %}Display Frame | {{ collection_name }} Catalogue Raisonné{% endblock %}
 
 {% block nav_display %}nav-item-active{% endblock %}
 
@@ -39,7 +39,7 @@
             <!-- Title Overlay -->
             <div id="frame-info" class="mt-4 text-center opacity-100 transition-opacity duration-300 flex-shrink-0">
                 <p id="frame-title" class="text-xl font-serif text-gray-200">Loading...</p>
-                <p class="text-sm text-gold-500 mt-1">Dan Brown (1949-2022)</p>
+                <p class="text-sm text-gold-500 mt-1">{{ collection_name }} ({{ collection_dates }})</p>
             </div>
         </div>
 
@@ -251,7 +251,7 @@
     <div class="text-center">
         <img id="fullscreen-image" src="" alt="" class="max-h-[80vh] max-w-[90vw] object-contain rounded-lg">
         <p id="fullscreen-title" class="text-xl font-serif mt-4 text-gray-200">-</p>
-        <p class="text-sm text-gold-500 mt-1">Dan Brown (1949-2022)</p>
+        <p class="text-sm text-gold-500 mt-1">{{ collection_name }} ({{ collection_dates }})</p>
     </div>
 
     <button class="absolute right-4 top-1/2 -translate-y-1/2 btn-icon bg-gray-800/80 hover:bg-gray-700 w-12 h-12" onclick="nextArtwork()">

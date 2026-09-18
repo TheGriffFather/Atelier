@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Outreach | Dan Brown Catalogue Raisonné{% endblock %}
+{% block title %}Outreach | {{ collection_name }} Catalogue Raisonné{% endblock %}
 
 {% block nav_outreach %}nav-item-active{% endblock %}
 
@@ -824,13 +824,13 @@
 {% block scripts %}
 <style>
     .tab-btn {
-        @apply px-4 py-3 text-sm font-medium text-gray-500 border-b-2 border-transparent transition-colors;
+        padding: .75rem 1rem; font-size: .875rem; font-weight: 500; color: #9ca3af; border-bottom: 2px solid transparent; transition: color .2s, border-color .2s;
     }
     .tab-btn:hover {
-        @apply text-gray-300;
+        color: #d1d5db;
     }
     .tab-btn.active {
-        @apply text-gold-500 border-gold-500;
+        color: #c5a065; border-color: #c5a065;
     }
 </style>
 
@@ -2155,7 +2155,7 @@
 
     // Compose email for a specific contact (from contacts page)
     function composeEmail(contactId, email, name) {
-        const subject = `Regarding artwork by Dan Brown`;
+        const subject = `Regarding artwork by {{ collection_name }}`;
         openComposeModal(email, subject, contactId);
     }
 

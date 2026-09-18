@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     # Application
     app_name: str = "Atelier"
+    demo_mode: bool = False
     debug: bool = False
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 

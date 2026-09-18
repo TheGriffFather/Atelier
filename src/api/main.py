@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -21,6 +21,11 @@ STATIC_DIR = BASE_DIR / "static"
 
 # Initialize Jinja2 templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.globals.update(
+    demo_mode=settings.demo_mode,
+    collection_name="Atelier Studio" if settings.demo_mode else "Dan Brown",
+    collection_dates="Sample collection" if settings.demo_mode else "1949-2022",
+)
 
 
 @asynccontextmanager
@@ -38,6 +43,30 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def isolate_demo_integrations(request: Request, call_next):
+    """Demo records never authorize live mailbox, scraping, or image-download calls."""
+    if settings.demo_mode:
+        path = request.url.path
+        live_integration = (
+            path.startswith("/api/gmail")
+            or path.startswith("/api/scraper")
+            or path.startswith("/api/scrape")
+            or (path.startswith("/api/alerts/") and
+                (path.endswith("/run") or path.endswith("/run-all")))
+            or (path.startswith("/api/images/") and request.method != "GET")
+        )
+        if path == "/api/gmail/status":
+            return JSONResponse({"authenticated": False, "configured": False,
+                                 "message": "Mail is disconnected in the synthetic demo."})
+        if live_integration:
+            return JSONResponse(status_code=403, content={
+                "detail": "Live integrations are disabled in the synthetic demo."
+            })
+    return await call_next(request)
+
 
 # CORS for dashboard and display frame
 app.add_middleware(
@@ -108,7 +137,7 @@ async def timeline_page(request: Request):
 @app.get("/about", response_class=HTMLResponse)
 async def about_page(request: Request):
     """Serve the About page explaining what a catalogue raisonné is."""
-    return templates.TemplateResponse(request=request, name="about.html", context={"request": request})
+    return templates.TemplateResponse(request=request, name="demo-about.html" if settings.demo_mode else "about.html", context={"request": request})
 
 
 @app.get("/discovery", response_class=HTMLResponse)

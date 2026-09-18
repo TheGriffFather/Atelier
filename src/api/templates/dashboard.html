@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Tracker | Dan Brown Catalogue Raisonné{% endblock %}
+{% block title %}Tracker | {{ collection_name }} Catalogue Raisonné{% endblock %}
 
 {% block content %}
 <div class="min-h-full">
@@ -625,7 +625,7 @@
         <!-- Museum Placard -->
         <a id="lightbox-placard" href="#" class="museum-placard group mt-4 block flex-shrink-0" onclick="event.stopPropagation()">
             <div class="placard-inner">
-                <p class="placard-artist">Dan Brown</p>
+                <p class="placard-artist">{{ collection_name }}</p>
                 <p class="placard-dates">American, 1949–2022</p>
                 <h3 id="placard-title" class="placard-title"></h3>
                 <p id="placard-year" class="placard-year"></p>
@@ -845,12 +845,12 @@
         const titles = {
             tracker: { title: 'Tracker', subtitle: 'Manage and verify artwork discoveries' },
             gallery: { title: 'Gallery', subtitle: 'Visual collection of catalogued works' },
-            shows: { title: 'Shows', subtitle: 'Exhibition history from 1993-2023' }
+            shows: { title: 'Shows', subtitle: '{{ 'Exhibition history connected to the collection' if demo_mode else 'Exhibition history from 1993-2023' }}' }
         };
         const info = titles[tabName] || titles.tracker;
         document.getElementById('page-title').textContent = info.title;
         document.getElementById('page-subtitle').textContent = info.subtitle;
-        document.title = `${info.title} | Dan Brown Catalogue Raisonné`;
+        document.title = `${info.title} | {{ collection_name }} Catalogue Raisonné`;
 
         // Update URL without reload
         const url = new URL(window.location);
@@ -1083,12 +1083,12 @@
                                     ${!artwork.is_verified ? `
                                         <button onclick="event.preventDefault(); event.stopPropagation(); verifyArtwork(${artwork.id})"
                                                 class="px-3 py-2 border border-gray-600 hover:border-success-400 hover:text-success-400 text-gray-300 text-sm rounded-lg transition-colors"
-                                                title="Confirm this is Dan Brown's work">
+                                                title="Confirm this is {{ collection_name }}'s work">
                                             ✓
                                         </button>
                                         <button onclick="event.preventDefault(); event.stopPropagation(); rejectArtwork(${artwork.id})"
                                                 class="px-3 py-2 border border-gray-600 hover:border-danger-400 hover:text-danger-400 text-gray-300 text-sm rounded-lg transition-colors"
-                                                title="Reject - not Dan Brown's work">
+                                                title="Reject - not {{ collection_name }}'s work">
                                             ✕
                                         </button>
                                     ` : ''}

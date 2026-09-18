@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Artwork Detail | Dan Brown Catalogue Raisonné{% endblock %}
+{% block title %}Artwork Detail | {{ collection_name }} Catalogue Raisonné{% endblock %}
 
 {% block content %}
 <style>
@@ -487,7 +487,7 @@
             artwork = await API.get(`/artworks/${artworkId}`);
 
             // Update page title
-            document.title = `${artwork.title} | Dan Brown Catalogue Raisonné`;
+            document.title = `${artwork.title} | {{ collection_name }} Catalogue Raisonné`;
 
             // Handle image
             loading.classList.add('hidden');
@@ -579,7 +579,7 @@
 
                 <!-- Artist Attribution & Catalog Number -->
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <p class="detail-artist" style="margin-bottom: 0;">Dan Brown (1949-2022)</p>
+                    <p class="detail-artist" style="margin-bottom: 0;">{{ collection_name }} ({{ collection_dates }})</p>
                     <span style="font-size: 0.8rem; color: #666; font-family: monospace;">Cat. No. ${art.id}</span>
                 </div>
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dan Brown Catalogue Raisonné{% endblock %}</title>
+    <title>{% block title %}{{ collection_name }} Catalogue Raisonné{% endblock %}</title>
 
     <!-- Tailwind CSS -->
     <link rel="stylesheet" href="/api/static/css/output.css">
@@ -21,8 +21,8 @@
             <!-- Logo/Brand -->
             <div class="h-20 flex items-center px-6 border-b border-gray-800">
                 <a href="/about" class="block group">
-                    <h1 class="text-xl font-serif font-semibold text-gray-200 group-hover:text-gold-500 transition-colors">Dan Brown</h1>
-                    <span class="text-sm text-gray-500 group-hover:text-gold-500/70 transition-colors">Catalogue Raisonné</span>
+                    <h1 class="text-xl font-serif font-semibold text-gray-200 group-hover:text-gold-500 transition-colors">{% if demo_mode %}Atelier{% else %}{{ collection_name }}{% endif %}</h1>
+                    <span class="text-sm text-gray-500 group-hover:text-gold-500/70 transition-colors">{% if demo_mode %}Demonstration catalogue{% else %}Catalogue Raisonné{% endif %}</span>
                 </a>
             </div>
 
@@ -85,14 +85,19 @@
             <!-- Sidebar Footer -->
             <div class="p-4 border-t border-gray-800">
                 <div class="text-xs text-gray-500 space-y-1">
-                    <p>Dan Brown (1949-2022)</p>
-                    <p class="text-gold-500/70">Trompe l'oeil Master</p>
+                    <p>{{ collection_name }} ({{ collection_dates }})</p>
+                    <p class="text-gold-500/70">{% if demo_mode %}Original digital studies{% else %}Trompe l'oeil Master{% endif %}</p>
                 </div>
             </div>
         </aside>
 
         <!-- Main Content Area -->
         <main class="flex-1 overflow-y-auto bg-gray-850 no-scrollbar">
+            {% if demo_mode %}
+            <div role="note" style="padding:9px 32px;background:#26231d;border-bottom:1px solid #4c422c;color:#d6bd83;font-size:11px;letter-spacing:.08em;">
+                DEMO COLLECTION &nbsp; / &nbsp; SYNTHETIC RECORDS &amp; ORIGINAL SAMPLE ART
+            </div>
+            {% endif %}
             {% block content %}{% endblock %}
         </main>
     </div>
@@ -222,8 +227,8 @@
             // Determine active nav based on URL
             if (path === '/outreach') {
                 updateSidebarNav('outreach');
-            } else if (path === '/alerts') {
-                updateSidebarNav('alerts');
+            } else if (path === '/discovery') {
+                updateSidebarNav('discovery');
             } else if (path === '/display') {
                 updateSidebarNav('display');
             } else if (path === '/timeline') {

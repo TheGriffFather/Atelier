@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Discovery Hub | Dan Brown Catalogue Raisonne{% endblock %}
+{% block title %}Discovery Hub | {{ collection_name }} Catalogue Raisonne{% endblock %}
 
 {% block nav_discovery %}nav-item-active{% endblock %}
 
@@ -12,7 +12,7 @@
             <div class="flex items-center gap-3 mb-2">
                 <h1 class="text-3xl font-serif font-semibold text-gray-100">Discovery Hub</h1>
             </div>
-            <p class="text-gray-400">Search eBay and auction sites for Dan Brown artwork</p>
+            <p class="text-gray-400">{% if demo_mode %}Explore sample searches and discovery results. Live scans are off.{% else %}Search eBay and auction sites for {{ collection_name }} artwork{% endif %}</p>
             <p class="text-xs text-gray-500 mt-1" id="last-scanned">Last scanned: Never</p>
         </div>
         <div class="flex items-center gap-3">
@@ -71,7 +71,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <h3 class="text-xl text-gray-400 mb-2">No saved searches yet</h3>
-            <p class="text-gray-500 mb-4">Create your first search to start monitoring for Dan Brown artwork</p>
+            <p class="text-gray-500 mb-4">Create your first search to start monitoring for {{ collection_name }} artwork</p>
             <button onclick="openNewSearchModal()" class="btn-primary">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
@@ -126,11 +126,11 @@
         <form id="form-new-search" class="p-6 space-y-4" onsubmit="createSearch(event)">
             <div>
                 <label class="block text-sm text-gray-400 mb-1">Search Name</label>
-                <input type="text" name="name" required class="form-input" placeholder="e.g., Dan Brown Trompe l'oeil">
+                <input type="text" name="name" required class="form-input" placeholder="e.g., {{ collection_name }} Trompe l'oeil">
             </div>
             <div>
                 <label class="block text-sm text-gray-400 mb-1">Search Query</label>
-                <input type="text" name="query" required class="form-input" placeholder="e.g., Dan Brown trompe l'oeil painting">
+                <input type="text" name="query" required class="form-input" placeholder="e.g., {{ collection_name }} trompe l'oeil painting">
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -446,7 +446,7 @@ async function loadResults() {
                 </div>
                 <!-- Quick Action Buttons -->
                 <div class="px-4 pb-4 flex gap-2">
-                    <button onclick="event.stopPropagation(); dismissResult(${result.id})" class="quick-action-btn flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10" title="Not Dan Brown's work">
+                    <button onclick="event.stopPropagation(); dismissResult(${result.id})" class="quick-action-btn flex-1 text-red-400 hover:text-red-300 hover:bg-red-500/10" title="Not {{ collection_name }}'s work">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>

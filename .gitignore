@@ -130,3 +130,6 @@ token*.json
 *.key
 *.pfx
 *.p12
+
+# Generated browser capture scratch files
+output/playwright/

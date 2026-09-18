@@ -86,3 +86,11 @@ Do not use real email accounts, private catalogues, or credentials in tests.
 
 CSV/JSON exports contain selected fields. They are useful for interchange, but
 are not a complete backup of images, contacts, mail state, and the database.
+
+## Synthetic demonstration and new screenshots
+
+`python scripts/run_demo.py` starts the labelled demo on `127.0.0.1:8779`. It creates original sample art and synthetic records in `local/demo/`, changes its working directory to that isolated folder, and configures the application before importing it. Your regular `.env`, database, and relative Gmail files are not used.
+
+The launcher refuses to use an existing nonempty folder without its demo marker. Subsequent launches reuse its database. The `DEMO_MODE` setting selects the demo labels and blocks live mail, scraper, search-run, and image-download routes. Use the launcher to configure isolation correctly; changing the flag alone does not relocate an existing database.
+
+For the nine current screenshots, the browser viewport is 1260 x 900. On Gallery, wait for the images to load; on Discovery select **All Results**; on Outreach select **Emails Sent**. The Timeline capture uses compact mode. The promotional composition is editable in `docs/images/promo.html`; render at 2400 x 1260 with its adjacent screenshots available.

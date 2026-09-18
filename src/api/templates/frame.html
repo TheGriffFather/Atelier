@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <title>Dan Brown Art Frame</title>
+    <title>{{ collection_name }} Art Frame</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -537,7 +537,7 @@
 
         <div class="title-bar" id="title-bar">
             <div class="artwork-title" id="artwork-title">-</div>
-            <div class="artwork-artist">Dan Brown (1949-2022)</div>
+            <div class="artwork-artist">{{ collection_name }} ({{ collection_dates }})</div>
         </div>
 
         <div class="progress-dots" id="progress-dots"></div>
@@ -560,7 +560,7 @@
         <img class="details-image" id="details-image" src="" alt="">
         <div class="details-content">
             <h1 class="details-title" id="details-title">-</h1>
-            <div class="details-artist">Dan Brown (1949-2022)</div>
+            <div class="details-artist">{{ collection_name }} ({{ collection_dates }})</div>
 
             <div class="details-section" id="details-description-section">
                 <h3>About This Work</h3>
@@ -1007,7 +1007,7 @@
             document.getElementById('details-image').src = imageUrl;
             document.getElementById('details-title').textContent = artwork.title;
             document.getElementById('details-description').textContent =
-                artwork.description || 'A masterful work by Dan Brown showcasing his signature trompe l\'oeil technique.';
+                artwork.description || 'A masterful work by {{ collection_name }} showcasing his signature trompe l\'oeil technique.';
             document.getElementById('details-medium').textContent = signals.medium || 'Oil on panel';
             document.getElementById('details-category').textContent = signals.category || 'Fine Art';
             document.getElementById('details-style').textContent = signals.style || 'Trompe l\'oeil';
@@ -1230,5 +1230,6 @@
             loadArtworks();
         })();
     </script>
+{% if demo_mode %}<div style="position:fixed;bottom:12px;left:16px;font:10px sans-serif;letter-spacing:.14em;color:#bda672;z-index:100;pointer-events:none;">DEMO COLLECTION · ORIGINAL SAMPLE ART</div>{% endif %}
 </body>
 </html>
